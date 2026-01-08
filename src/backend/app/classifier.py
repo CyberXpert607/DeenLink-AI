@@ -7,7 +7,5 @@ def classify_topic(question: str) -> str:
         return "hadith"
     if any(w in q for w in ["fiqh", "halal", "haram", "prayer", "salah", "zakat", "purification"]):
         return "fiqh"
-    if any(w in q for w in ["aqeedah", "tariqa", "sunni", "sunnah", "shia", "bidah", "izala"]):
-        return "aqeedah"
 
     return "unknown"
