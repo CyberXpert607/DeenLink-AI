@@ -1,0 +1,10 @@
+[project]
+name = "deen-ai"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.0",
+    "inngest>=0.5.13",
+    "langchain>=1.2.2",
+    "langchain-community>=0.4.1",
+]
