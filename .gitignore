@@ -1,4 +1,4 @@
 .env
 tests
 .venv
-src/backend/app/__pycache__
+src/backend/app/__pycache__/*

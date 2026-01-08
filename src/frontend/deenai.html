@@ -897,7 +897,7 @@
             showTypingIndicator();
 
             try {
-                const res = await fetch('http://localhost:8000/ask', { //now the Agent calls my backend so... no harcoded responses
+                const res = await fetch('http://localhost:8000/api/ask', { //now the Agent calls my backend so... no harcoded responses
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question: text })
