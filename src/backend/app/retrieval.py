@@ -19,4 +19,4 @@ def retrieve_evidence(topic: str, query: str):
         if query.lower() in item["text_en"].lower():
             matches.append(item)
 
-    return matches[:3]  # HARD LIMIT
+    return matches[:3]  # MAX retries

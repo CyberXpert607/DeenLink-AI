@@ -7,3 +7,5 @@ def log_event(payload: dict):
         requests.post(INNGEST_URL, json=payload, timeout=2)
     except Exception:
         pass
+
+#this is what we'll use for monitoring the agents reponse, though this is just a basic implemenatation
