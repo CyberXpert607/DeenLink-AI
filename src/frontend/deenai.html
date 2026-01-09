@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deen AI | Islamic Assistant</title>
+    <title>DeenLink AI | Islamic Assistant</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -688,7 +688,7 @@
                     <i class="fas fa-star"></i>
                 </div>
             </div>
-            <div class="loader-text">Loading Deen AI...</div>
+            <div class="loader-text">Loading DeenLink AI...</div>
         </div>
     </div>
 
@@ -700,7 +700,7 @@
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <div class="header-title">
-                    <i class="fas fa-robot"></i> Deen AI
+                    <i class="fas fa-robot"></i> DeenLink AI
                 </div>
             </div>
             <div class="header-right">
@@ -799,7 +799,7 @@
                 {
                     id: 1,
                     sender: 'ai',
-                    text: 'Assalamu Alaikum! I am Deen AI. Ask me about Qur’an, Hadith, Fiqh, or Aqeedah.',
+                    text: 'Assalamu Alaikum! I am DeenLink AI. Ask me about Qur’an, Hadith, Fiqh, or Aqeedah.',
                     time: 'Just now'
                 }
             ],
@@ -900,7 +900,7 @@
                 const res = await fetch('http://localhost:8000/api/ask', { //now the Agent calls my backend so... no harcoded responses
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: text })
+                    body: JSON.stringify({ message: text })
                 });
 
                 const data = await res.json();
@@ -909,7 +909,7 @@
                 state.messages.push({
                     id: state.messages.length + 1,
                     sender: 'ai',
-                    text: data.answer,
+                    text: data.answer_html,
                     time: getCurrentTime()
                 });
 
