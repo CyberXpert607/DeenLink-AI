@@ -3,18 +3,6 @@ from config import GROQ_API_KEY, MODEL
 
 client = Groq(api_key=GROQ_API_KEY)
 
-SYSTEM_PROMPT = """
-You are a STRICT Islamic assistant.
-
-RULES:
-- You may ONLY answer using the provided evidence.
-- If evidence is insufficient, say:
-  "I cannot answer this based on the available sources."
-- NEVER fabricate Quran verses or Hadith.
-- Provide Arabic text first, then English translation.
-- Cite references clearly.
-"""
-
 def generate_answer(user_question: str, evidence: None, mode="knowledge") -> str:
     
     if mode == "chat":
@@ -28,10 +16,14 @@ def generate_answer(user_question: str, evidence: None, mode="knowledge") -> str
         Assistant:
         """
     else:
-        sources_text = "\n\n".join(
-            f"- {e['arabic']} ({e.get('translation', '')})"
+        if not evidence:
+            return "I cannot answer this based on the available sources"
+        
+        sources = "\n\n".join(
+            f"Arabic:\n{e['arabic']}\n\nEnglish:\n{e['english']}\n(Source: {e['source']})"
             for e in evidence
         )
+
 
         prompt = f"""
         Answer ONLY using the provided sources.
@@ -41,12 +33,12 @@ def generate_answer(user_question: str, evidence: None, mode="knowledge") -> str
         {user_question}
 
         Sources:
-        {sources_text}
+        {sources}
 
-        Answer with:
-        • Arabic evidence
-        • English translation
-        • Clear explanation
+        Format:
+        • Arabic
+        • English
+        • Explanation
         """
     response = client.chat.completions.create(
         model=MODEL,
