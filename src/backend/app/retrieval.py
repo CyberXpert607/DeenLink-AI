@@ -1,22 +1,39 @@
 import json
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path("data")
 
-def load_source(topic: str):
-    file = DATA_DIR / f"{topic}.json"
-    if not file.exists():
+def retrieve_evidence(topic: str, question: str):
+    file_map = {
+        "hadith": "40_hadith_nawawi.json",
+        "fiqh": "imam_malik.json",
+        #"quran": "quran.json", TO DO: update later!
+    }
+
+    file_name = file_map.get(topic)
+    if not file_name:
         return []
 
-    with open(file, encoding="utf-8") as f:
-        return json.load(f)
+    path = DATA_DIR / file_name
+    if not path.exists():
+        return []
 
-def retrieve_evidence(topic: str, query: str):
-    data = load_source(topic)
+    with open(path, "r", encoding="utf-8") as f:
+        raw_items = json.load(f)
 
-    matches = []
-    for item in data:
-        if query.lower() in item["text_en"].lower():
-            matches.append(item)
+    results = []
 
-    return matches[:3]  # MAX retries
+    for item in raw_items:
+        arabic = item.get("arabic")
+        english_text = item.get("english", {}).get("text")
+
+        if not arabic or not english_text:
+            continue
+
+        results.append({
+            "arabic": arabic.strip(),
+            "english": english_text.strip(),
+            "source": item.get("collection", "unknown"),
+        })
+
+    return results[:3]  # hard limit for safety
