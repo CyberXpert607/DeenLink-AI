@@ -1,48 +1,82 @@
 from groq import Groq
 from config import GROQ_API_KEY, MODEL
 
+MAX_SOURCES = 2
+MAX_CHARS_PER_FIELD = 350
+MAX_OUTPUT_TOKENS = 400
+
+
 client = Groq(api_key=GROQ_API_KEY)
 
-def generate_answer(user_question: str, evidence: None, mode="knowledge") -> str:
-    
-    if mode == "chat":
-        prompt = f"""
-        You are Usman a friendly DeenLink Islamic APP assistant.
-        You may engage in casual conversation.
-        Do not issue religious rulings.
-        Keep responses short and polite.
+CHAT_SYSTEM_PROMPT = """
+You are a polite, concise Islamic assistant.
 
-        User: {user_question}
-        Assistant:
-        """
-    else:
-        if not evidence:
-            return "I cannot answer this based on the available sources"
-        
-        sources = "\n\n".join(
-            f"Arabic:\n{e['arabic']}\n\nEnglish:\n{e['english']}\n(Source: {e['source']})"
-            for e in evidence
-        )
+Rules:
+- Do NOT greet with Salam or repeat greetings.
+- Answer naturally and helpfully.
+- Do NOT invent religious rulings or hadith.
+- If the question is religious, keep the answer high-level.
+"""
+
+RELIGIOUS_SYSTEM_PROMPT = """
+You are an Islamic knowledge assistant.
+
+Rules:
+- You may ONLY answer using the provided sources.
+- You must NOT invent hadith, verses, or rulings.
+- If sources do not clearly answer the question, say so.
+- Every answer MUST cite its source.
+"""
+
+def truncate(text: str, limit: int) -> str:
+    if not text:
+        return ""
+    return text[:limit]
 
 
-        prompt = f"""
-        Answer ONLY using the provided sources.
-        Do not add external information.
-
-        Question:
-        {user_question}
-
-        Sources:
-        {sources}
-
-        Format:
-        • Arabic
-        • English
-        • Explanation
-        """
+def generate_chat_response(user_question: str) -> str:
     response = client.chat.completions.create(
         model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3 if mode == "knowledge" else 0.7,
+        messages=[
+            {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+            {"role": "user", "content": user_question}
+        ],
+        temperature=0.7,
+        max_tokens=300
     )
-    return response.choices[0].message.content.strip()
+
+    return response.choices[0].message.content
+
+def generate_knowledgeBase_answer(question: str, sources: list):
+    if not sources:
+        return {
+            "answer": "I cannot answer this based on the available sources.",
+            "sources": []
+        }
+    
+    limited_sources = sources[:MAX_SOURCES]
+
+    sources_text = "\n".join(
+        f"Source {i+1}:\n"
+        f"Collection: {s.get('collection', 'Unknown')}\n"
+        f"Narrator: {s.get('narrator', 'Unknown')}\n"
+        f"Text (English): {truncate(s.get('english', ''), MAX_CHARS_PER_FIELD)}"
+        for i, s in enumerate(limited_sources)
+    )
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": RELIGIOUS_SYSTEM_PROMPT},
+            {
+                "role": "user", "content": f"Question:\n{question}\n\nSources:\n{sources_text}"
+                        }
+                    ],
+                    temperature=0.0,
+                    max_tokens=MAX_OUTPUT_TOKENS
+                )
+
+    return {
+        "answer": response.choices[0].message.content,
+        "sources": limited_sources
+    }
