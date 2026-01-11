@@ -4,11 +4,6 @@ from pydantic import BaseModel
 from retrieval import retrieve_evidence
 from agent import generate_knowledgeBase_answer, generate_chat_response
 from inngest import log_event
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from fastapi import Request
-
-limiter = Limiter(key_func=get_remote_address)
 
 class AskRequest(BaseModel):
     message: str
@@ -16,7 +11,6 @@ class AskRequest(BaseModel):
 router = APIRouter()
 
 @router.post("/ask")
-@limiter.limit("10/minute")
 async def ask(payload: AskRequest):
     message = payload.message
 
