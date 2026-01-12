@@ -1,0 +1,49 @@
+{
+  "surah": 1,
+  "hasBasmallah": true,
+  "basmallah": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+      "english": "In the name of Allah, the Most Gracious, the Most Merciful.",
+      "hausa": "Da sunan Allah, Mai rahama, Mai jinƙai."
+    },
+    {
+      "ayah": 2,
+      "arabic": "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ",
+      "english": "[All] praise is [due] to Allah, Lord of the worlds -",
+      "hausa": "Godiya ta tabbata ga Allah, Ubangijin halittu;"
+    },
+    {
+      "ayah": 3,
+      "arabic": "ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+      "english": "The Entirely Merciful, the Especially Merciful,",
+      "hausa": "Mai rahama, Mai jin ƙai;"
+    },
+    {
+      "ayah": 4,
+      "arabic": "مَـٰلِكِ يَوْمِ ٱلدِّينِ",
+      "english": "Sovereign of the Day of Recompense.",
+      "hausa": "Mai nuna Mulkin Rãnar Sakamako."
+    },
+    {
+      "ayah": 5,
+      "arabic": "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+      "english": "It is You we worship and You we ask for help.",
+      "hausa": "Kai muke bauta wa, kuma Kai muke neman taimakonKa."
+    },
+    {
+      "ayah": 6,
+      "arabic": "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ",
+      "english": "Guide us to the straight path -",
+      "hausa": "Ka shiryar da mu ga hanya madaidaiciya."
+    },
+    {
+      "ayah": 7,
+      "arabic": "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ",
+      "english": "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.",
+      "hausa": "Hanyar waɗanda Ka yi wa ni'ima, ba waɗanda aka yi wa fushi ba, kuma ba ɓatattu ba."
+    }
+  ]
+}
