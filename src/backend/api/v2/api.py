@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .vectoreStore import search_similar
-from .agent import generate_rag_answer
-from .prompts import RAG_SYSTEM_PROMPT
+from v2.vectoreStore import search_similar
+from v2.agent import generate_rag_answer
+from v2.prompts import RAG_SYSTEM_PROMPT
 
 router = APIRouter(prefix="/api/v2", tags=["RAG v2"])
 
@@ -24,3 +24,9 @@ async def ask_v2(payload: AskRequest):
             "sources": []
         }
     results = generate_rag_answer(query, filtered)
+
+@router.get("/health")
+async def get_health():
+    return {
+        "status": "okay"
+    }

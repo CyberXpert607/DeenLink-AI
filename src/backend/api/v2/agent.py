@@ -1,6 +1,6 @@
 from groq import Groq
-from api.config import GROQ_API_KEY, MODEL
-from .prompts import CHAT_SYSTEM_PROMPT, RAG_SYSTEM_PROMPT
+from config import GROQ_API_KEY, MODEL
+from v2.prompts import CHAT_SYSTEM_PROMPT, RAG_SYSTEM_PROMPT
 
 client = Groq(api_key=GROQ_API_KEY)
 
