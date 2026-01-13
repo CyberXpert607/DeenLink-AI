@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/v1", tags=["v1"])
 class AskRequest(BaseModel):
     message: str
 
-@router.post("/v1/ask")
+@router.post("/ask")
 async def ask(payload: AskRequest):
     message = payload.message
     topic = classify_topic(message)
@@ -61,7 +61,7 @@ async def ask(payload: AskRequest):
         "sources": result["sources"]
     }
 
-@router.get("/v1/health")
+@router.get("/health")
 def check_health():
     return {
         "status": "okay"
