@@ -1,11 +1,10 @@
 from fastapi import APIRouter
-from .classifier import classify_topic
+from v1.classifier import classify_topic
 from pydantic import BaseModel
-from .retrieval import retrieve_evidence
-from .agent import generate_knowledgeBase_answer, generate_chat_response
-from .inngest import log_event
+from v1.retrieval import retrieve_evidence
+from v1.agent import generate_knowledgeBase_answer, generate_chat_response
 
-router = APIRouter(prefix="/api/v1", tags=["v1"])
+router = APIRouter(prefix="/api/v1", tags=["Deenlink v1"])
 
 
 class AskRequest(BaseModel):
@@ -18,18 +17,12 @@ async def ask(payload: AskRequest):
 
     if topic == "chat":
         answer = generate_chat_response(message)
-
-        log_event({
-            "event": "chat_response",
-            "message": message
-        })
-
         return {
             "answer_html": answer,
             "sources": []
         }
     
-#Knowledge_restricted_mode:
+
     MAX_EVIDENCE = 2
 
     evidence, confidence = retrieve_evidence(topic, message)
@@ -37,24 +30,12 @@ async def ask(payload: AskRequest):
     evidence = evidence[:MAX_EVIDENCE]
     
     if confidence < 0.65:
-        log_event({
-            "event": "low_confidence",
-            "topic": topic,
-            "confidence": confidence
-        })
-
         return {
             "answer_html": "I couldn’t find a reliable source that answers this question.",
             "sources": []
         }
 
     result = generate_knowledgeBase_answer(message, evidence)
-
-    log_event({
-        "event": "answered",
-        "topic": topic,
-        "confidence": confidence
-    })
 
     return {
         "answer_html": result["answer"],
@@ -64,5 +45,5 @@ async def ask(payload: AskRequest):
 @router.get("/health")
 def check_health():
     return {
-        "status": "okay"
+        "status" : "okay"
     }
