@@ -1,6 +1,6 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from .embeddings import embed_text
+from v2.embeddings import embed_text
 
 COLLECTION_NAME = "islamic_sources"
 
@@ -9,9 +9,7 @@ client = QdrantClient(
 )
 
 def ensure_collection():
-    """
-    Create collection if it does not exist.
-    """
+    #create collection if it doesn't exist with the name as the value in COLLECTION_NAME variable on the top!
     collections = [c.name for c in client.get_collections().collections]
 
     if COLLECTION_NAME not in collections:
@@ -25,9 +23,7 @@ def ensure_collection():
 
 
 def upsert_documents(docs: list[dict]):
-    """
-    Insert documents into Qdrant.
-    """
+    #Insert documents into Qdrant(json docs in /data directory)
     ensure_collection()
 
     points = []
@@ -46,13 +42,11 @@ def upsert_documents(docs: list[dict]):
     )
 
 
-def search_similar(query: str, limit: int = 5):
-    """
-    Semantic search in Qdrant.
-    """
+def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
+
     vector = embed_text(query)
 
-    results = client.search(
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
         query_vector=vector,
         limit=limit,
@@ -61,8 +55,9 @@ def search_similar(query: str, limit: int = 5):
 
     return [
         {
-            **hit.payload,
-            "score": hit.score
+            **p.payload,
+            "score": p.score
         }
-        for hit in results
+        for p in results.points
+        if p.score >= min_score
     ]
