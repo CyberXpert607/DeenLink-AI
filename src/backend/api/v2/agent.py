@@ -29,12 +29,10 @@ def generate_rag_answer(question: str, retrieved_docs: list):
         f"""
 Collection: {doc['collection']}
 Narrator: {doc.get('narrator', 'Unknown')}
-Arabic:
-{doc['arabic']}
-
-English:
-{doc['english']}
+Arabic:  {doc['arabic']}
+English:  {doc['english']}
 """
+
         for doc in retrieved_docs
     )
 
@@ -42,15 +40,7 @@ English:
         model=MODEL,
         messages=[
             {"role": "system", "content": RAG_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"""
-Question:
-{question}
-
-Sources:
-{sources_text}
-"""
+            {"role": "user",   "content": f""" Question: {question} Sources: {sources_text} """
             }
         ],
         temperature=0.0
