@@ -48,7 +48,7 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
 
     results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=vector,
+        vector=vector,
         limit=limit,
         with_payload=True
     )
