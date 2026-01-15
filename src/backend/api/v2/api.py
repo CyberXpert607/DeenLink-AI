@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from v2.vectoreStore import search_similar
-from v2.agent import generate_rag_answer
-from v2.prompts import RAG_SYSTEM_PROMPT
+from .vectoreStore import search_similar
+from .agent import generate_rag_answer, generate_chat_response
+from .classifier import is_religious_promt
 
-router = APIRouter(prefix="/api/v2", tags=["RAG v2"])
+router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
 
 class AskRequest(BaseModel):
     message: str
@@ -13,7 +13,17 @@ class AskRequest(BaseModel):
 @router.post("/ask")
 async def ask_v2(payload: AskRequest):
     query = payload.message
+    print(f"[Ask V2 Query]: {query}")
 
+    if not is_religious_promt(query):
+        answer = generate_chat_response(query)
+        print("[router chat mode]")
+        return {
+            "answer_html": answer,
+            "sources": []
+        }
+
+    print("[Router RAG MODE]")
     results = search_similar(query, limit=5)
 
     filtered = [r for r in results if r['score'] >= 0.30]
@@ -24,6 +34,7 @@ async def ask_v2(payload: AskRequest):
             "sources": []
         }
     results = generate_rag_answer(query, filtered)
+    return results
 
 @router.get("/health")
 async def get_health():
