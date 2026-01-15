@@ -1,20 +1,16 @@
-        // DOM Elements
         const pageLoader = document.getElementById('pageLoader');
         const pageContent = document.querySelector('.container');
 
-        // Function to show page loader
         function showPageLoader() {
             pageLoader.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
-        // Function to hide page loader
         function hidePageLoader() {
             pageLoader.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
 
-        // Handle back button navigation
         document.getElementById('backButton').addEventListener('click', function() {
             showPageLoader();
             setTimeout(() => {
@@ -22,17 +18,16 @@
             }, 300);
         });
 
-        // Hide loader when page is fully loaded
         window.addEventListener('load', function() {
             setTimeout(hidePageLoader, 300);
             
-            // Ensure content is visible
+            
             if (pageContent) {
                 pageContent.style.opacity = '1';
             }
         });
 
-        // Initial hide of loader
+
         setTimeout(() => {
             if (document.readyState === 'complete') {
                 hidePageLoader();
@@ -54,8 +49,6 @@
             isTyping: false
         };
 
-        /*
-        DOM ELEMENTS*/
         const body = document.body;
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -64,18 +57,12 @@
         const clearChatBtn = document.getElementById('clearChatBtn');
         const quickPromptBtns = document.querySelectorAll('.quick-prompt-btn');
 
-        /*
-        THEME
-        */
         themeToggle.addEventListener('click', () => {
             state.isDarkMode = !state.isDarkMode;
             body.classList.toggle('dark-theme', state.isDarkMode);
             body.classList.toggle('light-theme', !state.isDarkMode);
         });
 
-        /*
-        RENDER
-        */
         function renderMessages() {
             chatMessages.innerHTML = '';
 
@@ -97,9 +84,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        /*
-        TYPING INDICATOR
-         */
         function showTypingIndicator() {
             if (state.isTyping) return;
             state.isTyping = true;
@@ -125,9 +109,6 @@
             if (el) el.remove();
         }
 
-        /*
-        SEND MESSAGE (REAL API)
-        */
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
@@ -175,9 +156,6 @@
         }
     }
 
-    /*
-    EVENTS
-     */
     sendButton.addEventListener('click', sendMessage);
 
     messageInput.addEventListener('keydown', e => {
@@ -200,13 +178,9 @@
         renderMessages();
     });
 
-    /*
-    UTIL
-     */
     function getCurrentTime() {
         const d = new Date();
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    /* INIT */
     renderMessages();
