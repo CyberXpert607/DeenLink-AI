@@ -17,6 +17,7 @@ def generate_chat_response(user_question: str) -> str:
 
 
 def generate_rag_answer(question: str, retrieved_docs: list):
+    retrieved_docs = retrieved_docs[:3]
     if not retrieved_docs:
         return {
             "answer": (
@@ -27,11 +28,11 @@ def generate_rag_answer(question: str, retrieved_docs: list):
 
     sources_text = "\n\n".join(
         f"""
-Collection: {doc['collection']}
-Narrator: {doc.get('narrator', 'Unknown')}
-Arabic:  {doc['arabic']}
-English:  {doc['english']}
-"""
+        Collection: {doc['collection']}
+        Narrator: {doc.get('narrator', 'Unknown')}
+        Arabic:  {doc['arabic']}
+        English:  {doc['english']}
+        """
 
         for doc in retrieved_docs
     )
@@ -47,6 +48,6 @@ English:  {doc['english']}
     )
 
     return {
-        "answer": response.choices[0].message.content,
+        "answer_html": response.choices[0].message.content,
         "sources": retrieved_docs
     }
