@@ -624,6 +624,56 @@
             font-size: 13px;
         }
 
+        /* ===============================
+   RAG ANSWER FORMATTING
+================================ */
+
+.rag-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rag-explanation {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+.rag-source {
+  background: var(--light-green);
+  border-left: 4px solid var(--primary-green);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.rag-arabic {
+  font-family: 'Scheherazade', 'Traditional Arabic', serif;
+  font-size: 20px;
+  color: var(--primary-green);
+  direction: rtl;
+  text-align: right;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+.rag-english {
+  font-style: italic;
+  font-size: 14px;
+  color: #444;
+  margin: 6px 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent-gold);
+}
+
+.rag-meta {
+  font-size: 11px;
+  color: var(--dark-gray);
+  text-align: right;
+  margin-top: 6px;
+}
+
+
         .hadith-text {
             font-style: italic;
             margin: 10px 0;
