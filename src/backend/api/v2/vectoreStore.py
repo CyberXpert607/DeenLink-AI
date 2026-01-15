@@ -1,6 +1,6 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from v2.embeddings import embed_text
+from .embeddings import embed_text
 
 COLLECTION_NAME = "islamic_sources"
 
@@ -48,7 +48,7 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
 
     results = client.query_points(
         collection_name=COLLECTION_NAME,
-        vector=vector,
+        query=vector,
         limit=limit,
         with_payload=True
     )
