@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from v2.vectoreStore import search_similar
 from v2.agent import generate_rag_answer, generate_chat_response
@@ -8,7 +8,7 @@ from v2.classifier import is_religious_promt
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
 
 class AskRequest(BaseModel):
-    message: str
+    message: str = Field(default=None, max_length=100, min_length=1)
 
 @router.post("/ask")
 async def ask_v2(payload: AskRequest):
