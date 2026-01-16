@@ -1,6 +1,6 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from .embeddings import embed_text
+from v2.embeddings import embed_text
 
 COLLECTION_NAME = "islamic_sources"
 

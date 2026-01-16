@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .vectoreStore import search_similar
-from .agent import generate_rag_answer, generate_chat_response
-from .classifier import is_religious_promt
+from v2.vectoreStore import search_similar
+from v2.agent import generate_rag_answer, generate_chat_response
+from v2.classifier import is_religious_promt
 
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
 

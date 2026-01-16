@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from vectoreStore import upsert_documents
+from v2.vectoreStore import upsert_documents
 
 BASE_DIR =Path(__file__).resolve().parent
 API_DIR =BASE_DIR.parent
