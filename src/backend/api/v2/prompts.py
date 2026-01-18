@@ -40,10 +40,11 @@ Structure your response exactly like this:
 
     <div class="rag-meta">
       Collection: [collection] · Narrator: [narrator]
+      <!-- For Quranic sources -->
+      Quran Surah: [surah_name] · Ayah: [ayah_number]
     </div>
   </div>
 </div>
 
 If multiple sources exist, repeat <div class="rag-source"> for each one.
 """
-
