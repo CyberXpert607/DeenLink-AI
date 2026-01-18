@@ -1,0 +1,73 @@
+{
+  "surah": 100,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "وَٱلْعَـٰدِيَـٰتِ ضَبْحًا",
+      "english": "By the racers, panting,",
+      "hausa": "Ina rantsuwa da dawãki mãsu gudu suna fitar da kũkan ciki."
+    },
+    {
+      "ayah": 2,
+      "arabic": "فَٱلْمُورِيَـٰتِ قَدْحًا",
+      "english": "And the producers of sparks [when] striking",
+      "hausa": "Mãsu ƙyasta wuta (da kõfatansu a kan duwatsu) ƙyastawa."
+    },
+    {
+      "ayah": 3,
+      "arabic": "فَٱلْمُغِيرَٰتِ صُبْحًا",
+      "english": "And the chargers at dawn,",
+      "hausa": "Sa'an nan mãsu yin hari a lokacin asuba."
+    },
+    {
+      "ayah": 4,
+      "arabic": "فَأَثَرْنَ بِهِۦ نَقْعًا",
+      "english": "Stirring up thereby [clouds of] dust,",
+      "hausa": "Sai su motsar da ƙũra game da shi."
+    },
+    {
+      "ayah": 5,
+      "arabic": "فَوَسَطْنَ بِهِۦ جَمْعًا",
+      "english": "Arriving thereby in the center collectively,",
+      "hausa": "Sai su shiga, game da ita (ƙũrar), a tsakãnin jama'ar maƙiya."
+    },
+    {
+      "ayah": 6,
+      "arabic": "إِنَّ ٱلْإِنسَـٰنَ لِرَبِّهِۦ لَكَنُودٌ",
+      "english": "Indeed mankind, to his Lord, is ungrateful.",
+      "hausa": "Lalle ne mutum mai tsananin butulci ne ga Ubangijinsa."
+    },
+    {
+      "ayah": 7,
+      "arabic": "وَإِنَّهُۥ عَلَىٰ ذَٰلِكَ لَشَهِيدٌ",
+      "english": "And indeed, he is to that a witness.",
+      "hausa": "Lalle ne shi mai shaida ne a kan laifinsa dl haka."
+    },
+    {
+      "ayah": 8,
+      "arabic": "وَإِنَّهُۥ لِحُبِّ ٱلْخَيْرِ لَشَدِيدٌ",
+      "english": "And indeed he is, in love of wealth, intense.",
+      "hausa": "Kuma 1alle ne ga dũkiya shi mai tsananin so ne."
+    },
+    {
+      "ayah": 9,
+      "arabic": "أَفَلَا يَعْلَمُ إِذَا بُعْثِرَ مَا فِى ٱلْقُبُورِ",
+      "english": "But does he not know that when the contents of the graves are scattered",
+      "hausa": "Shin, bã ya da sanin lõkacin da aka tõne abin da yake cikin kaburbura."
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَحُصِّلَ مَا فِى ٱلصُّدُورِ",
+      "english": "And that within the breasts is obtained,",
+      "hausa": "Aka bayyana abin da ke cikin zukata."
+    },
+    {
+      "ayah": 11,
+      "arabic": "إِنَّ رَبَّهُم بِهِمْ يَوْمَئِذٍ لَّخَبِيرٌۢ",
+      "english": "Indeed, their Lord with them, that Day, is [fully] Acquainted.",
+      "hausa": "Lalle ne Ubangijinsu, game da su a ranar nan Mai ƙididdigewa ne?"
+    }
+  ]
+}

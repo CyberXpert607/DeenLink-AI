@@ -1,0 +1,25 @@
+{
+  "surah": 110,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "إِذَا جَآءَ نَصْرُ ٱللَّهِ وَٱلْفَتْحُ",
+      "english": "When the victory of Allah has come and the conquest,",
+      "hausa": "Idan taimakon Allah ya zo da cin nasara."
+    },
+    {
+      "ayah": 2,
+      "arabic": "وَرَأَيْتَ ٱلنَّاسَ يَدْخُلُونَ فِى دِينِ ٱللَّهِ أَفْوَاجًا",
+      "english": "And you see the people entering into the religion of Allah in multitudes,",
+      "hausa": "Kuma ka ga mutane suna shiga addinin Allah, ƙungiya-ƙungiya."
+    },
+    {
+      "ayah": 3,
+      "arabic": "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَٱسْتَغْفِرْهُ ۚ إِنَّهُۥ كَانَ تَوَّابًۢا",
+      "english": "Then exalt [Him] with praise of your Lord and ask forgiveness of Him. Indeed, He is ever Accepting of repentance.",
+      "hausa": "To, ka yi tasbihi game da gõde wa Ubangijinka, kuma ka nẽme Shi gafara, lalle Shi (Ubangijinka) Ya kasance Mai karɓar tũba ne."
+    }
+  ]
+}

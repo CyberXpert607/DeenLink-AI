@@ -1,0 +1,55 @@
+{
+  "surah": 99,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "إِذَا زُلْزِلَتِ ٱلْأَرْضُ زِلْزَالَهَا",
+      "english": "When the earth is shaken with its [final] earthquake",
+      "hausa": "Idan aka girgiza ƙasa, girgizawarta."
+    },
+    {
+      "ayah": 2,
+      "arabic": "وَأَخْرَجَتِ ٱلْأَرْضُ أَثْقَالَهَا",
+      "english": "And the earth discharges its burdens",
+      "hausa": "Kuma ƙasa ta fitar da kayanta, masu nauyi."
+    },
+    {
+      "ayah": 3,
+      "arabic": "وَقَالَ ٱلْإِنسَـٰنُ مَا لَهَا",
+      "english": "And man says, \"What is [wrong] with it?\" -",
+      "hausa": "Kuma mutum ya ce \"Mẽ neya same ta?\""
+    },
+    {
+      "ayah": 4,
+      "arabic": "يَوْمَئِذٍ تُحَدِّثُ أَخْبَارَهَا",
+      "english": "That Day, it will report its news",
+      "hausa": "A rãnar nan, zã ta faɗi lãbãrinta."
+    },
+    {
+      "ayah": 5,
+      "arabic": "بِأَنَّ رَبَّكَ أَوْحَىٰ لَهَا",
+      "english": "Because your Lord has commanded it.",
+      "hausa": "cewa Ubangijinka Ya yi umurni zuwa gare ta."
+    },
+    {
+      "ayah": 6,
+      "arabic": "يَوْمَئِذٍ يَصْدُرُ ٱلنَّاسُ أَشْتَاتًا لِّيُرَوْا۟ أَعْمَـٰلَهُمْ",
+      "english": "That Day, the people will depart separated [into categories] to be shown [the result of] their deeds.",
+      "hausa": "A rãnar nan mutane za su fito dabam-dabam domin a nuna musu ayyukansu."
+    },
+    {
+      "ayah": 7,
+      "arabic": "فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُۥ",
+      "english": "So whoever does an atom's weight of good will see it,",
+      "hausa": "To, wanda ya aikata (wani aiki) gwargwadon nauyin zarra, na alheri, zai gan shi."
+    },
+    {
+      "ayah": 8,
+      "arabic": "وَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ شَرًّا يَرَهُۥ",
+      "english": "And whoever does an atom's weight of evil will see it.",
+      "hausa": "Kuma wanda ya aikata gwargwadon nauyin zarra na sharri, zai gan shi."
+    }
+  ]
+}

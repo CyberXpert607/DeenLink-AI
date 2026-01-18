@@ -1,0 +1,55 @@
+{
+  "surah": 102,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "أَلْهَىٰكُمُ ٱلتَّكَاثُرُ",
+      "english": "Competition in [worldly] increase diverts you",
+      "hausa": "Alfahari da yawan dũkiya da dangi ya shagaltar da ku (dagaibada mai amfaninku)."
+    },
+    {
+      "ayah": 2,
+      "arabic": "حَتَّىٰ زُرْتُمُ ٱلْمَقَابِرَ",
+      "english": "Until you visit the graveyards.",
+      "hausa": "Har kuka ziyarci kaburbura."
+    },
+    {
+      "ayah": 3,
+      "arabic": "كَلَّا سَوْفَ تَعْلَمُونَ",
+      "english": "No! You are going to know.",
+      "hausa": "A'aha! (Nan gaba) zã ku sani."
+    },
+    {
+      "ayah": 4,
+      "arabic": "ثُمَّ كَلَّا سَوْفَ تَعْلَمُونَ",
+      "english": "Then no! You are going to know.",
+      "hausa": "Sa'an nan, tabbas, zã ku sani."
+    },
+    {
+      "ayah": 5,
+      "arabic": "كَلَّا لَوْ تَعْلَمُونَ عِلْمَ ٱلْيَقِينِ",
+      "english": "No! If you only knew with knowledge of certainty...",
+      "hausa": "Haƙĩƙa, da kuna da sani sani na yaƙĩni."
+    },
+    {
+      "ayah": 6,
+      "arabic": "لَتَرَوُنَّ ٱلْجَحِيمَ",
+      "english": "You will surely see the Hellfire.",
+      "hausa": "Lalle ne da kuna ganin Jahĩm."
+    },
+    {
+      "ayah": 7,
+      "arabic": "ثُمَّ لَتَرَوُنَّهَا عَيْنَ ٱلْيَقِينِ",
+      "english": "Then you will surely see it with the eye of certainty.",
+      "hausa": "Sa'an nan lalle ne za ku gan ta, da idanu, bayyane."
+    },
+    {
+      "ayah": 8,
+      "arabic": "ثُمَّ لَتُسْـَٔلُنَّ يَوْمَئِذٍ عَنِ ٱلنَّعِيمِ",
+      "english": "Then you will surely be asked that Day about pleasure.",
+      "hausa": "Sa'an nan lalle ne za a tambaye ku, a rãnar nan lãbãrin ni'imar (da aka yi muku)."
+    }
+  ]
+}

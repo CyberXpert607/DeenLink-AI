@@ -1,0 +1,37 @@
+{
+  "surah": 111,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "تَبَّتْ يَدَآ أَبِى لَهَبٍ وَتَبَّ",
+      "english": "May the hands of Abu Lahab be ruined, and ruined is he.",
+      "hausa": "Hannãye biyu na Abũlahabi sun halaka, kuma ya halaka."
+    },
+    {
+      "ayah": 2,
+      "arabic": "مَآ أَغْنَىٰ عَنْهُ مَالُهُۥ وَمَا كَسَبَ",
+      "english": "His wealth will not avail him or that which he gained.",
+      "hausa": "Dũkiyarsa ba ta tsare masa kõme ba, da abin da ya tãra."
+    },
+    {
+      "ayah": 3,
+      "arabic": "سَيَصْلَىٰ نَارًا ذَاتَ لَهَبٍ",
+      "english": "He will [enter to] burn in a Fire of [blazing] flame",
+      "hausa": "Zã ya shiga wuta mai hũruwa."
+    },
+    {
+      "ayah": 4,
+      "arabic": "وَٱمْرَأَتُهُۥ حَمَّالَةَ ٱلْحَطَبِ",
+      "english": "And his wife [as well] - the carrier of firewood.",
+      "hausa": "Tãre da matarsa mai ɗaukar itacen (wuta)."
+    },
+    {
+      "ayah": 5,
+      "arabic": "فِى جِيدِهَا حَبْلٌ مِّن مَّسَدٍۭ",
+      "english": "Around her neck is a rope of [twisted] fiber.",
+      "hausa": "A cikin kyakkyãwan wuyanta akwai igiya ta kaba (Rãnar ¡iyãma)."
+    }
+  ]
+}

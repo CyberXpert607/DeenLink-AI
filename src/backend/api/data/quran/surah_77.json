@@ -1,0 +1,307 @@
+{
+  "surah": 77,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "وَٱلْمُرْسَلَـٰتِ عُرْفًا",
+      "english": "By those [winds] sent forth in gusts",
+      "hausa": "Ina rantsuwa da iskõkin da ake sakõwa jẽre, sunã bin jũna."
+    },
+    {
+      "ayah": 2,
+      "arabic": "فَٱلْعَـٰصِفَـٰتِ عَصْفًا",
+      "english": "And the winds that blow violently",
+      "hausa": "Sa'an nan, su zamã iskõki mãsu ƙarfi suna kaɗãwa da ƙarfi."
+    },
+    {
+      "ayah": 3,
+      "arabic": "وَٱلنَّـٰشِرَٰتِ نَشْرًا",
+      "english": "And [by] the winds that spread [clouds]",
+      "hausa": "Kuma, mãsu watsa rahama wãtsãwa."
+    },
+    {
+      "ayah": 4,
+      "arabic": "فَٱلْفَـٰرِقَـٰتِ فَرْقًا",
+      "english": "And those [angels] who bring criterion",
+      "hausa": "sa'an nan, da ãyõyi mãsu rarrabe gaskiya da ƙarya rarrabẽwa."
+    },
+    {
+      "ayah": 5,
+      "arabic": "فَٱلْمُلْقِيَـٰتِ ذِكْرًا",
+      "english": "And those [angels] who deliver a message",
+      "hausa": "Sa'an nan da malã'iku mãsu jẽfa tunãtarwa ga Manzanni."
+    },
+    {
+      "ayah": 6,
+      "arabic": "عُذْرًا أَوْ نُذْرًا",
+      "english": "As justification or warning,",
+      "hausa": "Domin yanke hamzari ko dõmin gargadi."
+    },
+    {
+      "ayah": 7,
+      "arabic": "إِنَّمَا تُوعَدُونَ لَوَٰقِعٌ",
+      "english": "Indeed, what you are promised is to occur.",
+      "hausa": "Lalle ne, abin da ake yi muku wa'adi da shi tabbas mai aukuwa ne"
+    },
+    {
+      "ayah": 8,
+      "arabic": "فَإِذَا ٱلنُّجُومُ طُمِسَتْ",
+      "english": "So when the stars are obliterated",
+      "hausa": "To, idan taurãri aka shãfe haskensu."
+    },
+    {
+      "ayah": 9,
+      "arabic": "وَإِذَا ٱلسَّمَآءُ فُرِجَتْ",
+      "english": "And when the heaven is opened",
+      "hausa": "Kuma, idan sama aka tsãge ta."
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَإِذَا ٱلْجِبَالُ نُسِفَتْ",
+      "english": "And when the mountains are blown away",
+      "hausa": "Kuma, idan duwãtsu aka nike su."
+    },
+    {
+      "ayah": 11,
+      "arabic": "وَإِذَا ٱلرُّسُلُ أُقِّتَتْ",
+      "english": "And when the messengers' time has come...",
+      "hausa": "Kuma, idan manzanni aka ƙayyade lõkacin tãra su."
+    },
+    {
+      "ayah": 12,
+      "arabic": "لِأَىِّ يَوْمٍ أُجِّلَتْ",
+      "english": "For what Day was it postponed?",
+      "hausa": "Domin babbar rãnar da aka yi wa ajali."
+    },
+    {
+      "ayah": 13,
+      "arabic": "لِيَوْمِ ٱلْفَصْلِ",
+      "english": "For the Day of Judgement.",
+      "hausa": "Domin rãnar rarrabẽwa."
+    },
+    {
+      "ayah": 14,
+      "arabic": "وَمَآ أَدْرَىٰكَ مَا يَوْمُ ٱلْفَصْلِ",
+      "english": "And what can make you know what is the Day of Judgement?",
+      "hausa": "Kuma, me ya sanar da kai rãnar rarrabẽwa?"
+    },
+    {
+      "ayah": 15,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone yã tabbata a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 16,
+      "arabic": "أَلَمْ نُهْلِكِ ٱلْأَوَّلِينَ",
+      "english": "Did We not destroy the former peoples?",
+      "hausa": "Ashe, ba Mu halakar da (mãsu ƙaryatãw) na farko ba."
+    },
+    {
+      "ayah": 17,
+      "arabic": "ثُمَّ نُتْبِعُهُمُ ٱلْـَٔاخِرِينَ",
+      "english": "Then We will follow them with the later ones.",
+      "hausa": "Sa'an nan, kuma zã Mu biyar musu da na ƙarshe?"
+    },
+    {
+      "ayah": 18,
+      "arabic": "كَذَٰلِكَ نَفْعَلُ بِٱلْمُجْرِمِينَ",
+      "english": "Thus do We deal with the criminals.",
+      "hausa": "Haka nan, Muke aikatãwa da mãsu yin laifi."
+    },
+    {
+      "ayah": 19,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone yã tabbata a rãnar nan ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 20,
+      "arabic": "أَلَمْ نَخْلُقكُّم مِّن مَّآءٍ مَّهِينٍ",
+      "english": "Did We not create you from a liquid disdained?",
+      "hausa": "Ashe, ba Mu halitta ku daga wani ruwa wulakantacce ba."
+    },
+    {
+      "ayah": 21,
+      "arabic": "فَجَعَلْنَـٰهُ فِى قَرَارٍ مَّكِينٍ",
+      "english": "And We placed it in a firm lodging",
+      "hausa": "Sa'an nan Muka sanya shi a cikin wani wurin natsuwa amintacce."
+    },
+    {
+      "ayah": 22,
+      "arabic": "إِلَىٰ قَدَرٍ مَّعْلُومٍ",
+      "english": "For a known extent.",
+      "hausa": "Zuwa ga wani gwargwadon mudda sananna."
+    },
+    {
+      "ayah": 23,
+      "arabic": "فَقَدَرْنَا فَنِعْمَ ٱلْقَـٰدِرُونَ",
+      "english": "And We determined [it], and excellent [are We] to determine.",
+      "hausa": "Sa'an nan, Muka nũna iyãwarMu? Madalla da Mu, Mãsu nũna iyãwa."
+    },
+    {
+      "ayah": 24,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata a rãnar nan ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 25,
+      "arabic": "أَلَمْ نَجْعَلِ ٱلْأَرْضَ كِفَاتًا",
+      "english": "Have We not made the earth a container",
+      "hausa": "Ashe, ba Mu sanya ƙasa matattarã ba."
+    },
+    {
+      "ayah": 26,
+      "arabic": "أَحْيَآءً وَأَمْوَٰتًا",
+      "english": "Of the living and the dead?",
+      "hausa": "Ga rãyayyu da matattu,"
+    },
+    {
+      "ayah": 27,
+      "arabic": "وَجَعَلْنَا فِيهَا رَوَٰسِىَ شَـٰمِخَـٰتٍ وَأَسْقَيْنَـٰكُم مَّآءً فُرَاتًا",
+      "english": "And We placed therein lofty, firmly set mountains and have given you to drink sweet water.",
+      "hausa": "Kuma, Muka sanya, a cikinta, kafaffun duwãtsu maɗaukaka, kuma Muka shayar da ku ruwa mai dãɗi?"
+    },
+    {
+      "ayah": 28,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 29,
+      "arabic": "ٱنطَلِقُوٓا۟ إِلَىٰ مَا كُنتُم بِهِۦ تُكَذِّبُونَ",
+      "english": "[They will be told], \"Proceed to that which you used to deny.",
+      "hausa": "Ku tafi zuwa ga abin da kuka kasance kuna ƙaryatãwa game da shi!"
+    },
+    {
+      "ayah": 30,
+      "arabic": "ٱنطَلِقُوٓا۟ إِلَىٰ ظِلٍّ ذِى ثَلَـٰثِ شُعَبٍ",
+      "english": "Proceed to a shadow [of smoke] having three columns",
+      "hausa": "Ku tafi zuwa ga wata inuwa mai rassa uku."
+    },
+    {
+      "ayah": 31,
+      "arabic": "لَّا ظَلِيلٍ وَلَا يُغْنِى مِنَ ٱللَّهَبِ",
+      "english": "[But having] no cool shade and availing not against the flame.\"",
+      "hausa": "Ita ba inuwar ba, kuma ba ta wadãtarwa daga harshen wuta."
+    },
+    {
+      "ayah": 32,
+      "arabic": "إِنَّهَا تَرْمِى بِشَرَرٍ كَٱلْقَصْرِ",
+      "english": "Indeed, it throws sparks [as huge] as a fortress,",
+      "hausa": "Lalle ne, ita, tanã jifã da tartsatsi kamar sõraye."
+    },
+    {
+      "ayah": 33,
+      "arabic": "كَأَنَّهُۥ جِمَـٰلَتٌ صُفْرٌ",
+      "english": "As if they were yellowish [black] camels.",
+      "hausa": "Kamar dai su raƙumma ne baƙãƙe."
+    },
+    {
+      "ayah": 34,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 35,
+      "arabic": "هَـٰذَا يَوْمُ لَا يَنطِقُونَ",
+      "english": "This is a Day they will not speak,",
+      "hausa": "Wannan, yini ne da bã zã su iya yin magana ba."
+    },
+    {
+      "ayah": 36,
+      "arabic": "وَلَا يُؤْذَنُ لَهُمْ فَيَعْتَذِرُونَ",
+      "english": "Nor will it be permitted for them to make an excuse.",
+      "hausa": "Bã zã a yi musu izni ba, balle su kãwo hanzari."
+    },
+    {
+      "ayah": 37,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 38,
+      "arabic": "هَـٰذَا يَوْمُ ٱلْفَصْلِ ۖ جَمَعْنَـٰكُمْ وَٱلْأَوَّلِينَ",
+      "english": "This is the Day of Judgement; We will have assembled you and the former peoples.",
+      "hausa": "Wannan rãnar rarrabẽwa ce, Mun tattara ku tare da mutãnen farko."
+    },
+    {
+      "ayah": 39,
+      "arabic": "فَإِن كَانَ لَكُمْ كَيْدٌ فَكِيدُونِ",
+      "english": "So if you have a plan, then plan against Me.",
+      "hausa": "To, idan akwai wata dabara gare ku, sai ku yi ma Ni ita."
+    },
+    {
+      "ayah": 40,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 41,
+      "arabic": "إِنَّ ٱلْمُتَّقِينَ فِى ظِلَـٰلٍ وَعُيُونٍ",
+      "english": "Indeed, the righteous will be among shades and springs",
+      "hausa": "Lalle ne, mãsu taƙawa suna a cikin inuwõwi da marẽmari."
+    },
+    {
+      "ayah": 42,
+      "arabic": "وَفَوَٰكِهَ مِمَّا يَشْتَهُونَ",
+      "english": "And fruits from whatever they desire,",
+      "hausa": "Da wasu 'ya'yan itãce irin waɗanda suke marmari."
+    },
+    {
+      "ayah": 43,
+      "arabic": "كُلُوا۟ وَٱشْرَبُوا۟ هَنِيٓـًٔۢا بِمَا كُنتُمْ تَعْمَلُونَ",
+      "english": "[Being told], \"Eat and drink in satisfaction for what you used to do.\"",
+      "hausa": "(A ce musu) \"Ku ci ku sha cikin ni'ima sabõda abin da kuka kasance kuna aikatãwa.\""
+    },
+    {
+      "ayah": 44,
+      "arabic": "إِنَّا كَذَٰلِكَ نَجْزِى ٱلْمُحْسِنِينَ",
+      "english": "Indeed, We thus reward the doers of good.",
+      "hausa": "Lalle ne, Mũ haka Muke sãka wa mãsu kyautatãwa."
+    },
+    {
+      "ayah": 45,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 46,
+      "arabic": "كُلُوا۟ وَتَمَتَّعُوا۟ قَلِيلًا إِنَّكُم مُّجْرِمُونَ",
+      "english": "[O disbelievers], eat and enjoy yourselves a little; indeed, you are criminals.",
+      "hausa": "(Ana ce musu) \"Ku ci ku ji ɗan dãdi kaɗan, lalle ne dai ku mãsu laifi ne.\""
+    },
+    {
+      "ayah": 47,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 48,
+      "arabic": "وَإِذَا قِيلَ لَهُمُ ٱرْكَعُوا۟ لَا يَرْكَعُونَ",
+      "english": "And when it is said to them, \"Bow [in prayer],\" they do not bow.",
+      "hausa": "Kuma, idan an ce musu: \"Ku yi rukũ'i; bã zã su yi rukũ'in (salla) ba.\""
+    },
+    {
+      "ayah": 49,
+      "arabic": "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+      "english": "Woe, that Day, to the deniers.",
+      "hausa": "Bone ya tabbata, a rãnar nan, ga mãsu ƙaryatãwa!"
+    },
+    {
+      "ayah": 50,
+      "arabic": "فَبِأَىِّ حَدِيثٍۭ بَعْدَهُۥ يُؤْمِنُونَ",
+      "english": "Then in what statement after the Qur'an will they believe?",
+      "hausa": "To, da wane lãbãri (Littãfi), waninsa (Alƙur'ãni) zã su yi ĩmãni"
+    }
+  ]
+}

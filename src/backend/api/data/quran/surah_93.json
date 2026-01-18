@@ -1,0 +1,73 @@
+{
+  "surah": 93,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "وَٱلضُّحَىٰ",
+      "english": "By the morning brightness",
+      "hausa": "Inã rantsuwa da hantsi."
+    },
+    {
+      "ayah": 2,
+      "arabic": "وَٱلَّيْلِ إِذَا سَجَىٰ",
+      "english": "And [by] the night when it covers with darkness,",
+      "hausa": "Da dare a lõkacin da ya rufe (da duhunsa)."
+    },
+    {
+      "ayah": 3,
+      "arabic": "مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ",
+      "english": "Your Lord has not taken leave of you, [O Muhammad], nor has He detested [you].",
+      "hausa": "Ubangijinka bai yi maka bankwana ba, kuma bai ƙĩ kaba."
+    },
+    {
+      "ayah": 4,
+      "arabic": "وَلَلْـَٔاخِرَةُ خَيْرٌ لَّكَ مِنَ ٱلْأُولَىٰ",
+      "english": "And the Hereafter is better for you than the first [life].",
+      "hausa": "Kuma lalle ta ƙarshe ce mafi alheri a gare ka daga ta farko."
+    },
+    {
+      "ayah": 5,
+      "arabic": "وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰٓ",
+      "english": "And your Lord is going to give you, and you will be satisfied.",
+      "hausa": "Kuma lalle ne, Ubangijinka zai yi ta bã ka kyauta sai ka yarda."
+    },
+    {
+      "ayah": 6,
+      "arabic": "أَلَمْ يَجِدْكَ يَتِيمًا فَـَٔاوَىٰ",
+      "english": "Did He not find you an orphan and give [you] refuge?",
+      "hausa": "Ashe, bai sãme ka marãya ba, sa'an nan Ya yi maka makõma?"
+    },
+    {
+      "ayah": 7,
+      "arabic": "وَوَجَدَكَ ضَآلًّا فَهَدَىٰ",
+      "english": "And He found you lost and guided [you],",
+      "hausa": "Kuma Ya sãme ka bã ka da shari'ã, sai Ya shiryar da kai?"
+    },
+    {
+      "ayah": 8,
+      "arabic": "وَوَجَدَكَ عَآئِلًا فَأَغْنَىٰ",
+      "english": "And He found you poor and made [you] self-sufficient.",
+      "hausa": "Kuma Ya sãme ka matalauci, sai Ya wadãtã ka?"
+    },
+    {
+      "ayah": 9,
+      "arabic": "فَأَمَّا ٱلْيَتِيمَ فَلَا تَقْهَرْ",
+      "english": "So as for the orphan, do not oppress [him].",
+      "hausa": "Sabõda haka, amma marãya, to, kada ka rinjãye shi."
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَأَمَّا ٱلسَّآئِلَ فَلَا تَنْهَرْ",
+      "english": "And as for the petitioner, do not repel [him].",
+      "hausa": "Kuma amma mai tambaya, kada ka yi masa tsãwa."
+    },
+    {
+      "ayah": 11,
+      "arabic": "وَأَمَّا بِنِعْمَةِ رَبِّكَ فَحَدِّثْ",
+      "english": "But as for the favor of your Lord, report [it].",
+      "hausa": "Kuma amma ni'imar Ubangijinka, sai ka faɗa (dõmin gõdiya)."
+    }
+  ]
+}

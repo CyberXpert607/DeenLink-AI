@@ -1,0 +1,31 @@
+{
+  "surah": 106,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "لِإِيلَـٰفِ قُرَيْشٍ",
+      "english": "For the accustomed security of the Quraysh -",
+      "hausa": "Sabõda sãbon ¡uraishawa."
+    },
+    {
+      "ayah": 2,
+      "arabic": "إِۦلَـٰفِهِمْ رِحْلَةَ ٱلشِّتَآءِ وَٱلصَّيْفِ",
+      "english": "Their accustomed security [in] the caravan of winter and summer -",
+      "hausa": "Sãbonsu na tafiyar hunturu da ta bazara."
+    },
+    {
+      "ayah": 3,
+      "arabic": "فَلْيَعْبُدُوا۟ رَبَّ هَـٰذَا ٱلْبَيْتِ",
+      "english": "Let them worship the Lord of this House,",
+      "hausa": "Sabõda haka sai su bauta wa Ubangijin wannan Gida (Ka'abah)."
+    },
+    {
+      "ayah": 4,
+      "arabic": "ٱلَّذِىٓ أَطْعَمَهُم مِّن جُوعٍ وَءَامَنَهُم مِّنْ خَوْفٍۭ",
+      "english": "Who has fed them, [saving them] from hunger and made them safe, [saving them] from fear.",
+      "hausa": "wanda Ya ciyar da su (Ya hana su) daga yunwa, kuma Ya amintar da su daga wani tsõro."
+    }
+  ]
+}

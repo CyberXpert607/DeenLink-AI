@@ -1,0 +1,37 @@
+{
+  "surah": 105,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَـٰبِ ٱلْفِيلِ",
+      "english": "Have you not considered, [O Muhammad], how your Lord dealt with the companions of the elephant?",
+      "hausa": "Ashe, ba ka ga yadda Ubangijinka Ya aikata ga mutanen giwa ba?"
+    },
+    {
+      "ayah": 2,
+      "arabic": "أَلَمْ يَجْعَلْ كَيْدَهُمْ فِى تَضْلِيلٍ",
+      "english": "Did He not make their plan into misguidance?",
+      "hausa": "Ashe, bai sanya kaidinsu a cikin ɓata ba?"
+    },
+    {
+      "ayah": 3,
+      "arabic": "وَأَرْسَلَ عَلَيْهِمْ طَيْرًا أَبَابِيلَ",
+      "english": "And He sent against them birds in flocks,",
+      "hausa": "Kuma Ya sako, a kansu, wasu tsuntsãye, jama'a-jama'a."
+    },
+    {
+      "ayah": 4,
+      "arabic": "تَرْمِيهِم بِحِجَارَةٍ مِّن سِجِّيلٍ",
+      "english": "Striking them with stones of hard clay,",
+      "hausa": "Suna jifar su da wasu duwatsu na yumɓun wuta."
+    },
+    {
+      "ayah": 5,
+      "arabic": "فَجَعَلَهُمْ كَعَصْفٍ مَّأْكُولٍۭ",
+      "english": "And He made them like eaten straw.",
+      "hausa": "Sa'an nan Ya sanya su kamar karmami wanda aka cinye?"
+    }
+  ]
+}

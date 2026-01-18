@@ -1,0 +1,25 @@
+{
+  "surah": 108,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "إِنَّآ أَعْطَيْنَـٰكَ ٱلْكَوْثَرَ",
+      "english": "Indeed, We have granted you, [O Muhammad], al-Kawthar.",
+      "hausa": "Lalle ne Mu, Mun yi maka kyauta mai yawa."
+    },
+    {
+      "ayah": 2,
+      "arabic": "فَصَلِّ لِرَبِّكَ وَٱنْحَرْ",
+      "english": "So pray to your Lord and sacrifice [to Him alone].",
+      "hausa": "Saboda haka, ka yi salla dõmin Ubangijinka, kuma ka sõke (baiko, wato sukar raƙumi)."
+    },
+    {
+      "ayah": 3,
+      "arabic": "إِنَّ شَانِئَكَ هُوَ ٱلْأَبْتَرُ",
+      "english": "Indeed, your enemy is the one cut off.",
+      "hausa": "Lalle mai aibanta ka shi ne mai yankakkiyar albarka."
+    }
+  ]
+}

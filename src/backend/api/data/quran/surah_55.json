@@ -1,0 +1,475 @@
+{
+  "surah": 55,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "ٱلرَّحْمَـٰنُ",
+      "english": "The Most Merciful",
+      "hausa": "(Allah) Mai rahama."
+    },
+    {
+      "ayah": 2,
+      "arabic": "عَلَّمَ ٱلْقُرْءَانَ",
+      "english": "Taught the Qur'an,",
+      "hausa": "Yã sanar da Alƙur'ani."
+    },
+    {
+      "ayah": 3,
+      "arabic": "خَلَقَ ٱلْإِنسَـٰنَ",
+      "english": "Created man,",
+      "hausa": "Yã halitta mutum."
+    },
+    {
+      "ayah": 4,
+      "arabic": "عَلَّمَهُ ٱلْبَيَانَ",
+      "english": "[And] taught him eloquence.",
+      "hausa": "Yã sanar da shi bayãni (magana)."
+    },
+    {
+      "ayah": 5,
+      "arabic": "ٱلشَّمْسُ وَٱلْقَمَرُ بِحُسْبَانٍ",
+      "english": "The sun and the moon [move] by precise calculation,",
+      "hausa": "Rãnã da watã a kan lissãfi suke."
+    },
+    {
+      "ayah": 6,
+      "arabic": "وَٱلنَّجْمُ وَٱلشَّجَرُ يَسْجُدَانِ",
+      "english": "And the stars and trees prostrate.",
+      "hausa": "Kuma tsirrai mãsu yãɗo da itãce sunã tawãlu'i."
+    },
+    {
+      "ayah": 7,
+      "arabic": "وَٱلسَّمَآءَ رَفَعَهَا وَوَضَعَ ٱلْمِيزَانَ",
+      "english": "And the heaven He raised and imposed the balance",
+      "hausa": "Kuma samã Ya ɗaukaka ta, Kuma Yã aza sikẽli."
+    },
+    {
+      "ayah": 8,
+      "arabic": "أَلَّا تَطْغَوْا۟ فِى ٱلْمِيزَانِ",
+      "english": "That you not transgress within the balance.",
+      "hausa": "Dõmin kada ku karkatar da sikẽlin."
+    },
+    {
+      "ayah": 9,
+      "arabic": "وَأَقِيمُوا۟ ٱلْوَزْنَ بِٱلْقِسْطِ وَلَا تُخْسِرُوا۟ ٱلْمِيزَانَ",
+      "english": "And establish weight in justice and do not make deficient the balance.",
+      "hausa": "Kuma ku daidaita awo da ãdalci, kuma kada ku rage sikẽlin."
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَٱلْأَرْضَ وَضَعَهَا لِلْأَنَامِ",
+      "english": "And the earth He laid [out] for the creatures.",
+      "hausa": "Kuma ƙasã Yã aza ta dõmin tãlikai."
+    },
+    {
+      "ayah": 11,
+      "arabic": "فِيهَا فَـٰكِهَةٌ وَٱلنَّخْلُ ذَاتُ ٱلْأَكْمَامِ",
+      "english": "Therein is fruit and palm trees having sheaths [of dates]",
+      "hausa": "A cikinta akwai 'ya'yan itãcen marmari da dabĩno mai kwasfa."
+    },
+    {
+      "ayah": 12,
+      "arabic": "وَٱلْحَبُّ ذُو ٱلْعَصْفِ وَٱلرَّيْحَانُ",
+      "english": "And grain having husks and scented plants.",
+      "hausa": "Da ƙwãya mai sõshiya da ƙamshi."
+    },
+    {
+      "ayah": 13,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangjinku kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 14,
+      "arabic": "خَلَقَ ٱلْإِنسَـٰنَ مِن صَلْصَـٰلٍ كَٱلْفَخَّارِ",
+      "english": "He created man from clay like [that of] pottery.",
+      "hausa": "Yã halitta mutum daga ƙẽkasasshen yumɓu kumar kasko."
+    },
+    {
+      "ayah": 15,
+      "arabic": "وَخَلَقَ ٱلْجَآنَّ مِن مَّارِجٍ مِّن نَّارٍ",
+      "english": "And He created the jinn from a smokeless flame of fire.",
+      "hausa": "Kuma ya halitta aljani daga bira daga wutã."
+    },
+    {
+      "ayah": 16,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 17,
+      "arabic": "رَبُّ ٱلْمَشْرِقَيْنِ وَرَبُّ ٱلْمَغْرِبَيْنِ",
+      "english": "[He is] Lord of the two sunrises and Lord of the two sunsets.",
+      "hausa": "Ubangjin mafita biyu na rãnã, kuma Ubangijin mafãɗã biyu na rãnã."
+    },
+    {
+      "ayah": 18,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 19,
+      "arabic": "مَرَجَ ٱلْبَحْرَيْنِ يَلْتَقِيَانِ",
+      "english": "He released the two seas, meeting [side by side];",
+      "hausa": "Yã garwaya tẽku biyu (ruwan dãɗi da na zartsi) sunã haɗuwa."
+    },
+    {
+      "ayah": 20,
+      "arabic": "بَيْنَهُمَا بَرْزَخٌ لَّا يَبْغِيَانِ",
+      "english": "Between them is a barrier [so] neither of them transgresses.",
+      "hausa": "A tsakãninsu akwai shãmaki, bã za su ƙetare haddi ba."
+    },
+    {
+      "ayah": 21,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 22,
+      "arabic": "يَخْرُجُ مِنْهُمَا ٱللُّؤْلُؤُ وَٱلْمَرْجَانُ",
+      "english": "From both of them emerge pearl and coral.",
+      "hausa": "Lu'ulu'u da murjãni na fita daga gare su."
+    },
+    {
+      "ayah": 23,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 24,
+      "arabic": "وَلَهُ ٱلْجَوَارِ ٱلْمُنشَـَٔاتُ فِى ٱلْبَحْرِ كَٱلْأَعْلَـٰمِ",
+      "english": "And to Him belong the ships [with sails] elevated in the sea like mountains.",
+      "hausa": "Kuma Yanã da manyan jirãge, waɗanda ake ƙãgãwa a cikin tẽku kamar manyan duwãtsu."
+    },
+    {
+      "ayah": 25,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 26,
+      "arabic": "كُلُّ مَنْ عَلَيْهَا فَانٍ",
+      "english": "Everyone upon the earth will perish,",
+      "hausa": "Dukkan wanda ke kanta mai ƙãrẽwa ne."
+    },
+    {
+      "ayah": 27,
+      "arabic": "وَيَبْقَىٰ وَجْهُ رَبِّكَ ذُو ٱلْجَلَـٰلِ وَٱلْإِكْرَامِ",
+      "english": "And there will remain the Face of your Lord, Owner of Majesty and Honor.",
+      "hausa": "Kuma Fuskarar Ubangijinka, Mai girman Jalala da karimci, ita ce take wanzuwa."
+    },
+    {
+      "ayah": 28,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 29,
+      "arabic": "يَسْـَٔلُهُۥ مَن فِى ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضِ ۚ كُلَّ يَوْمٍ هُوَ فِى شَأْنٍ",
+      "english": "Whoever is within the heavens and earth asks Him; every day He is bringing about a matter.",
+      "hausa": "wanda ke a cikin sammai da ƙasã yanã rõƙon Sa (Allah), a kullum Allah na a cikin wani sha'ani."
+    },
+    {
+      "ayah": 30,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 31,
+      "arabic": "سَنَفْرُغُ لَكُمْ أَيُّهَ ٱلثَّقَلَانِ",
+      "english": "We will attend to you, O prominent beings.",
+      "hausa": "Zã mu ɗauki lõkaci sabõda ku, yã kũ mãsu nauyin halitta biyu!"
+    },
+    {
+      "ayah": 32,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 33,
+      "arabic": "يَـٰمَعْشَرَ ٱلْجِنِّ وَٱلْإِنسِ إِنِ ٱسْتَطَعْتُمْ أَن تَنفُذُوا۟ مِنْ أَقْطَارِ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضِ فَٱنفُذُوا۟ ۚ لَا تَنفُذُونَ إِلَّا بِسُلْطَـٰنٍ",
+      "english": "O company of jinn and mankind, if you are able to pass beyond the regions of the heavens and the earth, then pass. You will not pass except by authority [from Allah].",
+      "hausa": "Ya jama'ar aljannu da mutãne! Idan kunã iya zarcẽwa daga sãsannin sammai da ƙasã to ku zarce. Bã za ku iya zarcẽwaba fãce da wani dalĩli."
+    },
+    {
+      "ayah": 34,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 35,
+      "arabic": "يُرْسَلُ عَلَيْكُمَا شُوَاظٌ مِّن نَّارٍ وَنُحَاسٌ فَلَا تَنتَصِرَانِ",
+      "english": "There will be sent upon you a flame of fire and smoke, and you will not defend yourselves.",
+      "hausa": "Anã sako wani harshe daga wata wutã a kanku, da narkakkiyar tagulla. To, bã zã ku nẽmi taimako ba?"
+    },
+    {
+      "ayah": 36,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 37,
+      "arabic": "فَإِذَا ٱنشَقَّتِ ٱلسَّمَآءُ فَكَانَتْ وَرْدَةً كَٱلدِّهَانِ",
+      "english": "And when the heaven is split open and becomes rose-colored like oil -",
+      "hausa": "Sa'an nan idan sama ta tsãge kuma ta zama jã kamar jar fãta."
+    },
+    {
+      "ayah": 38,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 39,
+      "arabic": "فَيَوْمَئِذٍ لَّا يُسْـَٔلُ عَن ذَنۢبِهِۦٓ إِنسٌ وَلَا جَآنٌّ",
+      "english": "Then on that Day none will be asked about his sin among men or jinn.",
+      "hausa": "To, a ran nan bã zã a tambayi wani mutum laifinsa ba, kuma haka aljani."
+    },
+    {
+      "ayah": 40,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 41,
+      "arabic": "يُعْرَفُ ٱلْمُجْرِمُونَ بِسِيمَـٰهُمْ فَيُؤْخَذُ بِٱلنَّوَٰصِى وَٱلْأَقْدَامِ",
+      "english": "The criminals will be known by their marks, and they will be seized by the forelocks and the feet.",
+      "hausa": "zã a iya sanin mãsu laifi da alãmarsu, sabõda haka sai a kãma kwarkaɗarsu da sãwãyensu."
+    },
+    {
+      "ayah": 42,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 43,
+      "arabic": "هَـٰذِهِۦ جَهَنَّمُ ٱلَّتِى يُكَذِّبُ بِهَا ٱلْمُجْرِمُونَ",
+      "english": "This is Hell, which the criminals deny.",
+      "hausa": "Wannan Jahannama ce wadda mãsu laifi ke ƙaryatãwa game da ita."
+    },
+    {
+      "ayah": 44,
+      "arabic": "يَطُوفُونَ بَيْنَهَا وَبَيْنَ حَمِيمٍ ءَانٍ",
+      "english": "They will go around between it and scalding water, heated [to the utmost degree].",
+      "hausa": "Sunã kẽwaya a tsakaninta da ruwan ɗimi mai tsananin tafasa."
+    },
+    {
+      "ayah": 45,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 46,
+      "arabic": "وَلِمَنْ خَافَ مَقَامَ رَبِّهِۦ جَنَّتَانِ",
+      "english": "But for he who has feared the position of his Lord are two gardens -",
+      "hausa": "Kuma wanda ya ji tsõron tsayãwa a gaba ga Ubangijinsa yanã da Aljanna biyu."
+    },
+    {
+      "ayah": 47,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 48,
+      "arabic": "ذَوَاتَآ أَفْنَانٍ",
+      "english": "Having [spreading] branches.",
+      "hausa": "Mãsu rassan itãce."
+    },
+    {
+      "ayah": 49,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 50,
+      "arabic": "فِيهِمَا عَيْنَانِ تَجْرِيَانِ",
+      "english": "In both of them are two springs, flowing.",
+      "hausa": "A cikinsu akwai marẽmari biyu sunã gudãna."
+    },
+    {
+      "ayah": 51,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 52,
+      "arabic": "فِيهِمَا مِن كُلِّ فَـٰكِهَةٍ زَوْجَانِ",
+      "english": "In both of them are of every fruit, two kinds.",
+      "hausa": "A cikinsu akwai nau'i biyu daga kõwane 'ya'yan itãcen marmari."
+    },
+    {
+      "ayah": 53,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 54,
+      "arabic": "مُتَّكِـِٔينَ عَلَىٰ فُرُشٍۭ بَطَآئِنُهَا مِنْ إِسْتَبْرَقٍ ۚ وَجَنَى ٱلْجَنَّتَيْنِ دَانٍ",
+      "english": "[They are] reclining on beds whose linings are of silk brocade, and the fruit of the two gardens is hanging low.",
+      "hausa": "Sunã gincire a kan waɗansu shimfiɗu cikinsu tufãfin alharĩni mai kauri ne kuma nũnannun 'yã'yan itãcen Aljannar biyu kusakusa suke."
+    },
+    {
+      "ayah": 55,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 56,
+      "arabic": "فِيهِنَّ قَـٰصِرَٰتُ ٱلطَّرْفِ لَمْ يَطْمِثْهُنَّ إِنسٌ قَبْلَهُمْ وَلَا جَآنٌّ",
+      "english": "In them are women limiting [their] glances, untouched before them by man or jinni -",
+      "hausa": "A cikinsu akwai mãtã mãsu taƙaita ganinsu, wani mutum, gabanin mazajensu bai ɗebe budurcinsu ba kuma haka wani aljani."
+    },
+    {
+      "ayah": 57,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 58,
+      "arabic": "كَأَنَّهُنَّ ٱلْيَاقُوتُ وَٱلْمَرْجَانُ",
+      "english": "As if they were rubies and coral.",
+      "hausa": "Kamar dai su yaƙũtu ne da murjãni."
+    },
+    {
+      "ayah": 59,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 60,
+      "arabic": "هَلْ جَزَآءُ ٱلْإِحْسَـٰنِ إِلَّا ٱلْإِحْسَـٰنُ",
+      "english": "Is the reward for good [anything] but good?",
+      "hausa": "Shin, kyautatãwa nã da wani sakamako? (Ã'aha) fãce kyautatãwa."
+    },
+    {
+      "ayah": 61,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 62,
+      "arabic": "وَمِن دُونِهِمَا جَنَّتَانِ",
+      "english": "And below them both [in excellence] are two [other] gardens -",
+      "hausa": "Kuma baicinsu akwai waɗansu gidãjen Aljanna biyu."
+    },
+    {
+      "ayah": 63,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 64,
+      "arabic": "مُدْهَآمَّتَانِ",
+      "english": "Dark green [in color].",
+      "hausa": "Mãsu duhun inuwa."
+    },
+    {
+      "ayah": 65,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 66,
+      "arabic": "فِيهِمَا عَيْنَانِ نَضَّاخَتَانِ",
+      "english": "In both of them are two springs, spouting.",
+      "hausa": "A cikinsu akwai marẽmari biyu masu kwarãrar ruwa."
+    },
+    {
+      "ayah": 67,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 68,
+      "arabic": "فِيهِمَا فَـٰكِهَةٌ وَنَخْلٌ وَرُمَّانٌ",
+      "english": "In both of them are fruit and palm trees and pomegranates.",
+      "hausa": "A cikinsu akwai 'ya'yan itãcen marmari da dabĩno darummãni."
+    },
+    {
+      "ayah": 69,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 70,
+      "arabic": "فِيهِنَّ خَيْرَٰتٌ حِسَانٌ",
+      "english": "In them are good and beautiful women -",
+      "hausa": "A cikinsu, akwai wasu mãtã mãsu kyaun hãlãye, mãsu kyaun halitta."
+    },
+    {
+      "ayah": 71,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 72,
+      "arabic": "حُورٌ مَّقْصُورَٰتٌ فِى ٱلْخِيَامِ",
+      "english": "Fair ones reserved in pavilions -",
+      "hausa": "Mãsu farin idãnu da baƙinsu waɗanda aka tsare a cikin haimõmi."
+    },
+    {
+      "ayah": 73,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 74,
+      "arabic": "لَمْ يَطْمِثْهُنَّ إِنسٌ قَبْلَهُمْ وَلَا جَآنٌّ",
+      "english": "Untouched before them by man or jinni -",
+      "hausa": "Wani mutum, gabanin mazajensu bai ɗẽbe budurcinsu ba, kuma haka wani aljani."
+    },
+    {
+      "ayah": 75,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny? -",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 76,
+      "arabic": "مُتَّكِـِٔينَ عَلَىٰ رَفْرَفٍ خُضْرٍ وَعَبْقَرِىٍّ حِسَانٍ",
+      "english": "Reclining on green cushions and beautiful fine carpets.",
+      "hausa": "Sunã gincire a kan wasu matãsai mãsu kõren launi da katĩfun Abkara kyãwãwa."
+    },
+    {
+      "ayah": 77,
+      "arabic": "فَبِأَىِّ ءَالَآءِ رَبِّكُمَا تُكَذِّبَانِ",
+      "english": "So which of the favors of your Lord would you deny?",
+      "hausa": "To, sabõda wanne daga ni'imõmin Ubangijinku, kuke ƙaryatãwa?"
+    },
+    {
+      "ayah": 78,
+      "arabic": "تَبَـٰرَكَ ٱسْمُ رَبِّكَ ذِى ٱلْجَلَـٰلِ وَٱلْإِكْرَامِ",
+      "english": "Blessed is the name of your Lord, Owner of Majesty and Honor.",
+      "hausa": "Sũnan Ubangjinka, Mai girman Jalãla da Karimci, ya tsarkaka."
+    }
+  ]
+}

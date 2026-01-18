@@ -1,0 +1,37 @@
+{
+  "surah": 97,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "بِّسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ إِنَّآ أَنزَلْنَـٰهُ فِى لَيْلَةِ ٱلْقَدْرِ",
+      "english": "Indeed, We sent the Qur'an down during the Night of Decree.",
+      "hausa": "Lalle ne Mũ, Mun saukar da shi (Alƙur'ãni) a cikin Lailatul ƙadari (daren daraja)"
+    },
+    {
+      "ayah": 2,
+      "arabic": "وَمَآ أَدْرَىٰكَ مَا لَيْلَةُ ٱلْقَدْرِ",
+      "english": "And what can make you know what is the Night of Decree?",
+      "hausa": "To, me ya sanar da kai abin da ake cewa Lailatul ¡adari?"
+    },
+    {
+      "ayah": 3,
+      "arabic": "لَيْلَةُ ٱلْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ",
+      "english": "The Night of Decree is better than a thousand months.",
+      "hausa": "Lailatul ¡adari mafi alheri ne daga wasu watanni dubu."
+    },
+    {
+      "ayah": 4,
+      "arabic": "تَنَزَّلُ ٱلْمَلَـٰٓئِكَةُ وَٱلرُّوحُ فِيهَا بِإِذْنِ رَبِّهِم مِّن كُلِّ أَمْرٍ",
+      "english": "The angels and the Spirit descend therein by permission of their Lord for every matter.",
+      "hausa": "Mala'iku da Rũhi suna sauka a cikinsa da iznin Ubangijinsu sabõda kowane umurni."
+    },
+    {
+      "ayah": 5,
+      "arabic": "سَلَـٰمٌ هِىَ حَتَّىٰ مَطْلَعِ ٱلْفَجْرِ",
+      "english": "Peace it is until the emergence of dawn.",
+      "hausa": "Sallama ne shi daren, har fitar alfijiri."
+    }
+  ]
+}

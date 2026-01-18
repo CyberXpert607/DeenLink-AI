@@ -1,0 +1,247 @@
+{
+  "surah": 78,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "عَمَّ يَتَسَآءَلُونَ",
+      "english": "About what are they asking one another?",
+      "hausa": "A kan mẽ suke tambayar jũna?"
+    },
+    {
+      "ayah": 2,
+      "arabic": "عَنِ ٱلنَّبَإِ ٱلْعَظِيمِ",
+      "english": "About the great news -",
+      "hausa": "A kan muhimmin lãbãri mai girma (Alƙur'ãni)?"
+    },
+    {
+      "ayah": 3,
+      "arabic": "ٱلَّذِى هُمْ فِيهِ مُخْتَلِفُونَ",
+      "english": "That over which they are in disagreement.",
+      "hausa": "Wanda suke sãɓa wa jũna a cikinsa?"
+    },
+    {
+      "ayah": 4,
+      "arabic": "كَلَّا سَيَعْلَمُونَ",
+      "english": "No! They are going to know.",
+      "hausa": "A'aha! Zã su sani."
+    },
+    {
+      "ayah": 5,
+      "arabic": "ثُمَّ كَلَّا سَيَعْلَمُونَ",
+      "english": "Then, no! They are going to know.",
+      "hausa": "Kuma, a'aha! Zã su sani."
+    },
+    {
+      "ayah": 6,
+      "arabic": "أَلَمْ نَجْعَلِ ٱلْأَرْضَ مِهَـٰدًا",
+      "english": "Have We not made the earth a resting place?",
+      "hausa": "Ashe, ba Mu sanya ƙasa shimfiɗa ba?"
+    },
+    {
+      "ayah": 7,
+      "arabic": "وَٱلْجِبَالَ أَوْتَادًا",
+      "english": "And the mountains as stakes?",
+      "hausa": "Da duwãtsu turaku (ga riƙe ƙasa)?"
+    },
+    {
+      "ayah": 8,
+      "arabic": "وَخَلَقْنَـٰكُمْ أَزْوَٰجًا",
+      "english": "And We created you in pairs",
+      "hausa": "Kuma, Mun halitta ku mazã da mãtã?"
+    },
+    {
+      "ayah": 9,
+      "arabic": "وَجَعَلْنَا نَوْمَكُمْ سُبَاتًا",
+      "english": "And made your sleep [a means for] rest",
+      "hausa": "Kuma, Muka sanya barcinku hũtãwa?"
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَجَعَلْنَا ٱلَّيْلَ لِبَاسًا",
+      "english": "And made the night as clothing",
+      "hausa": "Kuma, Muka sanya dare (ya zama) sutura?"
+    },
+    {
+      "ayah": 11,
+      "arabic": "وَجَعَلْنَا ٱلنَّهَارَ مَعَاشًا",
+      "english": "And made the day for livelihood",
+      "hausa": "Kuma, Muka sanya yini (yazama) lõkacin nẽman abinci?"
+    },
+    {
+      "ayah": 12,
+      "arabic": "وَبَنَيْنَا فَوْقَكُمْ سَبْعًا شِدَادًا",
+      "english": "And constructed above you seven strong [heavens]",
+      "hausa": "Kuma, Muka gina, a samanku, sammai bakwai mãsu ƙarfi?"
+    },
+    {
+      "ayah": 13,
+      "arabic": "وَجَعَلْنَا سِرَاجًا وَهَّاجًا",
+      "english": "And made [therein] a burning lamp",
+      "hausa": "Kuma, Muka sanya fitila mai tsanin haske (rãnã)?"
+    },
+    {
+      "ayah": 14,
+      "arabic": "وَأَنزَلْنَا مِنَ ٱلْمُعْصِرَٰتِ مَآءً ثَجَّاجًا",
+      "english": "And sent down, from the rain clouds, pouring water",
+      "hausa": "Kuma, Muka saukar daga cikakkun girãgizai, ruwa mai yawan zuba?"
+    },
+    {
+      "ayah": 15,
+      "arabic": "لِّنُخْرِجَ بِهِۦ حَبًّا وَنَبَاتًا",
+      "english": "That We may bring forth thereby grain and vegetation",
+      "hausa": "Dõmin, Mu fitar da ƙwaya da tsiri game da shi?"
+    },
+    {
+      "ayah": 16,
+      "arabic": "وَجَنَّـٰتٍ أَلْفَافًا",
+      "english": "And gardens of entwined growth.",
+      "hausa": "Da itãcen lambuna mãsu lillibniya?"
+    },
+    {
+      "ayah": 17,
+      "arabic": "إِنَّ يَوْمَ ٱلْفَصْلِ كَانَ مِيقَـٰتًا",
+      "english": "Indeed, the Day of Judgement is an appointed time -",
+      "hausa": "Lalle ne, rãnar rarrabẽwa tã kasance abin ƙayyadẽ wa lõkaci."
+    },
+    {
+      "ayah": 18,
+      "arabic": "يَوْمَ يُنفَخُ فِى ٱلصُّورِ فَتَأْتُونَ أَفْوَاجًا",
+      "english": "The Day the Horn is blown and you will come forth in multitudes",
+      "hausa": "Rãnar da zã a yi bũsa a cikin ƙaho, sai ku zo, jama'a jama'a."
+    },
+    {
+      "ayah": 19,
+      "arabic": "وَفُتِحَتِ ٱلسَّمَآءُ فَكَانَتْ أَبْوَٰبًا",
+      "english": "And the heaven is opened and will become gateways",
+      "hausa": "Kuma, aka buɗe sama, sai ta kasance ƙõfõfi."
+    },
+    {
+      "ayah": 20,
+      "arabic": "وَسُيِّرَتِ ٱلْجِبَالُ فَكَانَتْ سَرَابًا",
+      "english": "And the mountains are removed and will be [but] a mirage.",
+      "hausa": "Kuma, aka tafiyar da duwãtsu, sai suka kasance ƙũra."
+    },
+    {
+      "ayah": 21,
+      "arabic": "إِنَّ جَهَنَّمَ كَانَتْ مِرْصَادًا",
+      "english": "Indeed, Hell has been lying in wait",
+      "hausa": "Lalle ne, Jahannama tã kasance madãkata."
+    },
+    {
+      "ayah": 22,
+      "arabic": "لِّلطَّـٰغِينَ مَـَٔابًا",
+      "english": "For the transgressors, a place of return,",
+      "hausa": "Ga mãsu ƙẽtare iyãkõki, tã zama makõma."
+    },
+    {
+      "ayah": 23,
+      "arabic": "لَّـٰبِثِينَ فِيهَآ أَحْقَابًا",
+      "english": "In which they will remain for ages [unending].",
+      "hausa": "Sunã, mãsu zama a cikinta, zãmunna."
+    },
+    {
+      "ayah": 24,
+      "arabic": "لَّا يَذُوقُونَ فِيهَا بَرْدًا وَلَا شَرَابًا",
+      "english": "They will not taste therein [any] coolness or drink",
+      "hausa": "Bã su ɗanɗanãwar wani sanyi a cikinta, kuma bã su ɗanɗana abin sha."
+    },
+    {
+      "ayah": 25,
+      "arabic": "إِلَّا حَمِيمًا وَغَسَّاقًا",
+      "english": "Except scalding water and [foul] purulence -",
+      "hausa": "Fãce tafasasshen ruwa da ruɓaɓɓen jini."
+    },
+    {
+      "ayah": 26,
+      "arabic": "جَزَآءً وِفَاقًا",
+      "english": "An appropriate recompense.",
+      "hausa": "Sakamako mai dãcẽwa."
+    },
+    {
+      "ayah": 27,
+      "arabic": "إِنَّهُمْ كَانُوا۟ لَا يَرْجُونَ حِسَابًا",
+      "english": "Indeed, they were not expecting an account",
+      "hausa": "Lalle ne, sũ, sun kasance bã su fãtar sauƙin wani hisãbi."
+    },
+    {
+      "ayah": 28,
+      "arabic": "وَكَذَّبُوا۟ بِـَٔايَـٰتِنَا كِذَّابًا",
+      "english": "And denied Our verses with [emphatic] denial.",
+      "hausa": "Kuma, suka ƙaryata game da ãyõyinMu, ƙaryatãwa!"
+    },
+    {
+      "ayah": 29,
+      "arabic": "وَكُلَّ شَىْءٍ أَحْصَيْنَـٰهُ كِتَـٰبًا",
+      "english": "But all things We have enumerated in writing.",
+      "hausa": "Alhãli, kõwane abu Mun ƙididdigẽ shi, a rubũce."
+    },
+    {
+      "ayah": 30,
+      "arabic": "فَذُوقُوا۟ فَلَن نَّزِيدَكُمْ إِلَّا عَذَابًا",
+      "english": "\"So taste [the penalty], and never will We increase you except in torment.\"",
+      "hausa": "Sabõda haka, ku ɗanɗana domin haka, bã zã Mu ƙara muku kõme ba fãce azãba."
+    },
+    {
+      "ayah": 31,
+      "arabic": "إِنَّ لِلْمُتَّقِينَ مَفَازًا",
+      "english": "Indeed, for the righteous is attainment -",
+      "hausa": "Lalle ne, mãsu taƙawã nã da wani wurin sãmun babban rabo."
+    },
+    {
+      "ayah": 32,
+      "arabic": "حَدَآئِقَ وَأَعْنَـٰبًا",
+      "english": "Gardens and grapevines",
+      "hausa": "Lambuna da inabõbi."
+    },
+    {
+      "ayah": 33,
+      "arabic": "وَكَوَاعِبَ أَتْرَابًا",
+      "english": "And full-breasted [companions] of equal age",
+      "hausa": "Da cikakkun 'yammata, tsãrar jũna."
+    },
+    {
+      "ayah": 34,
+      "arabic": "وَكَأْسًا دِهَاقًا",
+      "english": "And a full cup.",
+      "hausa": "Da hinjãlan giya cikakku."
+    },
+    {
+      "ayah": 35,
+      "arabic": "لَّا يَسْمَعُونَ فِيهَا لَغْوًا وَلَا كِذَّٰبًا",
+      "english": "No ill speech will they hear therein or any falsehood -",
+      "hausa": "Bã su jin yãsassar magana, a cikinta, kuma bã su jin ƙaryatãwa."
+    },
+    {
+      "ayah": 36,
+      "arabic": "جَزَآءً مِّن رَّبِّكَ عَطَآءً حِسَابًا",
+      "english": "[As] reward from your Lord, [a generous] gift [made due by] account,",
+      "hausa": "Dõmin sakamako daga Ubangijinka, kyautã mai yawa."
+    },
+    {
+      "ayah": 37,
+      "arabic": "رَّبِّ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضِ وَمَا بَيْنَهُمَا ٱلرَّحْمَـٰنِ ۖ لَا يَمْلِكُونَ مِنْهُ خِطَابًا",
+      "english": "[From] the Lord of the heavens and the earth and whatever is between them, the Most Merciful. They possess not from Him [authority for] speech.",
+      "hausa": "Ubangijin sammai da ƙasa da abin da yake a tsakãninsu, Mai rahama, bã su da ikon yin wata magana daga gare Shi."
+    },
+    {
+      "ayah": 38,
+      "arabic": "يَوْمَ يَقُومُ ٱلرُّوحُ وَٱلْمَلَـٰٓئِكَةُ صَفًّا ۖ لَّا يَتَكَلَّمُونَ إِلَّا مَنْ أَذِنَ لَهُ ٱلرَّحْمَـٰنُ وَقَالَ صَوَابًا",
+      "english": "The Day that the Spirit and the angels will stand in rows, they will not speak except for one whom the Most Merciful permits, and he will say what is correct.",
+      "hausa": "Rãnar da Rũhi da malã'iku zã su tsaya a cikin safu, bã su magana, sai wanda Allah Ya yi masa izni, kuma ya faɗi abin da ke daidai."
+    },
+    {
+      "ayah": 39,
+      "arabic": "ذَٰلِكَ ٱلْيَوْمُ ٱلْحَقُّ ۖ فَمَن شَآءَ ٱتَّخَذَ إِلَىٰ رَبِّهِۦ مَـَٔابًا",
+      "english": "That is the True Day; so he who wills may take to his Lord a [way of] return.",
+      "hausa": "Wancan, shi ne yini na gaskiya; to wanda ya so, ya riƙa makõma zuwa ga Ubangijinsa."
+    },
+    {
+      "ayah": 40,
+      "arabic": "إِنَّآ أَنذَرْنَـٰكُمْ عَذَابًا قَرِيبًا يَوْمَ يَنظُرُ ٱلْمَرْءُ مَا قَدَّمَتْ يَدَاهُ وَيَقُولُ ٱلْكَافِرُ يَـٰلَيْتَنِى كُنتُ تُرَٰبًۢا",
+      "english": "Indeed, We have warned you of a near punishment on the Day when a man will observe what his hands have put forth and the disbeliever will say, \"Oh, I wish that I were dust!\"",
+      "hausa": "Lalle ne, Mũ, Mun yi muku gargaɗin azãba makusanciya, rãnar da mutum ke dũbi zuwa ga abin da hannãyensa suka aikata, kuma kafiri ya ce: \"Kaitona, dã dai nã zama turɓãya!\""
+    }
+  ]
+}

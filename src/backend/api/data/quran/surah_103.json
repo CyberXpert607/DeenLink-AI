@@ -1,0 +1,25 @@
+{
+  "surah": 103,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "وَٱلْعَصْرِ",
+      "english": "By time,",
+      "hausa": "Ina rantsuwa da zãmani."
+    },
+    {
+      "ayah": 2,
+      "arabic": "إِنَّ ٱلْإِنسَـٰنَ لَفِى خُسْرٍ",
+      "english": "Indeed, mankind is in loss,",
+      "hausa": "Lalle ne mutum yana a cikin hasara."
+    },
+    {
+      "ayah": 3,
+      "arabic": "إِلَّا ٱلَّذِينَ ءَامَنُوا۟ وَعَمِلُوا۟ ٱلصَّـٰلِحَـٰتِ وَتَوَاصَوْا۟ بِٱلْحَقِّ وَتَوَاصَوْا۟ بِٱلصَّبْرِ",
+      "english": "Except for those who have believed and done righteous deeds and advised each other to truth and advised each other to patience.",
+      "hausa": "Fãce waɗanda suka yi ĩmani, kuma suka aikata ayyukan ƙwarai, kuma suka yi wa juna wasiyya da bin gaskiya, kuma suka yi wa juna wasiyya da yin haƙuri (su kam, basu cikin hasara)."
+    }
+  ]
+}

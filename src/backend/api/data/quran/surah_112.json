@@ -1,0 +1,31 @@
+{
+  "surah": 112,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "قُلْ هُوَ ٱللَّهُ أَحَدٌ",
+      "english": "Say, \"He is Allah, [who is] One,",
+      "hausa": "Ka ce: \"Shi ne Allah Makaɗaĩci.\""
+    },
+    {
+      "ayah": 2,
+      "arabic": "ٱللَّهُ ٱلصَّمَدُ",
+      "english": "Allah, the Eternal Refuge.",
+      "hausa": "\"Allah wanda ake nufin Sa da buƙata.\""
+    },
+    {
+      "ayah": 3,
+      "arabic": "لَمْ يَلِدْ وَلَمْ يُولَدْ",
+      "english": "He neither begets nor is born,",
+      "hausa": "\"Bai haifa ba, kuma ba a haife Shi ba.\""
+    },
+    {
+      "ayah": 4,
+      "arabic": "وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ",
+      "english": "Nor is there to Him any equivalent.\"",
+      "hausa": "\"Kuma babu ɗaya da ya kasance tamka a gare Shi.\""
+    }
+  ]
+}

@@ -1,0 +1,673 @@
+{
+  "surah": 17,
+  "hasBasmallah": false,
+  "basmallah": "",
+  "verses": [
+    {
+      "ayah": 1,
+      "arabic": "سُبْحَـٰنَ ٱلَّذِىٓ أَسْرَىٰ بِعَبْدِهِۦ لَيْلًا مِّنَ ٱلْمَسْجِدِ ٱلْحَرَامِ إِلَى ٱلْمَسْجِدِ ٱلْأَقْصَا ٱلَّذِى بَـٰرَكْنَا حَوْلَهُۥ لِنُرِيَهُۥ مِنْ ءَايَـٰتِنَآ ۚ إِنَّهُۥ هُوَ ٱلسَّمِيعُ ٱلْبَصِيرُ",
+      "english": "Exalted is He who took His Servant by night from al-Masjid al-Haram to al-Masjid al-Aqsa, whose surroundings We have blessed, to show him of Our signs. Indeed, He is the Hearing, the Seeing.",
+      "hausa": "Tsarki ya tabbata ga wanda Ya yi tafiyar dare da bãwanSa da dare daga Masallaci mai alfarma zuwa ga Masallaci mafi nĩsa wanda Muka sanya albarka a gefensa dõmin Mu nũna masa daga ãyõyinMu. Lalle ne Shi shĩ ne Mai ji, Mai gani."
+    },
+    {
+      "ayah": 2,
+      "arabic": "وَءَاتَيْنَا مُوسَى ٱلْكِتَـٰبَ وَجَعَلْنَـٰهُ هُدًى لِّبَنِىٓ إِسْرَٰٓءِيلَ أَلَّا تَتَّخِذُوا۟ مِن دُونِى وَكِيلًا",
+      "english": "And We gave Moses the Scripture and made it a guidance for the Children of Israel that you not take other than Me as Disposer of affairs,",
+      "hausa": "Kuma Mun bai wa Mũsã littafi, kuma Mun sanya shi shiriya ga Banĩ Isrã'ila, cẽwa kada ku riƙi wani wakĩli baiciNa."
+    },
+    {
+      "ayah": 3,
+      "arabic": "ذُرِّيَّةَ مَنْ حَمَلْنَا مَعَ نُوحٍ ۚ إِنَّهُۥ كَانَ عَبْدًا شَكُورًا",
+      "english": "O descendants of those We carried [in the ship] with Noah. Indeed, he was a grateful servant.",
+      "hausa": "Zuriyar waɗanda Muka ɗauka tãre da Nũhu. Lalle ne shi ya kasance wani bãwa mai gõdiya."
+    },
+    {
+      "ayah": 4,
+      "arabic": "وَقَضَيْنَآ إِلَىٰ بَنِىٓ إِسْرَٰٓءِيلَ فِى ٱلْكِتَـٰبِ لَتُفْسِدُنَّ فِى ٱلْأَرْضِ مَرَّتَيْنِ وَلَتَعْلُنَّ عُلُوًّا كَبِيرًا",
+      "english": "And We conveyed to the Children of Israel in the Scripture that, \"You will surely cause corruption on the earth twice, and you will surely reach [a degree of] great haughtiness.",
+      "hausa": "Kuma Mun hukunta zuwa ga Bani Isrã'ĩla a cikin Littãfi, cewa lalle ne, kunã yin ɓarna a cikin ƙasa sau biyu, kuma lalle ne kunã zãlunci, zãlunci mai girma."
+    },
+    {
+      "ayah": 5,
+      "arabic": "فَإِذَا جَآءَ وَعْدُ أُولَىٰهُمَا بَعَثْنَا عَلَيْكُمْ عِبَادًا لَّنَآ أُو۟لِى بَأْسٍ شَدِيدٍ فَجَاسُوا۟ خِلَـٰلَ ٱلدِّيَارِ ۚ وَكَانَ وَعْدًا مَّفْعُولًا",
+      "english": "So when the [time of] promise came for the first of them, We sent against you servants of Ours - those of great military might, and they probed [even] into the homes, and it was a promise fulfilled.",
+      "hausa": "To idan wa'adin na farkonsu yajẽ, za Mu aika, a kanku waɗansu bãyi Nãmu, ma'abũta yãƙi mafĩ tsanani, har su yi yãwo a tsakãnin gidãjenku, kuma yã zama wa'adi abin aikatawa."
+    },
+    {
+      "ayah": 6,
+      "arabic": "ثُمَّ رَدَدْنَا لَكُمُ ٱلْكَرَّةَ عَلَيْهِمْ وَأَمْدَدْنَـٰكُم بِأَمْوَٰلٍ وَبَنِينَ وَجَعَلْنَـٰكُمْ أَكْثَرَ نَفِيرًا",
+      "english": "Then We gave back to you a return victory over them. And We reinforced you with wealth and sons and made you more numerous in manpower",
+      "hausa": "Sa'an nan kuma Mu nwayar da ɗauki a gare ku a kansu, kuma Mu taimake ku da dũkiyõyi da ɗiya kuma Mu sanya ku mafiya yawan mãsu fita yãƙi."
+    },
+    {
+      "ayah": 7,
+      "arabic": "إِنْ أَحْسَنتُمْ أَحْسَنتُمْ لِأَنفُسِكُمْ ۖ وَإِنْ أَسَأْتُمْ فَلَهَا ۚ فَإِذَا جَآءَ وَعْدُ ٱلْـَٔاخِرَةِ لِيَسُـۥٓـُٔوا۟ وُجُوهَكُمْ وَلِيَدْخُلُوا۟ ٱلْمَسْجِدَ كَمَا دَخَلُوهُ أَوَّلَ مَرَّةٍ وَلِيُتَبِّرُوا۟ مَا عَلَوْا۟ تَتْبِيرًا",
+      "english": "[And said], \"If you do good, you do good for yourselves; and if you do evil, [you do it] to yourselves.\" Then when the final promise came, [We sent your enemies] to sadden your faces and to enter the temple in Jerusalem, as they entered it the first time, and to destroy what they had taken over with [total] destruction.",
+      "hausa": "Idan kun kyautata, kun kyautata dõmin kanku, kuma idan kun mũnana to dõmĩnsu. Sa'an nan idan wa'adin na ƙarshe ya jẽ, (za su je) dõmin su baƙanta fuskokinku, kuma su shiga masallaci kamar yadda suka shige shi a farkon lõkaci, kuma dõmin su halakar da abin da suka rinjaya a kansa, halakarwa."
+    },
+    {
+      "ayah": 8,
+      "arabic": "عَسَىٰ رَبُّكُمْ أَن يَرْحَمَكُمْ ۚ وَإِنْ عُدتُّمْ عُدْنَا ۘ وَجَعَلْنَا جَهَنَّمَ لِلْكَـٰفِرِينَ حَصِيرًا",
+      "english": "[Then Allah said], \"It is expected, [if you repent], that your Lord will have mercy upon you. But if you return [to sin], We will return [to punishment]. And We have made Hell, for the disbelievers, a prison-bed.\"",
+      "hausa": "Akwai tsammãnin Ubangijinku Ya yi muku rahama. Kuma idan kun sãke Mu sãke. Kuma Mun sanya Jahannama matsara ga kãfirai."
+    },
+    {
+      "ayah": 9,
+      "arabic": "إِنَّ هَـٰذَا ٱلْقُرْءَانَ يَهْدِى لِلَّتِى هِىَ أَقْوَمُ وَيُبَشِّرُ ٱلْمُؤْمِنِينَ ٱلَّذِينَ يَعْمَلُونَ ٱلصَّـٰلِحَـٰتِ أَنَّ لَهُمْ أَجْرًا كَبِيرًا",
+      "english": "Indeed, this Qur'an guides to that which is most suitable and gives good tidings to the believers who do righteous deeds that they will have a great reward.",
+      "hausa": "Lalle ne wannan Alƙur'ãni yanã shiryarwa ga (hãlayen) waɗanda suke mafi daidaita kuma yanã bãyar da bushãra ga mũminai waɗanda suke aikata ayyuka na ƙwarai (cẽwa) \"Lalle ne sunã da wata ijãra. mai girma.\""
+    },
+    {
+      "ayah": 10,
+      "arabic": "وَأَنَّ ٱلَّذِينَ لَا يُؤْمِنُونَ بِٱلْـَٔاخِرَةِ أَعْتَدْنَا لَهُمْ عَذَابًا أَلِيمًا",
+      "english": "And that those who do not believe in the Hereafter - We have prepared for them a painful punishment.",
+      "hausa": "Kuma lalle ne, waɗanda ba su yin ĩmãni da Lãhira, Mun yimusu tattalin wata azãba mai raɗaɗi."
+    },
+    {
+      "ayah": 11,
+      "arabic": "وَيَدْعُ ٱلْإِنسَـٰنُ بِٱلشَّرِّ دُعَآءَهُۥ بِٱلْخَيْرِ ۖ وَكَانَ ٱلْإِنسَـٰنُ عَجُولًا",
+      "english": "And man supplicates for evil as he supplicates for good, and man is ever hasty.",
+      "hausa": "Kuma mutum yanã yin addu'a da sharri kamar addu'arsa da alhẽri, kuma mutum ya kasance mai gaggãwa."
+    },
+    {
+      "ayah": 12,
+      "arabic": "وَجَعَلْنَا ٱلَّيْلَ وَٱلنَّهَارَ ءَايَتَيْنِ ۖ فَمَحَوْنَآ ءَايَةَ ٱلَّيْلِ وَجَعَلْنَآ ءَايَةَ ٱلنَّهَارِ مُبْصِرَةً لِّتَبْتَغُوا۟ فَضْلًا مِّن رَّبِّكُمْ وَلِتَعْلَمُوا۟ عَدَدَ ٱلسِّنِينَ وَٱلْحِسَابَ ۚ وَكُلَّ شَىْءٍ فَصَّلْنَـٰهُ تَفْصِيلًا",
+      "english": "And We have made the night and day two signs, and We erased the sign of the night and made the sign of the day visible that you may seek bounty from your Lord and may know the number of years and the account [of time]. And everything We have set out in detail.",
+      "hausa": "Kuma Mun sanya dare da rãna, ãyõyi biyu, sa'an nan Muka shãfe ãyar dare, kuma Muka sanya ãyar rãna mai sanyãwa a yi gani, dõmin ku nẽmi falala daga Ubangijinku, kuma dõmin ku san ƙidãyar shẽkara da lissafi. Kuma dukan kõme Mun bayyana shi daki-dakin bayyanãwa."
+    },
+    {
+      "ayah": 13,
+      "arabic": "وَكُلَّ إِنسَـٰنٍ أَلْزَمْنَـٰهُ طَـٰٓئِرَهُۥ فِى عُنُقِهِۦ ۖ وَنُخْرِجُ لَهُۥ يَوْمَ ٱلْقِيَـٰمَةِ كِتَـٰبًا يَلْقَىٰهُ مَنشُورًا",
+      "english": "And [for] every person We have imposed his fate upon his neck, and We will produce for him on the Day of Resurrection a record which he will encounter spread open.",
+      "hausa": "Kuma kõwane mutum Mun lazimta masa abin rekõdinsa a cikin wuyansa, kuma Mu fitar masa a Rãnar ¡iyãma da littãfi wanda zai haɗu da shi buɗaɗɗe."
+    },
+    {
+      "ayah": 14,
+      "arabic": "ٱقْرَأْ كِتَـٰبَكَ كَفَىٰ بِنَفْسِكَ ٱلْيَوْمَ عَلَيْكَ حَسِيبًا",
+      "english": "[It will be said], \"Read your record. Sufficient is yourself against you this Day as accountant.\"",
+      "hausa": "\"Karanta Littãfinka. Ranka ya isa ya zama mai hisãbi a kanka a yau.\""
+    },
+    {
+      "ayah": 15,
+      "arabic": "مَّنِ ٱهْتَدَىٰ فَإِنَّمَا يَهْتَدِى لِنَفْسِهِۦ ۖ وَمَن ضَلَّ فَإِنَّمَا يَضِلُّ عَلَيْهَا ۚ وَلَا تَزِرُ وَازِرَةٌ وِزْرَ أُخْرَىٰ ۗ وَمَا كُنَّا مُعَذِّبِينَ حَتَّىٰ نَبْعَثَ رَسُولًا",
+      "english": "Whoever is guided is only guided for [the benefit of] his soul. And whoever errs only errs against it. And no bearer of burdens will bear the burden of another. And never would We punish until We sent a messenger.",
+      "hausa": "Wanda ya nẽmi shiryuwa, to, ya nẽmi shiryuwa ne dõminkansa kawai kuma wanda ya ɓace, to, ya ɓace ne a kansa kawai kuma rai mai ɗaukar nauyi bã ya ɗaukar nauyin wani ran, kuma ba Mu zama mãsu yin azãba ba, sai Mun aika wani Manzo."
+    },
+    {
+      "ayah": 16,
+      "arabic": "وَإِذَآ أَرَدْنَآ أَن نُّهْلِكَ قَرْيَةً أَمَرْنَا مُتْرَفِيهَا فَفَسَقُوا۟ فِيهَا فَحَقَّ عَلَيْهَا ٱلْقَوْلُ فَدَمَّرْنَـٰهَا تَدْمِيرًا",
+      "english": "And when We intend to destroy a city, We command its affluent but they defiantly disobey therein; so the word comes into effect upon it, and We destroy it with [complete] destruction.",
+      "hausa": "Kuma idan Mun yi nufin Mu halakar da wata alƙarya, sai Mu umurci mawadãtanta, har su yi fãsicci a cikinta, sa'an nan maganar azãba ta wajaba a kanta, sa'an nan Mu darkãke ta, darkãkẽwa."
+    },
+    {
+      "ayah": 17,
+      "arabic": "وَكَمْ أَهْلَكْنَا مِنَ ٱلْقُرُونِ مِنۢ بَعْدِ نُوحٍ ۗ وَكَفَىٰ بِرَبِّكَ بِذُنُوبِ عِبَادِهِۦ خَبِيرًۢا بَصِيرًا",
+      "english": "And how many have We destroyed from the generations after Noah. And sufficient is your Lord, concerning the sins of His servants, as Acquainted and Seeing.",
+      "hausa": "Kuma da yawa Muka halakar da al'ummomi a bãyan Nũhu. Kuma Ubangijinka Ya isa ya zama Mai ƙididdigewa ga zunubban bãyinSa, Mai gani."
+    },
+    {
+      "ayah": 18,
+      "arabic": "مَّن كَانَ يُرِيدُ ٱلْعَاجِلَةَ عَجَّلْنَا لَهُۥ فِيهَا مَا نَشَآءُ لِمَن نُّرِيدُ ثُمَّ جَعَلْنَا لَهُۥ جَهَنَّمَ يَصْلَىٰهَا مَذْمُومًا مَّدْحُورًا",
+      "english": "Whoever should desire the immediate - We hasten for him from it what We will to whom We intend. Then We have made for him Hell, which he will [enter to] burn, censured and banished.",
+      "hausa": "Wanda ya kasance yanã nufin mai gaggãwa, sai Mu gaggauta masa a cikinta, abin da Muke so ga wanda Muke nufi, sa'an nan kuma Mu sanya masa Jahannama, ya ƙõnu da ita, yanã abin zargi kuma abin tunkuɗewa."
+    },
+    {
+      "ayah": 19,
+      "arabic": "وَمَنْ أَرَادَ ٱلْـَٔاخِرَةَ وَسَعَىٰ لَهَا سَعْيَهَا وَهُوَ مُؤْمِنٌ فَأُو۟لَـٰٓئِكَ كَانَ سَعْيُهُم مَّشْكُورًا",
+      "english": "But whoever desires the Hereafter and exerts the effort due to it while he is a believer - it is those whose effort is ever appreciated [by Allah].",
+      "hausa": "Kuma wanda ya nufi Lãhira, kuma ya yi aiki sabõda ita irin aikinta alhãli kuwa yanã mũmĩni, to, waɗannan aikinsu ya kasance gõdadde."
+    },
+    {
+      "ayah": 20,
+      "arabic": "كُلًّا نُّمِدُّ هَـٰٓؤُلَآءِ وَهَـٰٓؤُلَآءِ مِنْ عَطَآءِ رَبِّكَ ۚ وَمَا كَانَ عَطَآءُ رَبِّكَ مَحْظُورًا",
+      "english": "To each [category] We extend - to these and to those - from the gift of your Lord. And never has the gift of your Lord been restricted.",
+      "hausa": "Dukkansu Munã taimakon waɗannan da waɗancan daga kyautar Ubangijinka, kuma kyautar Ubangijinka ba ta kasance hananna ba."
+    },
+    {
+      "ayah": 21,
+      "arabic": "ٱنظُرْ كَيْفَ فَضَّلْنَا بَعْضَهُمْ عَلَىٰ بَعْضٍ ۚ وَلَلْـَٔاخِرَةُ أَكْبَرُ دَرَجَـٰتٍ وَأَكْبَرُ تَفْضِيلًا",
+      "english": "Look how We have favored [in provision] some of them over others. But the Hereafter is greater in degrees [of difference] and greater in distinction.",
+      "hausa": "Ka duba yadda Muka fĩfĩtar da sãshensu a kan sãshe! Kuma lalle ne Lãhira ce mafi girman darajõji, kuma mafi girman fĩfĩtãwa."
+    },
+    {
+      "ayah": 22,
+      "arabic": "لَّا تَجْعَلْ مَعَ ٱللَّهِ إِلَـٰهًا ءَاخَرَ فَتَقْعُدَ مَذْمُومًا مَّخْذُولًا",
+      "english": "Do not make [as equal] with Allah another deity and [thereby] become censured and forsaken.",
+      "hausa": "Kada ka sanya wani abin bautawa na daban tãre da Allah har ka zauna kana abin zargi, yarɓaɓɓe."
+    },
+    {
+      "ayah": 23,
+      "arabic": "وَقَضَىٰ رَبُّكَ أَلَّا تَعْبُدُوٓا۟ إِلَّآ إِيَّاهُ وَبِٱلْوَٰلِدَيْنِ إِحْسَـٰنًا ۚ إِمَّا يَبْلُغَنَّ عِندَكَ ٱلْكِبَرَ أَحَدُهُمَآ أَوْ كِلَاهُمَا فَلَا تَقُل لَّهُمَآ أُفٍّ وَلَا تَنْهَرْهُمَا وَقُل لَّهُمَا قَوْلًا كَرِيمًا",
+      "english": "And your Lord has decreed that you not worship except Him, and to parents, good treatment. Whether one or both of them reach old age [while] with you, say not to them [so much as], \"uff,\" and do not repel them but speak to them a noble word.",
+      "hausa": "Kuma Ubangijinka Ya hukunta kada ku bauta wa kõwa fãce Shi, kum game da mahaifa biyu ku kyautata kyautatawa, ko dai ɗayansu ya kai ga tsũfa a wurinka ko dukansu biyu, to, kada ka ce musu 'tir' kuma kada ka tsãwace su kuma ka faɗa musu magana mai karimci."
+    },
+    {
+      "ayah": 24,
+      "arabic": "وَٱخْفِضْ لَهُمَا جَنَاحَ ٱلذُّلِّ مِنَ ٱلرَّحْمَةِ وَقُل رَّبِّ ٱرْحَمْهُمَا كَمَا رَبَّيَانِى صَغِيرًا",
+      "english": "And lower to them the wing of humility out of mercy and say, \"My Lord, have mercy upon them as they brought me up [when I was] small.\"",
+      "hausa": "Kuma ka sassauta musu fikãfikan tausasãwa na rahama. Kuma ka ce: \"Ya Ubangijina! Ka yi musu rahama, kamar yadda suka yi rẽnõna, ina ƙarami.\""
+    },
+    {
+      "ayah": 25,
+      "arabic": "رَّبُّكُمْ أَعْلَمُ بِمَا فِى نُفُوسِكُمْ ۚ إِن تَكُونُوا۟ صَـٰلِحِينَ فَإِنَّهُۥ كَانَ لِلْأَوَّٰبِينَ غَفُورًا",
+      "english": "Your Lord is most knowing of what is within yourselves. If you should be righteous [in intention] - then indeed He is ever, to the often returning [to Him], Forgiving.",
+      "hausa": "Ubangijinku ne Mafi sani ga abin da yake a cikin rãyukanku. Idan kun kasance sãlihai to lalle ne shĩ Ya kasance ga mãsu kõmawa gare Shi, Mai gãfara."
+    },
+    {
+      "ayah": 26,
+      "arabic": "وَءَاتِ ذَا ٱلْقُرْبَىٰ حَقَّهُۥ وَٱلْمِسْكِينَ وَٱبْنَ ٱلسَّبِيلِ وَلَا تُبَذِّرْ تَبْذِيرًا",
+      "english": "And give the relative his right, and [also] the poor and the traveler, and do not spend wastefully.",
+      "hausa": "Kuma ka bai wa ma'abũcin zumunta hakkinsa da miskĩna da ɗan hanya. Kuma kada ka bazzara dũkiyarka, bazzarãwa."
+    },
+    {
+      "ayah": 27,
+      "arabic": "إِنَّ ٱلْمُبَذِّرِينَ كَانُوٓا۟ إِخْوَٰنَ ٱلشَّيَـٰطِينِ ۖ وَكَانَ ٱلشَّيْطَـٰنُ لِرَبِّهِۦ كَفُورًا",
+      "english": "Indeed, the wasteful are brothers of the devils, and ever has Satan been to his Lord ungrateful.",
+      "hausa": "Lalle ne mubazzarai sun kasance 'yan'uwan shaiɗanu. Kuma Shaiɗan ya kasance ga Ubangijinsa, mai yawan kãfirci."
+    },
+    {
+      "ayah": 28,
+      "arabic": "وَإِمَّا تُعْرِضَنَّ عَنْهُمُ ٱبْتِغَآءَ رَحْمَةٍ مِّن رَّبِّكَ تَرْجُوهَا فَقُل لَّهُمْ قَوْلًا مَّيْسُورًا",
+      "english": "And if you [must] turn away from the needy awaiting mercy from your Lord which you expect, then speak to them a gentle word.",
+      "hausa": "Ko dai ka kau da kai daga gare su dõmin nẽman rahama daga Ubangijinka, wadda kake fãtanta, to sai ka gaya musu magana mai laushi."
+    },
+    {
+      "ayah": 29,
+      "arabic": "وَلَا تَجْعَلْ يَدَكَ مَغْلُولَةً إِلَىٰ عُنُقِكَ وَلَا تَبْسُطْهَا كُلَّ ٱلْبَسْطِ فَتَقْعُدَ مَلُومًا مَّحْسُورًا",
+      "english": "And do not make your hand [as] chained to your neck or extend it completely and [thereby] become blamed and insolvent.",
+      "hausa": "Kuma kada ka sanya hannunka ƙuƙuntacce zuwa ga wuyanka, kuma kada ka shimfiɗa shi dukan shimfiɗãwa har ka zama abin zargi, wanda ake yanke wa."
+    },
+    {
+      "ayah": 30,
+      "arabic": "إِنَّ رَبَّكَ يَبْسُطُ ٱلرِّزْقَ لِمَن يَشَآءُ وَيَقْدِرُ ۚ إِنَّهُۥ كَانَ بِعِبَادِهِۦ خَبِيرًۢا بَصِيرًا",
+      "english": "Indeed, your Lord extends provision for whom He wills and restricts [it]. Indeed He is ever, concerning His servants, Acquainted and Seeing.",
+      "hausa": "Lalle ne Ubangijinka Yanã shimfiɗa arzĩki ga wanda Yake so, kuma Yanã ƙuƙuntãwa. Lalle Shi, Yã kasance Mai sani ga bãyinSa, Mai gani."
+    },
+    {
+      "ayah": 31,
+      "arabic": "وَلَا تَقْتُلُوٓا۟ أَوْلَـٰدَكُمْ خَشْيَةَ إِمْلَـٰقٍ ۖ نَّحْنُ نَرْزُقُهُمْ وَإِيَّاكُمْ ۚ إِنَّ قَتْلَهُمْ كَانَ خِطْـًٔا كَبِيرًا",
+      "english": "And do not kill your children for fear of poverty. We provide for them and for you. Indeed, their killing is ever a great sin.",
+      "hausa": "Kuma kada ku kashe 'yã'yanku dõmin tsõron talauci. Mu ne ke arzũta su, su da ku. Lalle ne kashe su yã kasance kuskure babba."
+    },
+    {
+      "ayah": 32,
+      "arabic": "وَلَا تَقْرَبُوا۟ ٱلزِّنَىٰٓ ۖ إِنَّهُۥ كَانَ فَـٰحِشَةً وَسَآءَ سَبِيلًا",
+      "english": "And do not approach unlawful sexual intercourse. Indeed, it is ever an immorality and is evil as a way.",
+      "hausa": "Kuma kada ku kusanci zina. Lalle ne ita ta kasance alfãsha ce kuma tã mũnãna ga zama hanya."
+    },
+    {
+      "ayah": 33,
+      "arabic": "وَلَا تَقْتُلُوا۟ ٱلنَّفْسَ ٱلَّتِى حَرَّمَ ٱللَّهُ إِلَّا بِٱلْحَقِّ ۗ وَمَن قُتِلَ مَظْلُومًا فَقَدْ جَعَلْنَا لِوَلِيِّهِۦ سُلْطَـٰنًا فَلَا يُسْرِف فِّى ٱلْقَتْلِ ۖ إِنَّهُۥ كَانَ مَنصُورًا",
+      "english": "And do not kill the soul which Allah has forbidden, except by right. And whoever is killed unjustly - We have given his heir authority, but let him not exceed limits in [the matter of] taking life. Indeed, he has been supported [by the law].",
+      "hausa": "Kuma kada ku kashe rai wanda Allah Ya haramta fãce da haƙƙi, kuma wanda aka kashe, yanã wanda aka zãlunta to, haƙĩƙa Mun sanya hujja ga waliyyinsa, sai dai kada ya ƙẽtare haddi a cikin kashẽwar. Lalle shĩ ya kasance wanda ake taimako."
+    },
+    {
+      "ayah": 34,
+      "arabic": "وَلَا تَقْرَبُوا۟ مَالَ ٱلْيَتِيمِ إِلَّا بِٱلَّتِى هِىَ أَحْسَنُ حَتَّىٰ يَبْلُغَ أَشُدَّهُۥ ۚ وَأَوْفُوا۟ بِٱلْعَهْدِ ۖ إِنَّ ٱلْعَهْدَ كَانَ مَسْـُٔولًا",
+      "english": "And do not approach the property of an orphan, except in the way that is best, until he reaches maturity. And fulfill [every] commitment. Indeed, the commitment is ever [that about which one will be] questioned.",
+      "hausa": "Kuma kada ku kusanci dũkiyar marãya fãce dai da sifa wadda take ita ce mafi kyau, har ya isa ga mafi ƙarfinsa. Kuma ku cika alkawari. Lalle alkawari yã kasance abin tambayãwa ne."
+    },
+    {
+      "ayah": 35,
+      "arabic": "وَأَوْفُوا۟ ٱلْكَيْلَ إِذَا كِلْتُمْ وَزِنُوا۟ بِٱلْقِسْطَاسِ ٱلْمُسْتَقِيمِ ۚ ذَٰلِكَ خَيْرٌ وَأَحْسَنُ تَأْوِيلًا",
+      "english": "And give full measure when you measure, and weigh with an even balance. That is the best [way] and best in result.",
+      "hausa": "Kuma ku cika mũdu idan kun yi awo, kuma ku auna nauyi da sikẽli madaidaici. Wancan ne mafi alhẽri, kuma mafi kyau ga fassara."
+    },
+    {
+      "ayah": 36,
+      "arabic": "وَلَا تَقْفُ مَا لَيْسَ لَكَ بِهِۦ عِلْمٌ ۚ إِنَّ ٱلسَّمْعَ وَٱلْبَصَرَ وَٱلْفُؤَادَ كُلُّ أُو۟لَـٰٓئِكَ كَانَ عَنْهُ مَسْـُٔولًا",
+      "english": "And do not pursue that of which you have no knowledge. Indeed, the hearing, the sight and the heart - about all those [one] will be questioned.",
+      "hausa": "Kuma kada ka bi abin da bã ka da ilmi game da shi. Lalle ne jĩ da gani da zũciya, dukan waɗancan (mutum) yã kasance daga gare shi wanda ake tambaya."
+    },
+    {
+      "ayah": 37,
+      "arabic": "وَلَا تَمْشِ فِى ٱلْأَرْضِ مَرَحًا ۖ إِنَّكَ لَن تَخْرِقَ ٱلْأَرْضَ وَلَن تَبْلُغَ ٱلْجِبَالَ طُولًا",
+      "english": "And do not walk upon the earth exultantly. Indeed, you will never tear the earth [apart], and you will never reach the mountains in height.",
+      "hausa": "Kuma kada ka yi tafiya a cikin ƙasa da alfahari. Lalle kai bã zã ka hũda ƙasa ba kuma bã zã ka kai a duwãtsu ba ga tsawo."
+    },
+    {
+      "ayah": 38,
+      "arabic": "كُلُّ ذَٰلِكَ كَانَ سَيِّئُهُۥ عِندَ رَبِّكَ مَكْرُوهًا",
+      "english": "All that - its evil is ever, in the sight of your Lord, detested.",
+      "hausa": "Dukan wancan mli mũninsa yã kasance abin ƙyãma a wurin Ubangijinka."
+    },
+    {
+      "ayah": 39,
+      "arabic": "ذَٰلِكَ مِمَّآ أَوْحَىٰٓ إِلَيْكَ رَبُّكَ مِنَ ٱلْحِكْمَةِ ۗ وَلَا تَجْعَلْ مَعَ ٱللَّهِ إِلَـٰهًا ءَاخَرَ فَتُلْقَىٰ فِى جَهَنَّمَ مَلُومًا مَّدْحُورًا",
+      "english": "That is from what your Lord has revealed to you, [O Muhammad], of wisdom. And, [O mankind], do not make [as equal] with Allah another deity, lest you be thrown into Hell, blamed and banished.",
+      "hausa": "Wancan yãnã daga abin da Ubangijinka Ya yi wahayi zuwa gare ka na hikima. Kuma kada ka sanya wani abin bautãwa na daban tãre da Allah har a jẽfa ka a cikin Jahannama kanã wanda ake zargi, wanda ake tunkuɗẽwa"
+    },
+    {
+      "ayah": 40,
+      "arabic": "أَفَأَصْفَىٰكُمْ رَبُّكُم بِٱلْبَنِينَ وَٱتَّخَذَ مِنَ ٱلْمَلَـٰٓئِكَةِ إِنَـٰثًا ۚ إِنَّكُمْ لَتَقُولُونَ قَوْلًا عَظِيمًا",
+      "english": "Then, has your Lord chosen you for [having] sons and taken from among the angels daughters? Indeed, you say a grave saying.",
+      "hausa": "Shin fa, Ubangijinku Ya zãɓe ku da ɗiya maza ne, kuma Ya riƙi 'ya'ya mãta daga malã'iku? Lalle ne kũ, haƙĩƙa, kunã faɗar magana mai girma!"
+    },
+    {
+      "ayah": 41,
+      "arabic": "وَلَقَدْ صَرَّفْنَا فِى هَـٰذَا ٱلْقُرْءَانِ لِيَذَّكَّرُوا۟ وَمَا يَزِيدُهُمْ إِلَّا نُفُورًا",
+      "english": "And We have certainly diversified [the contents] in this Qur'an that mankind may be reminded, but it does not increase the disbelievers except in aversion.",
+      "hausa": "Kuma lalle ne haƙĩƙa, Mun sarrafa bayãni a cikin wannan Alƙur'ãni dõmin su yi tunãni, kuma bã ya ƙãra musu kõme fãce gudu."
+    },
+    {
+      "ayah": 42,
+      "arabic": "قُل لَّوْ كَانَ مَعَهُۥٓ ءَالِهَةٌ كَمَا يَقُولُونَ إِذًا لَّٱبْتَغَوْا۟ إِلَىٰ ذِى ٱلْعَرْشِ سَبِيلًا",
+      "english": "Say, [O Muhammad], \"If there had been with Him [other] gods, as they say, then they [each] would have sought to the Owner of the Throne a way.\"",
+      "hausa": "Ka ce: \"Dã akwai waɗansu abũbuwan bautãwa tãre da shi, kamar yadda suka faɗa, a lõkacin, dã (abũbuwan bautãwar) sun nẽmi wata hanya zuwa ga Ma'abũcin Al'arshi.\""
+    },
+    {
+      "ayah": 43,
+      "arabic": "سُبْحَـٰنَهُۥ وَتَعَـٰلَىٰ عَمَّا يَقُولُونَ عُلُوًّا كَبِيرًا",
+      "english": "Exalted is He and high above what they say by great sublimity.",
+      "hausa": "TsarkinSa yã tabbata kuma Ya ɗaukaka daga abin da suke faɗã, ɗaukaka mai girma."
+    },
+    {
+      "ayah": 44,
+      "arabic": "تُسَبِّحُ لَهُ ٱلسَّمَـٰوَٰتُ ٱلسَّبْعُ وَٱلْأَرْضُ وَمَن فِيهِنَّ ۚ وَإِن مِّن شَىْءٍ إِلَّا يُسَبِّحُ بِحَمْدِهِۦ وَلَـٰكِن لَّا تَفْقَهُونَ تَسْبِيحَهُمْ ۗ إِنَّهُۥ كَانَ حَلِيمًا غَفُورًا",
+      "english": "The seven heavens and the earth and whatever is in them exalt Him. And there is not a thing except that it exalts [Allah] by His praise, but you do not understand their [way of] exalting. Indeed, He is ever Forbearing and Forgiving.",
+      "hausa": "Sammai bakwai da ƙasa da wanda yake a cikinsu sunã yi Masa tasbĩhi. Kuma bãbu wani abu fãce yanã tasbĩhi game da gõde Masa, kuma amma ba ku fahimtar tasbĩhinsu. Lalle ne shĩ, Ya kasance Mai haƙuri ne, Mai gãfara."
+    },
+    {
+      "ayah": 45,
+      "arabic": "وَإِذَا قَرَأْتَ ٱلْقُرْءَانَ جَعَلْنَا بَيْنَكَ وَبَيْنَ ٱلَّذِينَ لَا يُؤْمِنُونَ بِٱلْـَٔاخِرَةِ حِجَابًا مَّسْتُورًا",
+      "english": "And when you recite the Qur'an, We put between you and those who do not believe in the Hereafter a concealed partition.",
+      "hausa": "Kuma idan ka karanta Alƙur'ani, sai Mu sanya a tsakãninka da tsakanin waɗanda bã su yin ĩmãni da Lãhira wani shãmaki mai suturcẽwa."
+    },
+    {
+      "ayah": 46,
+      "arabic": "وَجَعَلْنَا عَلَىٰ قُلُوبِهِمْ أَكِنَّةً أَن يَفْقَهُوهُ وَفِىٓ ءَاذَانِهِمْ وَقْرًا ۚ وَإِذَا ذَكَرْتَ رَبَّكَ فِى ٱلْقُرْءَانِ وَحْدَهُۥ وَلَّوْا۟ عَلَىٰٓ أَدْبَـٰرِهِمْ نُفُورًا",
+      "english": "And We have placed over their hearts coverings, lest they understand it, and in their ears deafness. And when you mention your Lord alone in the Qur'an, they turn back in aversion.",
+      "hausa": "Kuma Mu sanya marufai a kan zukãtansu dõmin kada su fahimce shi, da, wani nauyi a cikin kunnuwansu, kuma idan ka ambaci Ubangijinka, a cikin Alƙur'ãni shĩ kaɗai, sai su jũya a kan bayayyakinsu dõmin gudu."
+    },
+    {
+      "ayah": 47,
+      "arabic": "نَّحْنُ أَعْلَمُ بِمَا يَسْتَمِعُونَ بِهِۦٓ إِذْ يَسْتَمِعُونَ إِلَيْكَ وَإِذْ هُمْ نَجْوَىٰٓ إِذْ يَقُولُ ٱلظَّـٰلِمُونَ إِن تَتَّبِعُونَ إِلَّا رَجُلًا مَّسْحُورًا",
+      "english": "We are most knowing of how they listen to it when they listen to you and [of] when they are in private conversation, when the wrongdoers say, \"You follow not but a man affected by magic.\"",
+      "hausa": "Mũ ne Mafi sani game da abin da suke saurãre da shi a lõkacin da suke yin saurãren zuwa gare ka, kuma a lõkacin da suke mãsu gãnãwa a tsakãninsu a lõkacin da azzãlumai suke cẽwa, \"Bã ku biyar kõwa fãce wani namiji sihirtacce.\""
+    },
+    {
+      "ayah": 48,
+      "arabic": "ٱنظُرْ كَيْفَ ضَرَبُوا۟ لَكَ ٱلْأَمْثَالَ فَضَلُّوا۟ فَلَا يَسْتَطِيعُونَ سَبِيلًا",
+      "english": "Look how they strike for you comparisons; but they have strayed, so they cannot [find] a way.",
+      "hausa": "Ka dũba yadda suka buga maka misãlai, sai suka ɓace bã su iya sãmun hanya."
+    },
+    {
+      "ayah": 49,
+      "arabic": "وَقَالُوٓا۟ أَءِذَا كُنَّا عِظَـٰمًا وَرُفَـٰتًا أَءِنَّا لَمَبْعُوثُونَ خَلْقًا جَدِيدًا",
+      "english": "And they say, \"When we are bones and crumbled particles, will we [truly] be resurrected as a new creation?\"",
+      "hausa": "Kuma suka ce: \"Shin, idan mun kasance ƙasũsuwa da, niƙaƙƙun gaɓãɓuwa ashe, lalle ne mũ haƙĩƙa, waɗanda ake tãyarwa ne a wata halitta sãbuwa?\""
+    },
+    {
+      "ayah": 50,
+      "arabic": "قُلْ كُونُوا۟ حِجَارَةً أَوْ حَدِيدًا",
+      "english": "Say, \"Be you stones or iron",
+      "hausa": "Ka ce: \"Ku kasance duwãtsu ko kuwa baƙin ƙarfe.\""
+    },
+    {
+      "ayah": 51,
+      "arabic": "أَوْ خَلْقًا مِّمَّا يَكْبُرُ فِى صُدُورِكُمْ ۚ فَسَيَقُولُونَ مَن يُعِيدُنَا ۖ قُلِ ٱلَّذِى فَطَرَكُمْ أَوَّلَ مَرَّةٍ ۚ فَسَيُنْغِضُونَ إِلَيْكَ رُءُوسَهُمْ وَيَقُولُونَ مَتَىٰ هُوَ ۖ قُلْ عَسَىٰٓ أَن يَكُونَ قَرِيبًا",
+      "english": "Or [any] creation of that which is great within your breasts.\" And they will say, \"Who will restore us?\" Say, \"He who brought you forth the first time.\" Then they will nod their heads toward you and say, \"When is that?\" Say, \"Perhaps it will be soon -",
+      "hausa": "\"Kõ kuwa wata halitta daga abin da yake da girma a cikin ƙirazanku.\" To zã su ce \"Wãne ne zai mayar da mu?\" Ka ce: \"Wanda Ya ƙaga halittarku a fabkon lõkaci.\" To, zã su gyaɗa kansu zuwa gare ka, kuma sunã cẽwa, \"A yaushene shi?\" Ka ce: \"Akwai tsammãninsa ya kasance kusa.\""
+    },
+    {
+      "ayah": 52,
+      "arabic": "يَوْمَ يَدْعُوكُمْ فَتَسْتَجِيبُونَ بِحَمْدِهِۦ وَتَظُنُّونَ إِن لَّبِثْتُمْ إِلَّا قَلِيلًا",
+      "english": "On the Day He will call you and you will respond with praise of Him and think that you had not remained [in the world] except for a little.\"",
+      "hausa": "\"A rãnar da Yake kiran ku, sa'an nan ku riƙa karɓãwa game dã gõde Masa, kuma kunã zaton ba ku zauna ba fãce kaɗan.\""
+    },
+    {
+      "ayah": 53,
+      "arabic": "وَقُل لِّعِبَادِى يَقُولُوا۟ ٱلَّتِى هِىَ أَحْسَنُ ۚ إِنَّ ٱلشَّيْطَـٰنَ يَنزَغُ بَيْنَهُمْ ۚ إِنَّ ٱلشَّيْطَـٰنَ كَانَ لِلْإِنسَـٰنِ عَدُوًّا مُّبِينًا",
+      "english": "And tell My servants to say that which is best. Indeed, Satan induces [dissension] among them. Indeed Satan is ever, to mankind, a clear enemy.",
+      "hausa": "Kuma ka cẽ wa bãyiNa, su faɗi kalma wadda take mafi kyau. Lalle ne Shaiɗan yanã sanya ɓarna a tsakãninsu. Lalle ne Shaiɗan ya kasance ga mutum, maƙiyi bayyananne."
+    },
+    {
+      "ayah": 54,
+      "arabic": "رَّبُّكُمْ أَعْلَمُ بِكُمْ ۖ إِن يَشَأْ يَرْحَمْكُمْ أَوْ إِن يَشَأْ يُعَذِّبْكُمْ ۚ وَمَآ أَرْسَلْنَـٰكَ عَلَيْهِمْ وَكِيلًا",
+      "english": "Your Lord is most knowing of you. If He wills, He will have mercy upon you; or if He wills, He will punish you. And We have not sent you, [O Muhammad], over them as a manager.",
+      "hausa": "Ubangijinku ne Mafi sani game da ku. Idan Ya so, zai yi muku rahama, kõ kuwa idan Yã so zai azabtãku. Kuma ba Mu aika ka kanã wakĩli a kansu ba."
+    },
+    {
+      "ayah": 55,
+      "arabic": "وَرَبُّكَ أَعْلَمُ بِمَن فِى ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضِ ۗ وَلَقَدْ فَضَّلْنَا بَعْضَ ٱلنَّبِيِّـۧنَ عَلَىٰ بَعْضٍ ۖ وَءَاتَيْنَا دَاوُۥدَ زَبُورًا",
+      "english": "And your Lord is most knowing of whoever is in the heavens and the earth. And We have made some of the prophets exceed others [in various ways], and to David We gave the book [of Psalms].",
+      "hausa": "Kuma Ubangijinka ne Mafi sani game da wanda yake a cikin sammai da ƙasa. Kuma lalle ne, haƙĩƙa, Mun fĩfĩta sãshen Annabãwa a kan sãshe kuma Mun bai wa Dãwũda zabũra."
+    },
+    {
+      "ayah": 56,
+      "arabic": "قُلِ ٱدْعُوا۟ ٱلَّذِينَ زَعَمْتُم مِّن دُونِهِۦ فَلَا يَمْلِكُونَ كَشْفَ ٱلضُّرِّ عَنكُمْ وَلَا تَحْوِيلًا",
+      "english": "Say, \"Invoke those you have claimed [as gods] besides Him, for they do not possess the [ability for] removal of adversity from you or [for its] transfer [to someone else].\"",
+      "hausa": "Ka ce: \"Ku kirãyi waɗanda kuka riya, baicinSa.\" To, ba su mallakar kuranyẽwar cũta daga gare ku, kuma haka jũyarwa.\""
+    },
+    {
+      "ayah": 57,
+      "arabic": "أُو۟لَـٰٓئِكَ ٱلَّذِينَ يَدْعُونَ يَبْتَغُونَ إِلَىٰ رَبِّهِمُ ٱلْوَسِيلَةَ أَيُّهُمْ أَقْرَبُ وَيَرْجُونَ رَحْمَتَهُۥ وَيَخَافُونَ عَذَابَهُۥٓ ۚ إِنَّ عَذَابَ رَبِّكَ كَانَ مَحْذُورًا",
+      "english": "Those whom they invoke seek means of access to their Lord, [striving as to] which of them would be nearest, and they hope for His mercy and fear His punishment. Indeed, the punishment of your Lord is ever feared.",
+      "hausa": "Waɗancan, waɗanda suke kiran, sunã nẽman tsãni zuwa ga Ubangijinsu. Waɗanne ne suke mafĩfĩta a kusanta? Kuma sunã fãtan sãmun rahamarSa, kuma sunã tsõron azãbarSa. Lalle ne azãbar Ubangijinka ta kasance abar tsõro ce."
+    },
+    {
+      "ayah": 58,
+      "arabic": "وَإِن مِّن قَرْيَةٍ إِلَّا نَحْنُ مُهْلِكُوهَا قَبْلَ يَوْمِ ٱلْقِيَـٰمَةِ أَوْ مُعَذِّبُوهَا عَذَابًا شَدِيدًا ۚ كَانَ ذَٰلِكَ فِى ٱلْكِتَـٰبِ مَسْطُورًا",
+      "english": "And there is no city but that We will destroy it before the Day of Resurrection or punish it with a severe punishment. That has ever been in the Register inscribed.",
+      "hausa": "Kuma bãbu wata alƙarya fãce, Mu ne mãsu halaka ta a gabãnin Rãnar ¡iyãma kõ kuwa Mũ mãsu azãbta ta ne da azãba mai tsanani. Wancan ya kasance a cikin littãfi rubũtacce."
+    },
+    {
+      "ayah": 59,
+      "arabic": "وَمَا مَنَعَنَآ أَن نُّرْسِلَ بِٱلْـَٔايَـٰتِ إِلَّآ أَن كَذَّبَ بِهَا ٱلْأَوَّلُونَ ۚ وَءَاتَيْنَا ثَمُودَ ٱلنَّاقَةَ مُبْصِرَةً فَظَلَمُوا۟ بِهَا ۚ وَمَا نُرْسِلُ بِٱلْـَٔايَـٰتِ إِلَّا تَخْوِيفًا",
+      "english": "And nothing has prevented Us from sending signs except that the former peoples denied them. And We gave Thamud the she-camel as a visible sign, but they wronged her. And We send not the signs except as a warning.",
+      "hausa": "Kuma bãbu abin da ya hana Mu, Mu aika da ãyõyi fãce sabõda mutãnen farko sun ƙaryata game da su. Kuma Mun bai wa Samũdãwa tãguwa, ãyã bayyananna, sai suka yi zãlunci game da ita. Kuma bã Mu aikãwa da ãyõyi fãce dõmin tsõratarwa."
+    },
+    {
+      "ayah": 60,
+      "arabic": "وَإِذْ قُلْنَا لَكَ إِنَّ رَبَّكَ أَحَاطَ بِٱلنَّاسِ ۚ وَمَا جَعَلْنَا ٱلرُّءْيَا ٱلَّتِىٓ أَرَيْنَـٰكَ إِلَّا فِتْنَةً لِّلنَّاسِ وَٱلشَّجَرَةَ ٱلْمَلْعُونَةَ فِى ٱلْقُرْءَانِ ۚ وَنُخَوِّفُهُمْ فَمَا يَزِيدُهُمْ إِلَّا طُغْيَـٰنًا كَبِيرًا",
+      "english": "And [remember, O Muhammad], when We told you, \"Indeed, your Lord has encompassed the people.\" And We did not make the sight which We showed you except as a trial for the people, as was the accursed tree [mentioned] in the Qur'an. And We threaten them, but it increases them not except in great transgression.",
+      "hausa": "Kuma a lõkacin da Muka ce maka, \"Lalle ne Ubangijinka Yã kẽwaye mutãne.\" Kuma ba Mu sanya abin da ya gani wanda Muka nũna maka ba, fãce dõmin fitina ga mutãne, da itãciya wadda aka la'anta a cikin Alƙur'ani. Kuma Munã tsõratar da su, sa'an nan (tsõratarwar) bã ta ƙãra su fãce da kangara mai girma."
+    },
+    {
+      "ayah": 61,
+      "arabic": "وَإِذْ قُلْنَا لِلْمَلَـٰٓئِكَةِ ٱسْجُدُوا۟ لِـَٔادَمَ فَسَجَدُوٓا۟ إِلَّآ إِبْلِيسَ قَالَ ءَأَسْجُدُ لِمَنْ خَلَقْتَ طِينًا",
+      "english": "And [mention] when We said to the angles, \"Prostrate to Adam,\" and they prostrated, except for Iblees. He said, \"Should I prostrate to one You created from clay?\"",
+      "hausa": "Kuma a lõkacin da Muka cẽ wa malã'iku, \"Ku yi sujada ga Ãdamu,\" sai suka yi sujada, fãce Ibilĩsa, ya ce: \"shin, zan yi sujada ga wanda ka halitta shi yanã lãka?\""
+    },
+    {
+      "ayah": 62,
+      "arabic": "قَالَ أَرَءَيْتَكَ هَـٰذَا ٱلَّذِى كَرَّمْتَ عَلَىَّ لَئِنْ أَخَّرْتَنِ إِلَىٰ يَوْمِ ٱلْقِيَـٰمَةِ لَأَحْتَنِكَنَّ ذُرِّيَّتَهُۥٓ إِلَّا قَلِيلًا",
+      "english": "[Iblees] said, \"Do You see this one whom You have honored above me? If You delay me until the Day of Resurrection, I will surely destroy his descendants, except for a few.\"",
+      "hausa": "Ya ce: \"Shin, kã gan ka! Wannan wanda ka girmama a kaina, lalle ne idan ka jinkirtã mini zuwa ga Rãnar ¡iyãma lalle ne, zan tumɓuke zuriyarsa, fãce kaɗan.\""
+    },
+    {
+      "ayah": 63,
+      "arabic": "قَالَ ٱذْهَبْ فَمَن تَبِعَكَ مِنْهُمْ فَإِنَّ جَهَنَّمَ جَزَآؤُكُمْ جَزَآءً مَّوْفُورًا",
+      "english": "[Allah] said, \"Go, for whoever of them follows you, indeed Hell will be the recompense of you - an ample recompense.",
+      "hausa": "Ya ce: \"Ka tafi. Sa'an nan wanda ya bĩ ka daga gare su, to, Jahannama ce sakamakonku, (Mu ba ku shi) sakamako cikakke.\""
+    },
+    {
+      "ayah": 64,
+      "arabic": "وَٱسْتَفْزِزْ مَنِ ٱسْتَطَعْتَ مِنْهُم بِصَوْتِكَ وَأَجْلِبْ عَلَيْهِم بِخَيْلِكَ وَرَجِلِكَ وَشَارِكْهُمْ فِى ٱلْأَمْوَٰلِ وَٱلْأَوْلَـٰدِ وَعِدْهُمْ ۚ وَمَا يَعِدُهُمُ ٱلشَّيْطَـٰنُ إِلَّا غُرُورًا",
+      "english": "And incite [to senselessness] whoever you can among them with your voice and assault them with your horses and foot soldiers and become a partner in their wealth and their children and promise them.\" But Satan does not promise them except delusion.",
+      "hausa": "\"Kuma ka rikitar da wanda ka sãmi ĩko a kansa, daga gare su, da sautinka, kuma ka yi hari a kansu da dawãkinka da dãkãrunka kuma ka yi tãrẽwa da su a cikin dũkiyõyi da ɗiyã, kumaka yi musu wa'adi. Alhãli kuwa Shaiɗan bã ya yi musu wa'adin kõme fãce da ruɗi.\""
+    },
+    {
+      "ayah": 65,
+      "arabic": "إِنَّ عِبَادِى لَيْسَ لَكَ عَلَيْهِمْ سُلْطَـٰنٌ ۚ وَكَفَىٰ بِرَبِّكَ وَكِيلًا",
+      "english": "Indeed, over My [believing] servants there is for you no authority. And sufficient is your Lord as Disposer of affairs.",
+      "hausa": "\"Lalle ne bãyiNa, bã ka da wani ƙarfi a kansu. Kuma Ubangijinka Ya isa Ya zama wakĩli.\""
+    },
+    {
+      "ayah": 66,
+      "arabic": "رَّبُّكُمُ ٱلَّذِى يُزْجِى لَكُمُ ٱلْفُلْكَ فِى ٱلْبَحْرِ لِتَبْتَغُوا۟ مِن فَضْلِهِۦٓ ۚ إِنَّهُۥ كَانَ بِكُمْ رَحِيمًا",
+      "english": "It is your Lord who drives the ship for you through the sea that you may seek of His bounty. Indeed, He is ever, to you, Merciful.",
+      "hausa": "Ubangijinku ne Yake gudãnar da jirgi a cikin tẽku, dõmin ku nema daga falalarSa. Lalle ne Shĩ, Yã kasance a gare ku Mai jin ƙai."
+    },
+    {
+      "ayah": 67,
+      "arabic": "وَإِذَا مَسَّكُمُ ٱلضُّرُّ فِى ٱلْبَحْرِ ضَلَّ مَن تَدْعُونَ إِلَّآ إِيَّاهُ ۖ فَلَمَّا نَجَّىٰكُمْ إِلَى ٱلْبَرِّ أَعْرَضْتُمْ ۚ وَكَانَ ٱلْإِنسَـٰنُ كَفُورًا",
+      "english": "And when adversity touches you at sea, lost are [all] those you invoke except for Him. But when He delivers you to the land, you turn away [from Him]. And ever is man ungrateful.",
+      "hausa": "Kuma idan cũta ta shãfe ku, a cikin tẽku, sai wanda kuke kira ya ɓace fãce Shi. To, a lõkacin da Ya tsira da ku zuwa, ga tudu sai kuka bijire. Kuma mutum ya kasance mai yawan butulci."
+    },
+    {
+      "ayah": 68,
+      "arabic": "أَفَأَمِنتُمْ أَن يَخْسِفَ بِكُمْ جَانِبَ ٱلْبَرِّ أَوْ يُرْسِلَ عَلَيْكُمْ حَاصِبًا ثُمَّ لَا تَجِدُوا۟ لَكُمْ وَكِيلًا",
+      "english": "Then do you feel secure that [instead] He will not cause a part of the land to swallow you or send against you a storm of stones? Then you would not find for yourselves an advocate.",
+      "hausa": "Shin fa kun amince cẽwa (Allah) bã Ya shãfe gẽfen ƙasa game da ku kõ kuwa Ya aika da iska mai tsakuwa a kanku, sa'an nan kuma bã zã ku sãmi wani wakĩli ba dõminku?"
+    },
+    {
+      "ayah": 69,
+      "arabic": "أَمْ أَمِنتُمْ أَن يُعِيدَكُمْ فِيهِ تَارَةً أُخْرَىٰ فَيُرْسِلَ عَلَيْكُمْ قَاصِفًا مِّنَ ٱلرِّيحِ فَيُغْرِقَكُم بِمَا كَفَرْتُمْ ۙ ثُمَّ لَا تَجِدُوا۟ لَكُمْ عَلَيْنَا بِهِۦ تَبِيعًا",
+      "english": "Or do you feel secure that He will not send you back into the sea another time and send upon you a hurricane of wind and drown you for what you denied? Then you would not find for yourselves against Us an avenger.",
+      "hausa": "Ko kun amince ga Ya mayar da ku a cikin tẽkun a wani lõkaci na dabam, sa'an na Ya aika wata gũguwa mai karya abũbuwa daga iska, har ya nutsar da ku sabõda abin da kuka yi na kãfirci? Sa'an nan kuma bã ku sãmun mai bin hakki sabõda ku, a kanMu, game da Shi."
+    },
+    {
+      "ayah": 70,
+      "arabic": "وَلَقَدْ كَرَّمْنَا بَنِىٓ ءَادَمَ وَحَمَلْنَـٰهُمْ فِى ٱلْبَرِّ وَٱلْبَحْرِ وَرَزَقْنَـٰهُم مِّنَ ٱلطَّيِّبَـٰتِ وَفَضَّلْنَـٰهُمْ عَلَىٰ كَثِيرٍ مِّمَّنْ خَلَقْنَا تَفْضِيلًا",
+      "english": "And We have certainly honored the children of Adam and carried them on the land and sea and provided for them of the good things and preferred them over much of what We have created, with [definite] preference.",
+      "hausa": "Kuma lalle ne Mun girmama 'yan Adam, kuma Muka ɗauke su a cikin ƙasa da tẽku kuma Muka azurta su daga abũbuwa mãsu dãɗi kuma Muka fĩfĩta su a kan mãsu yawa daga waɗanda Muka halitta, fĩfĩtãwa."
+    },
+    {
+      "ayah": 71,
+      "arabic": "يَوْمَ نَدْعُوا۟ كُلَّ أُنَاسٍۭ بِإِمَـٰمِهِمْ ۖ فَمَنْ أُوتِىَ كِتَـٰبَهُۥ بِيَمِينِهِۦ فَأُو۟لَـٰٓئِكَ يَقْرَءُونَ كِتَـٰبَهُمْ وَلَا يُظْلَمُونَ فَتِيلًا",
+      "english": "[Mention, O Muhammad], the Day We will call forth every people with their record [of deeds]. Then whoever is given his record in his right hand - those will read their records, and injustice will not be done to them, [even] as much as a thread [inside the date seed].",
+      "hausa": "A rãnar da Muke kiran kõwane mutãne da lĩmãminsu to, wanda aka bai wa littafinsa a dã, mansa, to, waɗannan sunã karãtun littãfinsu, kuma bã a zãluntar su da zaren bãkin gurtsin dabĩno."
+    },
+    {
+      "ayah": 72,
+      "arabic": "وَمَن كَانَ فِى هَـٰذِهِۦٓ أَعْمَىٰ فَهُوَ فِى ٱلْـَٔاخِرَةِ أَعْمَىٰ وَأَضَلُّ سَبِيلًا",
+      "english": "And whoever is blind in this [life] will be blind in the Hereafter and more astray in way.",
+      "hausa": "Kuma wanda ya kasance makãho a cikin wannan sabõda haka shi a Lãhira makãho ne kuma mafi ɓata ga hanya."
+    },
+    {
+      "ayah": 73,
+      "arabic": "وَإِن كَادُوا۟ لَيَفْتِنُونَكَ عَنِ ٱلَّذِىٓ أَوْحَيْنَآ إِلَيْكَ لِتَفْتَرِىَ عَلَيْنَا غَيْرَهُۥ ۖ وَإِذًا لَّٱتَّخَذُوكَ خَلِيلًا",
+      "english": "And indeed, they were about to tempt you away from that which We revealed to you in order to [make] you invent about Us something else; and then they would have taken you as a friend.",
+      "hausa": "Kuma lalle ne sun yi kusa haƙĩƙa, su fitinẽ ka daga abin da Muka yi wahayi zuwa gare ka, dõmin ka ƙirƙira waninsa a gare Mu, a lõkacin, haƙĩƙa, dã sun riƙe ka masoyi."
+    },
+    {
+      "ayah": 74,
+      "arabic": "وَلَوْلَآ أَن ثَبَّتْنَـٰكَ لَقَدْ كِدتَّ تَرْكَنُ إِلَيْهِمْ شَيْـًٔا قَلِيلًا",
+      "english": "And if We had not strengthened you, you would have almost inclined to them a little.",
+      "hausa": "Kuma bã dõmin Mun tabbatar da kai ba, lalle ne, haƙĩƙa, dã kã yi kusa ka karkata zuwa gare su ta wani abu kaɗan."
+    },
+    {
+      "ayah": 75,
+      "arabic": "إِذًا لَّأَذَقْنَـٰكَ ضِعْفَ ٱلْحَيَوٰةِ وَضِعْفَ ٱلْمَمَاتِ ثُمَّ لَا تَجِدُ لَكَ عَلَيْنَا نَصِيرًا",
+      "english": "Then [if you had], We would have made you taste double [punishment in] life and double [after] death. Then you would not find for yourself against Us a helper.",
+      "hausa": "A lõkacin, lalle ne, dã Mun ɗanɗana maka ninkin azãbar rãyuwa da ninkin azãbar mutuwa, sa'an nan kuma bã zã ka sãmi mataimaki ba a kanMu."
+    },
+    {
+      "ayah": 76,
+      "arabic": "وَإِن كَادُوا۟ لَيَسْتَفِزُّونَكَ مِنَ ٱلْأَرْضِ لِيُخْرِجُوكَ مِنْهَا ۖ وَإِذًا لَّا يَلْبَثُونَ خِلَـٰفَكَ إِلَّا قَلِيلًا",
+      "english": "And indeed, they were about to drive you from the land to evict you therefrom. And then [when they do], they will not remain [there] after you, except for a little.",
+      "hausa": "Kuma lalle ne, sun yi kusa, haƙĩƙa, su tãyar da hankalinka daga ƙasar, dõmin su fitar da kai daga gare ta. Kuma a lõkacin, bã zã su zauna ba a kan sãɓãninka fãce kaɗan."
+    },
+    {
+      "ayah": 77,
+      "arabic": "سُنَّةَ مَن قَدْ أَرْسَلْنَا قَبْلَكَ مِن رُّسُلِنَا ۖ وَلَا تَجِدُ لِسُنَّتِنَا تَحْوِيلًا",
+      "english": "[That is Our] established way for those We had sent before you of Our messengers; and you will not find in Our way any alteration.",
+      "hausa": "Hanyar waɗanda, haƙĩƙa, Muka aika a gabãninka, daga ManzanninMu, kuma bã zã ka sãmi jũyarwa ba ga hanyarMu."
+    },
+    {
+      "ayah": 78,
+      "arabic": "أَقِمِ ٱلصَّلَوٰةَ لِدُلُوكِ ٱلشَّمْسِ إِلَىٰ غَسَقِ ٱلَّيْلِ وَقُرْءَانَ ٱلْفَجْرِ ۖ إِنَّ قُرْءَانَ ٱلْفَجْرِ كَانَ مَشْهُودًا",
+      "english": "Establish prayer at the decline of the sun [from its meridian] until the darkness of the night and [also] the Qur'an of dawn. Indeed, the recitation of dawn is ever witnessed.",
+      "hausa": "Ka tsayar da salla a karkatar rãnã zuwa ga duhun dare da lõkacin fitar alfijir lalle ne karãtun fitar alfijir ya kasance wanda ake halarta."
+    },
+    {
+      "ayah": 79,
+      "arabic": "وَمِنَ ٱلَّيْلِ فَتَهَجَّدْ بِهِۦ نَافِلَةً لَّكَ عَسَىٰٓ أَن يَبْعَثَكَ رَبُّكَ مَقَامًا مَّحْمُودًا",
+      "english": "And from [part of] the night, pray with it as additional [worship] for you; it is expected that your Lord will resurrect you to a praised station.",
+      "hausa": "Kuma da dare, sai ka yi hĩra da shi (Alƙur'ãni) akan ƙãri gare ka. Akwai tsammãnin Ubangijinka Ya tãyar da kai a wani matsayi gõdadde."
+    },
+    {
+      "ayah": 80,
+      "arabic": "وَقُل رَّبِّ أَدْخِلْنِى مُدْخَلَ صِدْقٍ وَأَخْرِجْنِى مُخْرَجَ صِدْقٍ وَٱجْعَل لِّى مِن لَّدُنكَ سُلْطَـٰنًا نَّصِيرًا",
+      "english": "And say, \"My Lord, cause me to enter a sound entrance and to exit a sound exit and grant me from Yourself a supporting authority.\"",
+      "hausa": "Kuma ka ce: \"Yã Ubangijĩna! Ka shigar, da ni shigar gaskiya, kuma Ka fitar da ni fitar gaskiya. Kuma Ka sanya mini, daga gunKa, wani ƙarfi mai taimako.\""
+    },
+    {
+      "ayah": 81,
+      "arabic": "وَقُلْ جَآءَ ٱلْحَقُّ وَزَهَقَ ٱلْبَـٰطِلُ ۚ إِنَّ ٱلْبَـٰطِلَ كَانَ زَهُوقًا",
+      "english": "And say, \"Truth has come, and falsehood has departed. Indeed is falsehood, [by nature], ever bound to depart.\"",
+      "hausa": "Kuma ka ce: \"Gaskiya tã zo, kuma ƙarya ta lãlãce. Lalle ne ƙarya ta kasance lãlãtacciya.\""
+    },
+    {
+      "ayah": 82,
+      "arabic": "وَنُنَزِّلُ مِنَ ٱلْقُرْءَانِ مَا هُوَ شِفَآءٌ وَرَحْمَةٌ لِّلْمُؤْمِنِينَ ۙ وَلَا يَزِيدُ ٱلظَّـٰلِمِينَ إِلَّا خَسَارًا",
+      "english": "And We send down of the Qur'an that which is healing and mercy for the believers, but it does not increase the wrongdoers except in loss.",
+      "hausa": "Kuma Munã sassaukarwa daga Alƙur'ãni, abin da yake waraka ne da rahama ga mũminai. Kuma bã ya ƙãra wa azzãlumai (kõme) fãce hasãra."
+    },
+    {
+      "ayah": 83,
+      "arabic": "وَإِذَآ أَنْعَمْنَا عَلَى ٱلْإِنسَـٰنِ أَعْرَضَ وَنَـَٔا بِجَانِبِهِۦ ۖ وَإِذَا مَسَّهُ ٱلشَّرُّ كَانَ يَـُٔوسًا",
+      "english": "And when We bestow favor upon the disbeliever, he turns away and distances himself; and when evil touches him, he is ever despairing.",
+      "hausa": "Kuma idan Muka yi ni'ima a kan mutum, sai ya hinjire, kuma ya nĩsanta da gefensa, kuma idan sharri ya shãfe shi, sai ya kasance mai yanke ƙauna."
+    },
+    {
+      "ayah": 84,
+      "arabic": "قُلْ كُلٌّ يَعْمَلُ عَلَىٰ شَاكِلَتِهِۦ فَرَبُّكُمْ أَعْلَمُ بِمَنْ هُوَ أَهْدَىٰ سَبِيلًا",
+      "english": "Say, \"Each works according to his manner, but your Lord is most knowing of who is best guided in way.\"",
+      "hausa": "Ka ce: \"Kõwa ya yi aiki a kan hanyarsa. Sa'an nan Ubangijinka ne Mafi sani ga wanda yake mafi shiryuwa ga hanya.\""
+    },
+    {
+      "ayah": 85,
+      "arabic": "وَيَسْـَٔلُونَكَ عَنِ ٱلرُّوحِ ۖ قُلِ ٱلرُّوحُ مِنْ أَمْرِ رَبِّى وَمَآ أُوتِيتُم مِّنَ ٱلْعِلْمِ إِلَّا قَلِيلًا",
+      "english": "And they ask you, [O Muhammad], about the soul. Say, \"The soul is of the affair of my Lord. And mankind have not been given of knowledge except a little.\"",
+      "hausa": "Sunã tambayar ka ga rũhi. Ka ce: \"Rũhi daga al'amarin Ubangijina ne, kuma ba a bã ku (kõme) ba daga ilmi fãce kaɗan.\""
+    },
+    {
+      "ayah": 86,
+      "arabic": "وَلَئِن شِئْنَا لَنَذْهَبَنَّ بِٱلَّذِىٓ أَوْحَيْنَآ إِلَيْكَ ثُمَّ لَا تَجِدُ لَكَ بِهِۦ عَلَيْنَا وَكِيلًا",
+      "english": "And if We willed, We could surely do away with that which We revealed to you. Then you would not find for yourself concerning it an advocate against Us.",
+      "hausa": "Kuma lalle ne idan Mun so, haƙĩƙa, Munã tafiya da abinda Muka yi wahayi zuwa gare ka. Sa'an nan kuma bã za ka sãmi wani wakĩli ba dõminka game da shi a kanMu."
+    },
+    {
+      "ayah": 87,
+      "arabic": "إِلَّا رَحْمَةً مِّن رَّبِّكَ ۚ إِنَّ فَضْلَهُۥ كَانَ عَلَيْكَ كَبِيرًا",
+      "english": "Except [We have left it with you] as a mercy from your Lord. Indeed, His favor upon you has ever been great.",
+      "hausa": "Fãce da rahama daga Ubangijinka. Lalle ne falalarSa ta kasance mai girma a kanka."
+    },
+    {
+      "ayah": 88,
+      "arabic": "قُل لَّئِنِ ٱجْتَمَعَتِ ٱلْإِنسُ وَٱلْجِنُّ عَلَىٰٓ أَن يَأْتُوا۟ بِمِثْلِ هَـٰذَا ٱلْقُرْءَانِ لَا يَأْتُونَ بِمِثْلِهِۦ وَلَوْ كَانَ بَعْضُهُمْ لِبَعْضٍ ظَهِيرًا",
+      "english": "Say, \"If mankind and the jinn gathered in order to produce the like of this Qur'an, they could not produce the like of it, even if they were to each other assistants.\"",
+      "hausa": "Ka ce: \"Lalle ne idan mutãne da aljannu sun tãru a kan su zo da misãlin wannan Alƙur'ãni bã zã su zo da misãlinsa ba, kuma kõ dã sãshinsu yã kasance, mataimaki ga sãshi.\""
+    },
+    {
+      "ayah": 89,
+      "arabic": "وَلَقَدْ صَرَّفْنَا لِلنَّاسِ فِى هَـٰذَا ٱلْقُرْءَانِ مِن كُلِّ مَثَلٍ فَأَبَىٰٓ أَكْثَرُ ٱلنَّاسِ إِلَّا كُفُورًا",
+      "english": "And We have certainly diversified for the people in this Qur'an from every [kind] of example, but most of the people refused [anything] except disbelief.",
+      "hausa": "Kuma lalle ne, haƙĩƙa, Mun caccanza dõmin mutãne, a cikin wannan Alƙur'ãni, daga kõwane misãli sai mafi yawan mutãne suka ƙi (kõme) fãce kãfirci,"
+    },
+    {
+      "ayah": 90,
+      "arabic": "وَقَالُوا۟ لَن نُّؤْمِنَ لَكَ حَتَّىٰ تَفْجُرَ لَنَا مِنَ ٱلْأَرْضِ يَنۢبُوعًا",
+      "english": "And they say, \"We will not believe you until you break open for us from the ground a spring.",
+      "hausa": "Kuma suka ce: \"Bã zã mu yi ĩmãni ba dõminka sai kã ɓuɓɓugar da idan ruwa daga ƙasa."
+    },
+    {
+      "ayah": 91,
+      "arabic": "أَوْ تَكُونَ لَكَ جَنَّةٌ مِّن نَّخِيلٍ وَعِنَبٍ فَتُفَجِّرَ ٱلْأَنْهَـٰرَ خِلَـٰلَهَا تَفْجِيرًا",
+      "english": "Or [until] you have a garden of palm tress and grapes and make rivers gush forth within them in force [and abundance]",
+      "hausa": "\"Kõ kuma wata gõna daga dabĩnai da inabi ta kasance a gare ka. Sa'an nan ka ɓuɓɓugar da ƙõramu a tsakãninta ɓuɓɓugarwa.\""
+    },
+    {
+      "ayah": 92,
+      "arabic": "أَوْ تُسْقِطَ ٱلسَّمَآءَ كَمَا زَعَمْتَ عَلَيْنَا كِسَفًا أَوْ تَأْتِىَ بِٱللَّهِ وَٱلْمَلَـٰٓئِكَةِ قَبِيلًا",
+      "english": "Or you make the heaven fall upon us in fragments as you have claimed or you bring Allah and the angels before [us]",
+      "hausa": "\"Kõ kuwa ka kãyar da sama a kanmu kaɓukka kõ kuwa ka zo da Allah, da malã'iku banga-banga.\""
+    },
+    {
+      "ayah": 93,
+      "arabic": "أَوْ يَكُونَ لَكَ بَيْتٌ مِّن زُخْرُفٍ أَوْ تَرْقَىٰ فِى ٱلسَّمَآءِ وَلَن نُّؤْمِنَ لِرُقِيِّكَ حَتَّىٰ تُنَزِّلَ عَلَيْنَا كِتَـٰبًا نَّقْرَؤُهُۥ ۗ قُلْ سُبْحَانَ رَبِّى هَلْ كُنتُ إِلَّا بَشَرًا رَّسُولًا",
+      "english": "Or you have a house of gold or you ascend into the sky. And [even then], we will not believe in your ascension until you bring down to us a book we may read.\" Say, \"Exalted is my Lord! Was I ever but a human messenger?\"",
+      "hausa": "\"Kõ kuwa wani gida na zĩnãriya ya kasance a gare ka, kõ kuwa ka tãka a cikin sama. Kuma bã zã mu yi ĩmãni ba ga tãkawarka, sai ka sassaukõ da wani littãfi a kanmu, munã karantã shi.\" Ka ce: \"Tsarki ya tabbata ga Ubangijĩna! Ban kasance ba fãce mutum, Manzo.\""
+    },
+    {
+      "ayah": 94,
+      "arabic": "وَمَا مَنَعَ ٱلنَّاسَ أَن يُؤْمِنُوٓا۟ إِذْ جَآءَهُمُ ٱلْهُدَىٰٓ إِلَّآ أَن قَالُوٓا۟ أَبَعَثَ ٱللَّهُ بَشَرًا رَّسُولًا",
+      "english": "And what prevented the people from believing when guidance came to them except that they said, \"Has Allah sent a human messenger?\"",
+      "hausa": "Kuma bãbu abin da ya hana mutãne su yi ĩmãni, a lõkacin da shiriya ta jẽ musu, fãce sunce, \"Shin, Allah zai aiko mutum ya zamo yana Manzo.\""
+    },
+    {
+      "ayah": 95,
+      "arabic": "قُل لَّوْ كَانَ فِى ٱلْأَرْضِ مَلَـٰٓئِكَةٌ يَمْشُونَ مُطْمَئِنِّينَ لَنَزَّلْنَا عَلَيْهِم مِّنَ ٱلسَّمَآءِ مَلَكًا رَّسُولًا",
+      "english": "Say, \"If there were upon the earth angels walking securely, We would have sent down to them from the heaven an angel [as a] messenger.\"",
+      "hausa": "Ka ce: \"Dã malã'iku sun kasance a cikin ƙasa, kuma sunã tafiya, sunã masu natsuwa, lalle ne dã mun saukar da malã'ika daga sama ya zama manzo a kansu.\""
+    },
+    {
+      "ayah": 96,
+      "arabic": "قُلْ كَفَىٰ بِٱللَّهِ شَهِيدًۢا بَيْنِى وَبَيْنَكُمْ ۚ إِنَّهُۥ كَانَ بِعِبَادِهِۦ خَبِيرًۢا بَصِيرًا",
+      "english": "Say, \"Sufficient is Allah as Witness between me and you. Indeed he is ever, concerning His servants, Acquainted and Seeing.\"",
+      "hausa": "Ka ce: \"Allah Yã isa zama shaida a tsakãnina da ku. Lalle Shi Ya kasance ga bãyinsa, mai ƙididdigewa ne Mai gani.\""
+    },
+    {
+      "ayah": 97,
+      "arabic": "وَمَن يَهْدِ ٱللَّهُ فَهُوَ ٱلْمُهْتَدِ ۖ وَمَن يُضْلِلْ فَلَن تَجِدَ لَهُمْ أَوْلِيَآءَ مِن دُونِهِۦ ۖ وَنَحْشُرُهُمْ يَوْمَ ٱلْقِيَـٰمَةِ عَلَىٰ وُجُوهِهِمْ عُمْيًا وَبُكْمًا وَصُمًّا ۖ مَّأْوَىٰهُمْ جَهَنَّمُ ۖ كُلَّمَا خَبَتْ زِدْنَـٰهُمْ سَعِيرًا",
+      "english": "And whoever Allah guides - he is the [rightly] guided; and whoever He sends astray - you will never find for them protectors besides Him, and We will gather them on the Day of Resurrection [fallen] on their faces - blind, dumb and deaf. Their refuge is Hell; every time it subsides We increase them in blazing fire.",
+      "hausa": "Kuma wanda Allah Ya shiryar, to, shĩ ne shiryayye, kuma wanda Ya ɓatar to bã zã ka sãmi waɗansu masõya gare su ba baicinSa. Kuma Munã tãra su a Rãnar ¡iyãma a kan fuskõkinsu, sunã makãfi, kuma bẽbãye da kurãme. Matattararsu Jahannama ce, kõ da yaushe ta bice, sai Mu ƙãra musu wata wuta mai tsanani."
+    },
+    {
+      "ayah": 98,
+      "arabic": "ذَٰلِكَ جَزَآؤُهُم بِأَنَّهُمْ كَفَرُوا۟ بِـَٔايَـٰتِنَا وَقَالُوٓا۟ أَءِذَا كُنَّا عِظَـٰمًا وَرُفَـٰتًا أَءِنَّا لَمَبْعُوثُونَ خَلْقًا جَدِيدًا",
+      "english": "That is their recompense because they disbelieved in Our verses and said, \"When we are bones and crumbled particles, will we [truly] be resurrected [in] a new creation?\"",
+      "hausa": "Wancan ne sãkamakonsu sabõda lalle sũ, sun kãfirta da ãyõ yinMu, kuma suka ce: \"Shin idan muka kasance ƙasũsuwa da nĩƙaƙƙun gaɓũɓuwa, shin lalle mũ, haƙĩ ka, waɗanda ake tãyarwa ne a cikin wata halitta sãbuwa?\""
+    },
+    {
+      "ayah": 99,
+      "arabic": "أَوَلَمْ يَرَوْا۟ أَنَّ ٱللَّهَ ٱلَّذِى خَلَقَ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضَ قَادِرٌ عَلَىٰٓ أَن يَخْلُقَ مِثْلَهُمْ وَجَعَلَ لَهُمْ أَجَلًا لَّا رَيْبَ فِيهِ فَأَبَى ٱلظَّـٰلِمُونَ إِلَّا كُفُورًا",
+      "english": "Do they not see that Allah, who created the heavens and earth, is [the one] Able to create the likes of them? And He has appointed for them a term, about which there is no doubt. But the wrongdoers refuse [anything] except disbelief.",
+      "hausa": "Shin, kuma ba su ganĩ ba (cẽwa) lalle ne Allah, wandaYa halicci sammai da ƙasa, Mai ikon yi ne a kan Ya halicci misãlinsu? Kuma Ya sanya wani ajali wanda bãbu kõkwanto a cikinsa? Sai azzãlumai suka ƙi fãce kãfirci."
+    },
+    {
+      "ayah": 100,
+      "arabic": "قُل لَّوْ أَنتُمْ تَمْلِكُونَ خَزَآئِنَ رَحْمَةِ رَبِّىٓ إِذًا لَّأَمْسَكْتُمْ خَشْيَةَ ٱلْإِنفَاقِ ۚ وَكَانَ ٱلْإِنسَـٰنُ قَتُورًا",
+      "english": "Say [to them], \"If you possessed the depositories of the mercy of my Lord, then you would withhold out of fear of spending.\" And ever has man been stingy.",
+      "hausa": "Ka ce: \"Dã dai kũ, kunã mallakar taskõkin rahamar Ubangijĩna, a lõkacin, haƙĩƙa dã kun kãme dõmin tsõron ƙãrẽwar taskõkin. Kuma mutum yã kasance mai ƙwauro ne.\""
+    },
+    {
+      "ayah": 101,
+      "arabic": "وَلَقَدْ ءَاتَيْنَا مُوسَىٰ تِسْعَ ءَايَـٰتٍۭ بَيِّنَـٰتٍ ۖ فَسْـَٔلْ بَنِىٓ إِسْرَٰٓءِيلَ إِذْ جَآءَهُمْ فَقَالَ لَهُۥ فِرْعَوْنُ إِنِّى لَأَظُنُّكَ يَـٰمُوسَىٰ مَسْحُورًا",
+      "english": "And We had certainly given Moses nine evident signs, so ask the Children of Israel [about] when he came to them and Pharaoh said to him, \"Indeed I think, O Moses, that you are affected by magic.\"",
+      "hausa": "Kuma lalle ne haƙĩƙa Mun bai wa Mũsã ãyõyi guda tara bayyanannu, sai ka tambayi Banĩ Isrã'ila, a lõkacin da ya jẽ musu, sai Fir'auna ya ce masa, \"Lalle nĩ, inã zaton ka, ya Mũsã, sihirtacce.\""
+    },
+    {
+      "ayah": 102,
+      "arabic": "قَالَ لَقَدْ عَلِمْتَ مَآ أَنزَلَ هَـٰٓؤُلَآءِ إِلَّا رَبُّ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضِ بَصَآئِرَ وَإِنِّى لَأَظُنُّكَ يَـٰفِرْعَوْنُ مَثْبُورًا",
+      "english": "[Moses] said, \"You have already known that none has sent down these [signs] except the Lord of the heavens and the earth as evidence, and indeed I think, O Pharaoh, that you are destroyed.\"",
+      "hausa": "Ya ce: \"lalle ne haƙĩƙa ka sani bãbu wanda ya saukar da waɗannan, fãce Ubangijin sammai da ƙasa dõmĩn su zama abũbuwan lũra. Kuma lalle ne ni, haƙĩƙa, ina zaton ka, yã Fir'auna, halakakke.\""
+    },
+    {
+      "ayah": 103,
+      "arabic": "فَأَرَادَ أَن يَسْتَفِزَّهُم مِّنَ ٱلْأَرْضِ فَأَغْرَقْنَـٰهُ وَمَن مَّعَهُۥ جَمِيعًا",
+      "english": "So he intended to drive them from the land, but We drowned him and those with him all together.",
+      "hausa": "Sai ya yi nufin fitar da su daga ƙasar, sai Muka nutsar da shi, shi da wanda yake tãre da shi gabã ɗaya."
+    },
+    {
+      "ayah": 104,
+      "arabic": "وَقُلْنَا مِنۢ بَعْدِهِۦ لِبَنِىٓ إِسْرَٰٓءِيلَ ٱسْكُنُوا۟ ٱلْأَرْضَ فَإِذَا جَآءَ وَعْدُ ٱلْـَٔاخِرَةِ جِئْنَا بِكُمْ لَفِيفًا",
+      "english": "And We said after Pharaoh to the Children of Israel, \"Dwell in the land, and when there comes the promise of the Hereafter, We will bring you forth in [one] gathering.\"",
+      "hausa": "Kuma Muka ce: daga bãyansa ga Banĩ Isrã'ĩla, \"Ku zauni ƙasar. Sa'an nan idan wa'adin ƙarshe ya zo, zã Mu jẽ da ku jama'a-jama'a.\""
+    },
+    {
+      "ayah": 105,
+      "arabic": "وَبِٱلْحَقِّ أَنزَلْنَـٰهُ وَبِٱلْحَقِّ نَزَلَ ۗ وَمَآ أَرْسَلْنَـٰكَ إِلَّا مُبَشِّرًا وَنَذِيرًا",
+      "english": "And with the truth We have sent the Qur'an down, and with the truth it has descended. And We have not sent you, [O Muhammad], except as a bringer of good tidings and a warner.",
+      "hausa": "Kuma da gaskiya Muka saukar da shi, kuma da gaskiya ya sauka. Kuma ba Mu aike ka ba fãce kanã mai bãyar da bushãra kuma mai gargaɗi."
+    },
+    {
+      "ayah": 106,
+      "arabic": "وَقُرْءَانًا فَرَقْنَـٰهُ لِتَقْرَأَهُۥ عَلَى ٱلنَّاسِ عَلَىٰ مُكْثٍ وَنَزَّلْنَـٰهُ تَنزِيلًا",
+      "english": "And [it is] a Qur'an which We have separated [by intervals] that you might recite it to the people over a prolonged period. And We have sent it down progressively.",
+      "hausa": "Kuma yanã abin karãtu Mun rarraba shi dõmin ka karanta shi ga mutane a kan jinkiri kuma Mun sassaukar da shi sassaukarwa."
+    },
+    {
+      "ayah": 107,
+      "arabic": "قُلْ ءَامِنُوا۟ بِهِۦٓ أَوْ لَا تُؤْمِنُوٓا۟ ۚ إِنَّ ٱلَّذِينَ أُوتُوا۟ ٱلْعِلْمَ مِن قَبْلِهِۦٓ إِذَا يُتْلَىٰ عَلَيْهِمْ يَخِرُّونَ لِلْأَذْقَانِ سُجَّدًا",
+      "english": "Say, \"Believe in it or do not believe. Indeed, those who were given knowledge before it - when it is recited to them, they fall upon their faces in prostration,",
+      "hausa": "Ka ce: \"Ku yi ĩmãni da Shi, ko kuwa kada ku yi ĩmãni, lalle ne waɗanda aka bai wa ilmi daga gabãninsa, idan anã karãtunsa a kansu, sunã fãɗuwa ga haɓõɓinsu, sunã mãsu sujada.\""
+    },
+    {
+      "ayah": 108,
+      "arabic": "وَيَقُولُونَ سُبْحَـٰنَ رَبِّنَآ إِن كَانَ وَعْدُ رَبِّنَا لَمَفْعُولًا",
+      "english": "And they say, \"Exalted is our Lord! Indeed, the promise of our Lord has been fulfilled.\"",
+      "hausa": "\"Kuma sunã cẽwa: Tsarki ya tabbata ga Ubangijinmu! Lalle ne wa'adin Ubangijinmu ya kasance, haƙĩƙa, abin aikatãwa.\""
+    },
+    {
+      "ayah": 109,
+      "arabic": "وَيَخِرُّونَ لِلْأَذْقَانِ يَبْكُونَ وَيَزِيدُهُمْ خُشُوعًا ۩",
+      "english": "And they fall upon their faces weeping, and the Qur'an increases them in humble submission.",
+      "hausa": "Kuma sunã fãɗuwa ga haɓõɓinsu sunã kũka, kuma yanã ƙara musu tsõro."
+    },
+    {
+      "ayah": 110,
+      "arabic": "قُلِ ٱدْعُوا۟ ٱللَّهَ أَوِ ٱدْعُوا۟ ٱلرَّحْمَـٰنَ ۖ أَيًّا مَّا تَدْعُوا۟ فَلَهُ ٱلْأَسْمَآءُ ٱلْحُسْنَىٰ ۚ وَلَا تَجْهَرْ بِصَلَاتِكَ وَلَا تُخَافِتْ بِهَا وَٱبْتَغِ بَيْنَ ذَٰلِكَ سَبِيلًا",
+      "english": "Say, \"Call upon Allah or call upon the Most Merciful. Whichever [name] you call - to Him belong the best names.\" And do not recite [too] loudly in your prayer or [too] quietly but seek between that an [intermediate] way.",
+      "hausa": "Ka ce: \"Ku kirayi Allah kõ kuwa ku kirãyi Mai rahama. Kõwane kuka kira to Yanã da sũnãye mafi kyau. Kuma, kada ka bayyana ga sallarka, kuma kada ka ɓõye ta. Ka nẽmi hanya a tsakãnin wancan.\""
+    },
+    {
+      "ayah": 111,
+      "arabic": "وَقُلِ ٱلْحَمْدُ لِلَّهِ ٱلَّذِى لَمْ يَتَّخِذْ وَلَدًا وَلَمْ يَكُن لَّهُۥ شَرِيكٌ فِى ٱلْمُلْكِ وَلَمْ يَكُن لَّهُۥ وَلِىٌّ مِّنَ ٱلذُّلِّ ۖ وَكَبِّرْهُ تَكْبِيرًۢا",
+      "english": "And say, \"Praise to Allah, who has not taken a son and has had no partner in [His] dominion and has no [need of a] protector out of weakness; and glorify Him with [great] glorification.\"",
+      "hausa": "Kuma ka ce: \"Gõdiyã ta tabbata ga Allah wanda bai riƙi ɗã ba kuma abõkin tãrayya bai kasance a gare Shi ba a cikin mulkinSa, kuma wani masõyi sabõda wulãkancin bai kasance a gare Shi ba.\" Kuma ka girmama Shi, girmamãwa."
+    }
+  ]
+}
