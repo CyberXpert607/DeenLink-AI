@@ -18,11 +18,12 @@ async def ask_v2(payload: AskRequest):
     if not is_religious_promt(query):
         answer = generate_chat_response(query)
         print("[router chat mode]")
+
         return {
             "answer_html": answer,
             "sources": []
         }
-
+    
     print("[Router RAG MODE]")
     results = search_similar(query, limit=5)
 
