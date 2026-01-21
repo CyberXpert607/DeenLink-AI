@@ -11,7 +11,7 @@ def generate_chat_response(user_question: str) -> str:
             {"role": "system", "content": CHAT_SYSTEM_PROMPT},
             {"role": "user", "content": user_question}
         ],
-        temperature=0.7
+        temperature=0.0
     )
     return response.choices[0].message.content
 
