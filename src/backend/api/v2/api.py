@@ -13,29 +13,33 @@ class AskRequest(BaseModel):
 @router.post("/ask")
 async def ask_v2(payload: AskRequest):
     query = payload.message
-    print(f"[Ask V2 Query]: {query}")
+    try:
 
-    if not is_religious_promt(query):
-        answer = generate_chat_response(query)
-        print("[router chat mode]")
+        print(f"[Ask V2 Query]: {query}")
 
-        return {
-            "answer_html": answer,
-            "sources": []
-        }
-    
-    print("[Router RAG MODE]")
-    results = search_similar(query, limit=5)
+        if not is_religious_promt(query):
+            answer = generate_chat_response(query)
+            print("[router chat mode]")
 
-    filtered = [r for r in results if r['score'] >= 0.30]
+            return {
+                "answer_html": answer,
+                "sources": []
+            }
+        
+        print("[Router RAG MODE]")
+        results = search_similar(query, limit=5)
 
-    if not filtered:
-        return {
-            "answer_html": "I could not find authentic sources that directly answer this question.",
-            "sources": []
-        }
-    results = generate_rag_answer(query, filtered)
-    return results
+        filtered = [r for r in results if r['score'] >= 0.30]
+
+        if not filtered:
+            return {
+                "answer_html": "I could not find authentic sources that directly answer this question.",
+                "sources": []
+            }
+        results = generate_rag_answer(query, filtered)
+        return results
+    except Exception as e:
+        return {"[Error]:": {e}}
 
 @router.get("/health")
 async def get_health():
