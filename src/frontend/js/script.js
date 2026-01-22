@@ -135,10 +135,12 @@
                 const data = await res.json();
                 removeTypingIndicator();
 
+                const reply = data.answer_html || "No response received."; //instead of the undefined response 
+
                 state.messages.push({
                     id: state.messages.length + 1,
                     sender: 'ai',
-                    text: data.answer_html,
+                    text: reply,
                     time: getCurrentTime()
                 });
 
