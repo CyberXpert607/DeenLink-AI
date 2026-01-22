@@ -1,11 +1,20 @@
 
-def is_religious_promt(text: str) -> bool:
+def classify_query(text: str) -> bool:
     text = text.lower().strip()
 
-    keywords = [
-        "hadith", "fiqh", "verse", "narrated", "prophet", "Allah", "surah", "fasting", "zakat",
-        "charity", "salah", "iman", "ayah", "taqwa", "reported by", "muslim", "ibn majah", "bukhari",
-        "abu dawud", "tirmidhi", "islam", "muhammad", "quran"
+    hadith_triggers = [
+        "hadith", "narrated",
+        "charity", "taqwa", "reported by", "muslim", "ibn majah", "bukhari",
+        "abu dawud", "tirmidhi"
     ]
-    
-    return any(trigger in text for trigger in keywords)
+    quran_triggers = ["quran", "verse", "ayah", "surah", "where in the quran", "which ayah", "which surah"]
+
+    general_islmaic_knowledge= ["prophet", "muhammad", "islam", "iman", "zakat", "salah"]
+
+    if any(t in text for t in quran_triggers):
+        return "quran"
+    if any(t in text for t in hadith_triggers):
+        return "hadith"
+    if any(t in text for t in general_islmaic_knowledge):
+        return "general_chat"
+    return "chat"
