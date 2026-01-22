@@ -149,7 +149,7 @@
                 state.messages.push({
                     id: state.messages.length + 1,
                     sender: 'ai',
-                    text: 'Something went wrong. Please try again.',
+                    text: "I didn't get that, please try again.",
                     time: getCurrentTime()
                 });
             renderMessages();
