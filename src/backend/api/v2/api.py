@@ -8,7 +8,7 @@ from v2.classifier import is_religious_promt
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
 
 class AskRequest(BaseModel):
-    message: str = Field(default=None, max_length=100, min_length=1)
+    message: str = Field(default=None, max_length=1000, min_length=1) #adjust this depending on how much char users can send!
 
 @router.post("/ask")
 async def ask_v2(payload: AskRequest):
@@ -39,7 +39,9 @@ async def ask_v2(payload: AskRequest):
         results = generate_rag_answer(query, filtered)
         return results
     except Exception as e:
-        return {"[Error]:": {e}}
+        return {
+            "error": str(e)
+        }
 
 @router.get("/health")
 async def get_health():
