@@ -17,17 +17,24 @@ def generate_chat_response(user_question: str) -> str:
 
 
 def generate_rag_answer(question: str, retrieved_docs: list):
-    retrieved_docs = retrieved_docs[:3]
+    strong_hits = [d for d in retrieved_docs if d.get("score", 0) >= 0.55]
 
-    if not retrieved_docs:
+    if not strong_hits:
         return {
-            "answer_html": "I could not find any authentic sources that directly answer this question.",
+            "answer_html": (
+                "<div class='rag-answer'>"
+                "<p class='rag-explanation'>"
+                "The available sources do not directly answer this question. "
+                "My current knowledge base focuses on exact Quran verses and authenticated narrations."
+                "</p></div>"
+            ),
             "sources": []
         }
+    strong_hits = strong_hits[:3]
 
     sources_blocks = []
 
-    for doc in retrieved_docs:
+    for doc in strong_hits:
         if doc["source_type"] == "hadith":
             sources_blocks.append(f"""
             Collection: {doc['collection']}
@@ -58,5 +65,5 @@ def generate_rag_answer(question: str, retrieved_docs: list):
 
     return {
         "answer_html": response.choices[0].message.content,
-        "sources": retrieved_docs
+        "sources": strong_hits
     }
