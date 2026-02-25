@@ -5,5 +5,7 @@ src/backend/api/__pycache__/
 src/backend/api/v2/__pycache__/
 src/backend/api/v1/__pycache__/
 src/backend/api/v1/
-src/backend/api/v2/frontend/
+src/frontend/
 src/backend/api/v2/keys/
+src/backend/api/v2/keys/__pycache__/
+src/backend/api/v2/db/__pycache__/
