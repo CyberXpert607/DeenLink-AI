@@ -1,49 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeenLink AI | Islamic Assistant</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeenLink AI</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body class="light-theme">
-    <!-- Page Loader Overlay -->
-    <div id="pageLoader">
-        <div class="islamic-loader">
-            <div class="loader-crescent">
-                <div class="crescent"></div>
-                <div class="loader-star">
-                    <i class="fas fa-star"></i>
-                </div>
-            </div>
-            <div class="loader-text">Loading DeenLink AI...</div>
+
+<body>
+
+<div class="container layout">
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <button id="newChatBtn" class="sidebar-new-chat">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
         </div>
+
+        <div id="conversationList" class="conversation-list"></div>
     </div>
 
-    <div class="container">
-        <!-- Header - Compact and Sticky -->
+    <div id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-chat">
+
+        <!-- Header -->
         <header class="header-section">
             <div class="header-left">
-                <button class="back-button" id="backButton">
-                    <i class="fas fa-arrow-left"></i>
+                <button class="menu-button" id="menuToggle">
+                    <i class="fas fa-bars"></i>
                 </button>
                 <div class="header-title">
                     <i class="fas fa-robot"></i> DeenLink AI
                 </div>
             </div>
+
             <div class="header-right">
-                <button class="header-action-btn" id="clearChatBtn" title="Clear Chat">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-                <button class="header-action-btn" id="suggestTopicBtn" title="Suggest Topic">
-                    <i class="fas fa-lightbulb"></i>
-                </button>
-                <button class="header-action-btn" id="themeToggle" title="Toggle Theme">
+                <button class="header-action-btn" id="themeToggle">
                     <i class="fas fa-moon"></i>
                 </button>
             </div>
@@ -51,32 +48,31 @@
 
         <!-- Chat Container -->
         <div class="chat-container">
-            <!-- Messages Area - Contains everything that scrolls -->
-            <div class="messages-area" id="messagesArea">
-                <!-- Quick Prompt Buttons - NOW part of scrollable content -->
+            <div class="messages-area">
+
                 <div class="quick-prompts">
                     <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">Salah Importance</button>
                     <button class="quick-prompt-btn" data-prompt="Give me a verse about patience">Patience Verse</button>
                     <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">Five Pillars</button>
                 </div>
 
-                <!-- Chat messages wrapper -->
-                <div class="chat-messages" id="chatMessages">
-                    <!-- Messages will be dynamically added here -->
-                </div>
+                <div class="chat-messages" id="chatMessages"></div>
             </div>
 
-            <!-- Input Area - Sticky at bottom -->
             <div class="input-area">
                 <div class="input-container">
-                    <textarea class="message-input" id="messageInput" placeholder="Ask your Islamic question here..." rows="1"></textarea>
+                    <textarea class="message-input" id="messageInput" placeholder="Ask your Islamic question..." rows="1"></textarea>
                     <button class="send-button" id="sendButton">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
             </div>
         </div>
+        <div id="error-toast" class="error-toast hidden"></div>
+
     </div>
-    <script src="./js/script.js"></script>
+</div>
+
+<script src="/js/script.js"></script>
 </body>
 </html>
