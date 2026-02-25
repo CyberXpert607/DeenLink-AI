@@ -27,7 +27,7 @@ window.addEventListener("unhandledrejection", event => {
 
 //AUTH TOKEN MANAGEMENT
 async function getValidToken() {
-    const now = Date.now();
+    /*const now = Date.now();
 
     if (jwtToken && jwtExpiry && now < jwtExpiry) {
         return jwtToken;
@@ -56,7 +56,8 @@ async function getValidToken() {
     jwtToken = data.token;
     jwtExpiry = now + (5 * 60 * 1000);
 
-    return jwtToken;
+    return jwtToken;*/
+   // return "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJ1c2VyX3R5cGUiOiJhZG1pbiIsImlzcyI6ImRlZW5saW5rIiwiYXVkIjoiZGVlbmxpbmstYWkiLCJleHAiOjE3NzIwMzE1NDV9.HiLs_ztMsQzBaJDZ8jKOj_Zjw19Arb_73aj92bVwFEpWOi7B9F2vYV6dP_lOuCBUg2ZyS5S6wQqh3LeJP18g9foTbEUfR0pJKLj745G-4VVN2_A_mr6_PRONKebJsDPNnOKpaN4cI-ffPsoH6j-gbYcEY4jCFX8jvVJ3sUI3GUEVqtE52ZzALaAiWagU3OCr94uM4QX8szIjt1GS4oI13vRc6eh3evKoLMmVC-8EtfXy1Hter8PiC8wqL5B9ml06BUyqCJIhq6J3NByM_KKuCLhWfA5f32B_l8-ZNIDP-D1-o-nZ1eg-6kXPPgjqw27Uyal9sL4hR_yYykuF7ZnaGA"
 }
 
 //sidebar behaviour.
