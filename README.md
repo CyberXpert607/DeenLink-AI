@@ -4,3 +4,7 @@ Deen AI is a RAG AI Agent designed for the Deen APP and it is meant to answer qu
 This Project uses the `UV` Python Package Manager for fast, reproducible Python environments.
 
 How to setup:
+
+1: Go to the root directory and type the following commands:
+
+`uv sync`

@@ -4,3 +4,6 @@ tests
 src/backend/api/__pycache__/
 src/backend/api/v2/__pycache__/
 src/backend/api/v1/__pycache__/
+src/backend/api/v1/
+src/backend/api/v2/frontend/
+src/backend/api/v2/keys/
