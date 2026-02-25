@@ -53,7 +53,7 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
         with_payload=True
     )
 
-    return [
+    scored = [
         {
             **p.payload,
             "score": p.score
@@ -61,3 +61,4 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
         for p in results.points
         if p.score >= min_score
     ]
+    return [r for r in scored if r["score"] >= min_score]

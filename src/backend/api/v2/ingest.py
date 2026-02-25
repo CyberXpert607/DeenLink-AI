@@ -4,7 +4,7 @@ from v2.vectoreStore import upsert_documents
 
 BASE_DIR =Path(__file__).resolve().parent
 API_DIR =BASE_DIR.parent
-DATA_DIR = API_DIR / "data"
+DATA_DIR = API_DIR / "data" / "hadith"
 
 print("[INGEST] Scanning:", DATA_DIR)
 print("[INGEST] Exists:", DATA_DIR.exists())
@@ -23,7 +23,8 @@ def load_all_documents():
                 "arabic": item.get("arabic", ""),
                 "english": item.get("english", {}).get("text", ""),
                 "narrator": item.get("english", {}).get("narrator"),
-                "grade": item.get("grade")
+                "grade": item.get("grade"),
+                "source_type": "hadith",
             })
 
     return docs
