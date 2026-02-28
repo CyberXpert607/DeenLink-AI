@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from logging import getLogger
 import json
 import uuid
 
@@ -17,7 +18,7 @@ from v2.vectoreStore import search_similar
 
 
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
-
+logging = getLogger(__name__)
 
 class AskRequest(BaseModel):
     conversation_id: str
@@ -59,67 +60,86 @@ async def ask_stream(
 
     def event_stream():
         full_response = ""
-
+        try:
 
         # RAG (Quran and Hadith)
 
-        if intent in {"rag_quran", "rag_hadith"}:
-            results = search_similar(query, 5)
+            if intent in {"rag_quran", "rag_hadith"}:
+                try:
+                    results = search_similar(query, 5)
 
-            filtered = [
-                r for r in results
-                if r.score >= 0.30 and
-                (intent != "rag_quran" or r.source_type == "quran") and
-                (intent != "rag_hadith" or r.source_type == "hadith")
-            ]
+                    filtered = [
+                        r for r in results
+                        if r.score >= 0.30 and
+                        (intent != "rag_quran" or r.source_type == "quran") and
+                        (intent != "rag_hadith" or r.source_type == "hadith")
+                    ]
 
-            for chunk in stream_rag_answer(query, filtered):
-                full_response += chunk.get("content", "") if isinstance(chunk, dict) else str(chunk)
-                yield f"data: {json.dumps(chunk)}\n\n"
+                    for chunk in stream_rag_answer(query, filtered):
+                        if not isinstance(chunk, dict):
+                            chunk_str = str(chunk)
+                            full_response += chunk_str
+                            yield f"data: {json.dumps({'type': 'unknown', 'content': chunk_str})}\n\n"
+                            continue
+                        chunk_type = chunk.get("type")
+                        if chunk_type == "token":
+                            content = chunk.get("content", "")
+                            full_response += content
+                            yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
 
+                        elif chunk_type == "sources":
+                            yield f"data: {json.dumps(chunk)}\n\n"
+
+                        elif chunk_type == "final":
+                            yield f"data: {json.dumps(chunk)}\n\n"
+                        else:
+                            logging.warning(f"Unknown chunk type in RAG stream: {chunk_type}")
+                            yield f"data: {json.dumps({'type': 'unknown', 'content': str(chunk)})}\n\n"
+                except Exception as e:
+                    logging.error(f"Error in RAG streaming: {e}")
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'RAG streaming failed'})}\n\n"
+                    return
+
+            # MOTIVATION
+
+            elif intent == "motivation":
+
+                results = search_similar(query, 5)  # same as RAG
+                filtered = [r for r in results if r.score >= 0.3]
+
+
+                for token in stream_motivation_answer(query, filtered):
+                    full_response += token
+                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+
+
+            # CHAT (default)
+
+            else:
+                messages = build_prompt_with_memory(db, convo)
+
+                for token in stream_chat_response(messages):
+                    full_response += token
+                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+
+            # Save assistant message
+            assistant_msg = Message(
+                id=str(uuid.uuid4()),
+                conversation_id=convo.id,
+                role="assistant",
+                content=full_response,
+            )
+            db.add(assistant_msg)
+
+            if getattr(convo, "title", "New Chat") == "New Chat":
+                convo.title = full_response[:40]  # set title to first 50 chars of response
+
+            db.commit()
+        except Exception as e:
+            print("Error in event stream:", e)
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        finally:
             yield f"data: {json.dumps({'done': True})}\n\n"
-            return
-
-        # MOTIVATION
-
-        elif intent == "motivation":
-
-            results = search_similar(query, 5)  # same as RAG
-            filtered = [r for r in results if r.score >= 0.3]
-
-
-            for token in stream_motivation_answer(query, filtered):
-                full_response += token
-                yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-
-            yield f"data: {json.dumps({'done': True})}\n\n"
-
-
-        # CHAT (default)
-
-        else:
-            messages = build_prompt_with_memory(db, convo)
-
-            for token in stream_chat_response(messages):
-                full_response += token
-                yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-
-        # Save assistant message
-        assistant_msg = Message(
-            id=str(uuid.uuid4()),
-            conversation_id=convo.id,
-            role="assistant",
-            content=full_response,
-        )
-        db.add(assistant_msg)
-
-        # Generate title if first message
-        if convo.title == "New Chat":
-           new_title = full_response.strip()[:40]
-           convo.title = new_title
-           db.commit()
-
-        yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(
         event_stream(),
@@ -205,7 +225,7 @@ def create_new_conversation(user=Depends(verify_jwt), db: Session = Depends(get_
     db.add(convo)
     db.commit()
 
-    return {"conversation_id": conv_id, "title": convo.title}
+    return {"id": conv_id, "title": convo.title}
 
 # DELETE CONVERSATION
 
