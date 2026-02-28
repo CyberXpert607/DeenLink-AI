@@ -14,6 +14,7 @@ class Conversation(Base):
     user_id = Column(String, index=True)
     title=Column(String, default="New Chat")
     created_at = Column(DateTime, default=datetime.utcnow)
+    summary = Column(Text, default="")
 
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
