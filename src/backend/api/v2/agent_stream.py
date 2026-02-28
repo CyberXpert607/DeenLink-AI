@@ -53,11 +53,11 @@ English: {doc.english}
 
     # Stream tokens
     for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
+        delta_obj = chunk.choices[0].delta.content
+        if hasattr(delta_obj, "content") and delta_obj.content:
             yield {
                 "type": "token",
-                "content": delta
+                "content": delta_obj.content
             }
 
     # After stream ends → send sources separately
