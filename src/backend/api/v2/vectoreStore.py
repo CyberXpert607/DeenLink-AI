@@ -1,6 +1,9 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from v2.embeddings import embed_text
+from v2.vectore_types import VectorSearchResult
+from typing import List
+import uuid
 
 COLLECTION_NAME = "islamic_sources"
 
@@ -27,11 +30,11 @@ def upsert_documents(docs: list[dict]):
     ensure_collection()
 
     points = []
-    for idx, doc in enumerate(docs):
+    for doc in docs:
         text_blob = f"{doc['arabic']} {doc['english']}"
 
         points.append({
-            "id": idx,
+            "id": str(uuid.uuid4()),
             "vector": embed_text(text_blob),
             "payload": doc
         })
@@ -42,7 +45,7 @@ def upsert_documents(docs: list[dict]):
     )
 
 
-def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
+def search_similar(query: str, limit: int = 5, min_score: float = 0.35) -> List[VectorSearchResult]:
 
     vector = embed_text(query)
 
@@ -53,12 +56,21 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35):
         with_payload=True
     )
 
-    scored = [
-        {
-            **p.payload,
-            "score": p.score
-        }
-        for p in results.points
-        if p.score >= min_score
-    ]
-    return [r for r in scored if r["score"] >= min_score]
+    final_results = []
+    for p in results.points:
+        score = p.score if p.score else 0
+        if score < min_score:
+            continue
+        payload = p.payload
+        if "arabic" in payload and "english" in payload:
+            content_text = f"{payload.get('arabic', '')} {payload.get('english', '')}"
+        else:
+            content_text = str(payload)
+        
+        final_results.append(VectorSearchResult(
+            content=content_text,
+            score=float(score),
+            source_type = payload.get("source_type", "unknown"),
+            payload = payload
+        ))
+    return final_results
