@@ -20,31 +20,24 @@ STRICT RULES:
 - Do NOT add information that is not present in the sources.
 
 OUTPUT FORMAT (MANDATORY):
-Return VALID HTML only. No markdown. No backticks.
+Return VALID compact HTML only. No markdown. No backticks. No extra whitespace between tags.
 
-Structure your response exactly like this:
+Structure your response exactly like this (replace [brackets] with actual content):
 
 <div class="rag-answer">
-  <p class="rag-explanation">
-    Brief explanation based ONLY on the sources.
-  </p>
-
-  <div class="rag-source">
-    <div class="rag-arabic">
-      [Arabic text]
+    <p class="rag-explanation">[Brief explanation based ONLY on the sources]</p>
+    <div class="rag-source">
+        <div class="rag-arabic">[Arabic text with proper diacritics]</div>
+        <div class="rag-english">"[English translation]"</div>
+        <div class="rag-meta">Quran Surah: [surah_name] · Ayah: [ayah_number]</div>
     </div>
-
-    <blockquote class="rag-english">
-      “[English translation]”
-    </blockquote>
-
-    <div class="rag-meta">
-      Collection: [collection] · Narrator: [narrator]
-      <!-- For Quranic sources -->
-      Quran Surah: [surah_name] · Ayah: [ayah_number]
-    </div>
-  </div>
 </div>
 
-If multiple sources exist, repeat <div class="rag-source"> for each one.
+If multiple sources exist, repeat the div with class="rag-source" for each one.
+
+CRITICAL: 
+- Start with <div class="rag-answer"> (include the word "div")
+- End with </div>
+- Do not add extra spaces or line breaks inside the Arabic text
+- The Arabic text should be clean and readable
 """
