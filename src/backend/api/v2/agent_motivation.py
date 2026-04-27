@@ -13,12 +13,36 @@ Rules:
 """
 
 
-def stream_motivation_answer(query: str, sources: list):
+def format_hadith_reference(payload: dict) -> str:
+    """Format hadith reference for display"""
+    parts = []
+    
+    collection = payload.get('collection', 'Hadith')
+    parts.append(collection)
+    
+    # Use our generated display reference
+    hadith_ref = payload.get('hadith_number_display')
+    if hadith_ref:
+        parts.append(hadith_ref)
+    
+    # Add chapter info if available
+    chapter = payload.get('chapter_name_en') or payload.get('chapter_name_ar')
+    if chapter:
+        parts.append(chapter[:50])
+    
+    # Add grade
+    grade = payload.get('grade', '')
+    if grade and grade != 'Unknown':
+        parts.append(f"({grade})")
+    
+    return " · ".join(parts)
 
+
+def stream_motivation_answer(query: str, sources: list):
     if not sources:
         yield {
             "type": "final",
-            "answer_html": "No relevant Islamic sources found.",
+            "answer_html": "<div class='rag-answer'><p>No relevant Islamic sources found.</p></div>",
             "sources": []
         }
         return
@@ -32,40 +56,39 @@ def stream_motivation_answer(query: str, sources: list):
     source_blocks = []
 
     for s in strong_hits:
-
         payload = s.payload
 
         if payload.get("source_type") == "quran":
-
             block = f"""
 Qur'an
-Surah: {payload.get("surah_name")}
-Ayah: {payload.get("ayah")}
+Surah: {payload.get('surah_name', 'Unknown')}
+Ayah: {payload.get('ayah', 'Unknown')}
 
 Arabic:
-{payload.get("arabic")}
+{payload.get('arabic', 'N/A')[:500]}...
 
 English:
-{payload.get("english")}
+{payload.get('english', 'N/A')[:500]}...
 """
-
-        else:
-
+        else:  # Hadith
+            reference = format_hadith_reference(payload)
+            narrator = payload.get('narrator', 'Not specified')
+            grade = payload.get('grade', 'Unknown')
+            
             block = f"""
-Hadith
-Collection: {payload.get("collection")}
-Narrator: {payload.get("narrator")}
+{reference}
+Narrator: {narrator}
+Grade: {grade}
 
 Arabic:
-{payload.get("arabic")}
+{payload.get('arabic', 'N/A')[:500]}...
 
 English:
-{payload.get("english")}
+{payload.get('english', 'N/A')[:500]}...
 """
-
         source_blocks.append(block)
 
-    sources_text = "\n\n".join(source_blocks)
+    sources_text = "\n\n---\n\n".join(source_blocks)
 
     stream = client.chat.completions.create(
         model=MODEL,
@@ -81,9 +104,7 @@ English:
     )
 
     for chunk in stream:
-
         delta = chunk.choices[0].delta.content
-
         if delta:
             yield {
                 "type": "token",
@@ -92,5 +113,14 @@ English:
 
     yield {
         "type": "sources",
-        "sources": [s.payload for s in strong_hits]
+        "sources": [
+            {
+                "content": s.content,
+                "score": s.score,
+                "source_type": s.source_type,
+                "payload": s.payload,
+                "display_reference": format_hadith_reference(s.payload) if s.source_type == "hadith" else None
+            } 
+            for s in strong_hits
+        ]
     }

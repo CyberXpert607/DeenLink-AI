@@ -1,11 +1,11 @@
 import json
 import uuid
-import asyncio
+import gc
 import time
 import collections
-import concurrent.futures
 from pathlib import Path
 from itertools import islice
+
 from vectoreStore import client, COLLECTION_NAME
 from embeddings import embed_text
 
@@ -13,22 +13,16 @@ BASE_DIR = Path(__file__).resolve().parent
 API_DIR = BASE_DIR.parent
 DATA_DIR = API_DIR / "data" / "hadith"
 
-BATCH_SIZE = 512         
-MAX_WORKERS = 4      
-EMBED_CHUNK_SIZE = 100
-CHECKPOINT_FILE = Path("checkpoint.json")
-FAILED_EMBEDS_LOG = Path("failed_embeds.log")
-FAILED_UPSERTS_LOG = Path("failed_upserts.log")
-
-print("[INGEST] Scanning:", DATA_DIR)
-print("[INGEST] Exists:", DATA_DIR.exists())
-
+BATCH_SIZE = 64          
+EMBED_CHUNK_SIZE = 16    
+CHECKPOINT_FILE = Path("checkpoint_vps.json")
+FAILED_EMBEDS_LOG = Path("failed_embeds_vps.log")
+FAILED_UPSERTS_LOG = Path("failed_upserts_vps.log")
 
 def batched(iterable, size):
     it = iter(iterable)
     while batch := list(islice(it, size)):
         yield batch
-
 
 def generate_hadith_reference(item: dict, chapter_counter: dict, collection_name: str, idx: int) -> dict:
     chapter_num = item.get("chapter_number")
@@ -68,7 +62,6 @@ def generate_hadith_reference(item: dict, chapter_counter: dict, collection_name
             "sort_order": global_pos,
         }
 
-
 def extract_chapter_info(item: dict) -> dict:
     chapter_name_obj = item.get("chapter_name", {})
     if isinstance(chapter_name_obj, dict):
@@ -85,21 +78,17 @@ def extract_chapter_info(item: dict) -> dict:
         "book_id": None,
     }
 
-
 def extract_english_data(item: dict) -> tuple:
     english_data = item.get("english", {})
     if isinstance(english_data, dict):
         return english_data.get("text", ""), english_data.get("narrator", "")
     return str(english_data) if english_data else "", item.get("narrator", "")
 
-
 def extract_collection_name(item: dict, filename: str) -> str:
     collection = item.get("collection")
     return collection.title() if collection else Path(filename).stem.replace("_", " ").replace("-", " ").title()
 
-
 def get_total_documents() -> int:
-    """Do a quick pass to count total documents."""
     total = 0
     for file in DATA_DIR.glob("*.json"):
         try:
@@ -116,9 +105,7 @@ def get_total_documents() -> int:
             pass
     return total
 
-
 def load_and_prepare_documents():
-    """Generator to yield one document at a time."""
     chapter_counter = {}
     json_files = list(DATA_DIR.glob("*.json"))
     
@@ -151,11 +138,12 @@ def load_and_prepare_documents():
             if grade == "Unknown" and "sahih" in str(english_text).lower():
                 grade = "Sahih"
             
+            # Use a truncated text length to save CPU and RAM for embedding
             text_for_embedding = (
                 f"Hadith from {collection_name}. {ref_data['hadith_number_display']}. "
                 f"Chapter: {chapter_info['chapter_name_en'] or chapter_info['chapter_name_ar'] or 'General'}. "
                 f"Narrated by: {narrator}. "
-                f"Arabic: {arabic_text[:400]} English: {english_text[:400]}"
+                f"Arabic: {arabic_text[:300]} English: {english_text[:300]}"
             )
             
             doc = {
@@ -180,6 +168,9 @@ def load_and_prepare_documents():
             yield global_doc_idx, doc
             global_doc_idx += 1
 
+        # Memory cleanup after processing an entire file's JSON list
+        del data
+        gc.collect()
 
 def format_eta(seconds: float) -> str:
     if seconds < 0:
@@ -193,13 +184,11 @@ def format_eta(seconds: float) -> str:
     else:
         return f"{s}s"
 
-
 def process_embed_chunk(docs_batch):
     texts = [d[1]["text_for_embedding"] for d in docs_batch]
     vectors = None
     
-    # Retry loop with exponential backoff
-    for attempt, delay in enumerate([1, 2, 4]):
+    for attempt, delay in enumerate([2, 5, 10]):  # Longer delays for VPS
         try:
             vectors = embed_text(texts)
             break
@@ -215,22 +204,15 @@ def process_embed_chunk(docs_batch):
                 "id": str(uuid.uuid4()),
                 "vector": vector,
                 "payload": doc["payload"],
-                "_doc_idx": doc_idx  # Keep track for checkpointing
+                "_doc_idx": doc_idx
             })
     else:
-        # Log failures
         with open(FAILED_EMBEDS_LOG, "a") as f:
             for doc_idx, _ in docs_batch:
                 f.write(f"{doc_idx}\n")
     return points
 
-
-def upsert_batch(batch, successful_upserts_since_wait, total_upserted, total_docs, speed_history, start_total):
-    wait_flag = False
-    if successful_upserts_since_wait >= 5000:
-        wait_flag = True
-        successful_upserts_since_wait = 0
-        
+def upsert_batch(batch, total_upserted, total_docs, speed_history, start_total):
     t0_upsert = time.time()
     upsert_success = False
     
@@ -239,12 +221,13 @@ def upsert_batch(batch, successful_upserts_since_wait, total_upserted, total_doc
         for p in batch
     ]
     
-    for attempt, delay in enumerate([1, 2, 4]):
+    for attempt, delay in enumerate([2, 5, 10]):
         try:
+            # Force wait=True on VPS to prevent queue overflow
             client.upsert(
                 collection_name=COLLECTION_NAME,
                 points=qdrant_points,
-                wait=wait_flag
+                wait=True
             )
             upsert_success = True
             break
@@ -256,46 +239,38 @@ def upsert_batch(batch, successful_upserts_since_wait, total_upserted, total_doc
     if upsert_success:
         num_upserted = len(batch)
         total_upserted += num_upserted
-        successful_upserts_since_wait += num_upserted
         
-        # Save Checkpoint
         max_idx_in_batch = max(p["_doc_idx"] for p in batch)
         with open(CHECKPOINT_FILE, "w") as f:
             json.dump({"last_processed_idx": max_idx_in_batch + 1}, f)
         
+        # Clear out payload memory explicitly
+        del qdrant_points
+        gc.collect()
+
         # Update speed history
         elapsed = time.time() - t0_upsert
-        # We need docs/sec for ETA. Since we're tracking upsert + embed time we should include it 
-        # But for rolling average, let's just track the whole loop time for this batch.
-        # Actually a better speed metric is total docs / total time so far, or just batch size / batch elapsed time
-        # We'll just push batch size / batch time to history.
-        speed = num_upserted / elapsed if elapsed > 0 else 0
-        for _ in range(num_upserted):
-            speed_history.append(speed)
-            
-        # Print progress
+        # Calculate speed for printing
         avg_speed = sum(speed_history) / len(speed_history) if speed_history else 0
         remaining_docs = total_docs - total_upserted
         eta_seconds = remaining_docs / avg_speed if avg_speed > 0 else 0
         pct = (total_upserted / total_docs * 100) if total_docs > 0 else 0
         
-        print(f"    [2/3] Embedding & Upserting | {total_upserted:,} / {total_docs:,} | {pct:.1f}% | ETA: {format_eta(eta_seconds)}")
+        print(f"    [VPS] Ingested | {total_upserted:,} / {total_docs:,} | {pct:.1f}% | ETA: {format_eta(eta_seconds)}")
     else:
         with open(FAILED_UPSERTS_LOG, "a") as f:
             for p in batch:
                 f.write(f"{p['id']}\n")
                 
-    return successful_upserts_since_wait, total_upserted
+    return total_upserted
 
-
-def ingest_hadith_fast():
+def ingest_vps():
     start_total = time.time()
     
     print("=" * 60)
-    print("HADITH INGESTION (STREAMING & BATCHING)")
+    print("HADITH INGESTION (VPS OPTIMIZED: 2GB RAM / 1 vCPU)")
     print("=" * 60)
     
-    # 1. Load Checkpoint
     skip_count = 0
     if CHECKPOINT_FILE.exists():
         try:
@@ -303,29 +278,25 @@ def ingest_hadith_fast():
                 checkpoint_data = json.load(f)
                 skip_count = checkpoint_data.get("last_processed_idx", 0)
                 if skip_count > 0:
-                    print(f"[RESUME] Skipping first {skip_count} documents (already ingested)")
+                    print(f"[RESUME] Skipping first {skip_count} documents")
         except Exception as e:
             print(f"[WARNING] Failed to read checkpoint: {e}")
 
-    # 2. Count total documents for ETA
     print("\n[1/3] Calculating total documents for ETA...")
     t0 = time.time()
     total_docs = get_total_documents()
-    print(f"    Total documents to process: {total_docs} (Counted in {time.time()-t0:.1f}s)")
+    print(f"    Total documents: {total_docs} (Counted in {time.time()-t0:.1f}s)")
 
     if total_docs == 0:
         print("[ERROR] No documents to ingest")
         return
 
-    # Initialize ETA tracking
-    speed_history = collections.deque(maxlen=1000)
+    speed_history = collections.deque(maxlen=500)
     
-    # 3. Stream & Process
-    print(f"\n[2/3] & [3/3] Embedding & Upserting (chunk={EMBED_CHUNK_SIZE}, batch={BATCH_SIZE})...")
+    print(f"\n[2/3] Embedding & Upserting (chunk={EMBED_CHUNK_SIZE}, batch={BATCH_SIZE})...")
     
     doc_generator = load_and_prepare_documents()
     
-    # Skip already processed
     if skip_count > 0:
         for _ in range(skip_count):
             try:
@@ -335,8 +306,6 @@ def ingest_hadith_fast():
                 
     docs_batch = []
     points_to_upsert = []
-    
-    successful_upserts_since_wait = 0
     total_upserted = skip_count
     
     try:
@@ -348,21 +317,20 @@ def ingest_hadith_fast():
                 points = process_embed_chunk(docs_batch)
                 points_to_upsert.extend(points)
                 docs_batch = []
+                # Force GC after embedding
+                gc.collect()
                 
-                # If we have enough points, upsert them
                 while len(points_to_upsert) >= BATCH_SIZE:
                     batch_to_upsert = points_to_upsert[:BATCH_SIZE]
                     points_to_upsert = points_to_upsert[BATCH_SIZE:]
                     
                     elapsed_batch = time.time() - batch_start_time
-                    # Push speed to history based on whole loop time
                     speed = BATCH_SIZE / elapsed_batch if elapsed_batch > 0 else 0
                     for _ in range(BATCH_SIZE):
                         speed_history.append(speed)
 
-                    successful_upserts_since_wait, total_upserted = upsert_batch(
+                    total_upserted = upsert_batch(
                         batch_to_upsert, 
-                        successful_upserts_since_wait, 
                         total_upserted,
                         total_docs,
                         speed_history,
@@ -370,7 +338,6 @@ def ingest_hadith_fast():
                     )
                     batch_start_time = time.time()
         
-        # Process remaining embedded points
         if docs_batch:
             points = process_embed_chunk(docs_batch)
             points_to_upsert.extend(points)
@@ -381,9 +348,8 @@ def ingest_hadith_fast():
             for _ in range(len(points_to_upsert)):
                 speed_history.append(speed)
 
-            successful_upserts_since_wait, total_upserted = upsert_batch(
+            total_upserted = upsert_batch(
                 points_to_upsert, 
-                successful_upserts_since_wait, 
                 total_upserted,
                 total_docs,
                 speed_history,
@@ -396,7 +362,6 @@ def ingest_hadith_fast():
         print(f"   Total time: {time.time() - start_total:.1f}s")
         print("=" * 60)
         
-        # Cleanup checkpoint on successful completion
         if CHECKPOINT_FILE.exists():
             CHECKPOINT_FILE.unlink()
             
@@ -405,6 +370,5 @@ def ingest_hadith_fast():
     except Exception as e:
         print(f"\n[!] Fatal error during ingestion: {e}")
 
-
 if __name__ == "__main__":
-    ingest_hadith_fast()
+    ingest_vps()

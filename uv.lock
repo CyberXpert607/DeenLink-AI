@@ -515,6 +515,7 @@ dependencies = [
     { name = "slowapi" },
     { name = "sqlalchemy" },
     { name = "streamlit" },
+    { name = "tqdm" },
     { name = "uvicorn" },
 ]
 
@@ -540,6 +541,7 @@ requires-dist = [
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", specifier = ">=2.0.45" },
     { name = "streamlit", specifier = ">=1.53.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
     { name = "uvicorn", specifier = ">=0.40.0" },
 ]
 

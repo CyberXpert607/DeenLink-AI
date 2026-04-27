@@ -1,0 +1,9 @@
+# Caddyfile
+# This file configures Caddy to automatically provision HTTPS certificates 
+# and proxy requests to your local FastAPI backend.
+
+# Replace with your actual backend domain (e.g., api.deenlink.org)
+# If the backend is hosted on the same domain as the frontend, you might need path routing like `route /api/*`
+api.deenlink.org {
+	reverse_proxy 127.0.0.1:8000
+}

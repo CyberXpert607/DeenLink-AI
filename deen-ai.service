@@ -1,0 +1,23 @@
+[Unit]
+Description=Deen-AI FastAPI Backend
+After=network.target
+
+[Service]
+# Change this to the actual user running the app on your VPS (e.g., ubuntu, root, deen)
+User=root
+# Change this to the actual path where you cloned the repository
+WorkingDirectory=/path/to/Deen-AI
+
+# The uv package manager allows running scripts within the project's virtual environment
+# Update the path to uv if it's not in standard PATH (e.g., /root/.cargo/bin/uv)
+ExecStart=uv run uvicorn src.backend.api.main:app --host 127.0.0.1 --port 8000
+
+# Automatically restart if it crashes
+Restart=always
+RestartSec=5
+
+# Set environment variables if needed, though they are loaded from .env
+# Environment="PATH=/root/.cargo/bin:/usr/local/bin:/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target

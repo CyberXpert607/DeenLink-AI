@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeenLink AI - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2ecc71',
+                        primaryDark: '#27ae60',
+                        teal: '#1abc9c',
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        borderGray: '#334155',
+                        textLight: '#f8fafc',
+                        textMuted: '#94a3b8'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        .heatmap-cell {
+            width: 100%;
+            height: 24px;
+            border-radius: 4px;
+            transition: opacity 0.2s;
+        }
+        .heatmap-cell:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+        /* Custom scrollbar for tables */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="font-sans antialiased text-textLight">
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="bg-cardBg rounded-xl shadow-2xl p-8 max-w-md w-full border border-borderGray">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-primary/20">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Admin Authentication</h2>
+                <p class="text-sm text-textMuted mt-2">Enter your JWT token to access the dashboard</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-textMuted mb-2">Admin Token</label>
+                <input type="password" id="tokenInput" class="w-full px-4 py-3 bg-darkBg border border-borderGray rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-white placeholder-gray-600" placeholder="eyJhbGci...">
+            </div>
+            <div id="loginError" class="hidden text-red-400 text-sm mb-4 text-center">Invalid token or unauthorized</div>
+            <button onclick="handleLogin()" class="w-full bg-primary hover:bg-primaryDark text-darkBg font-bold py-3 rounded-lg transition-colors flex items-center justify-center">
+                <i class="fas fa-sign-in-alt mr-2"></i> Access Dashboard
+            </button>
+            <div class="mt-4 text-center">
+                <button onclick="useTestToken()" class="text-xs text-textMuted hover:text-primary transition-colors">Use test token (Dev only)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
+        <!-- System Health Bar -->
+        <div class="bg-cardBg border-b border-borderGray py-2 px-4 text-xs font-medium text-textMuted flex justify-between items-center z-50">
+            <div class="flex space-x-6 items-center">
+                <div class="flex items-center">
+                    <span class="w-2 h-2 rounded-full mr-2" id="statusDot"></span>
+                    <span id="healthStatusText">Checking Systems...</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-bolt text-yellow-400"></i>
+                    <span>Latency: <strong id="valLatency" class="text-white">-</strong> ms</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                    <span>Error Rate: <strong id="valErrorRate" class="text-white">-</strong>%</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-server text-blue-400"></i>
+                    <span>Uptime: <strong id="valUptime" class="text-white">-</strong>%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-cardBg shadow-sm border-b border-borderGray sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-primary text-darkBg rounded-lg flex items-center justify-center text-xl mr-3 shadow-lg shadow-primary/20">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">DeenLink AI <span class="text-primary font-light">Analytics</span></h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="fetchData()" class="flex items-center text-textMuted hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-borderGray">
+                        <i class="fas fa-sync-alt mr-2"></i> Refresh
+                    </button>
+                    <button onclick="logout()" class="flex items-center text-red-400 hover:text-red-300 transition-colors px-3 py-2 rounded-md hover:bg-red-900/20 border border-red-900">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div id="globalError" class="hidden mb-6 bg-red-900/30 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
+                <div class="flex">
+                    <div class="flex-shrink-0"><i class="fas fa-exclamation-circle text-red-400"></i></div>
+                    <div class="ml-3"><p class="text-sm text-red-300" id="globalErrorText"></p></div>
+                </div>
+            </div>
+
+            <!-- Overview Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 flex items-center hover:border-primary/50 transition-colors">
+                    <div class="rounded-full bg-blue-900/50 p-4 mr-4"><i class="fas fa-comments text-blue-400 text-xl"></i></div>
+                    <div>
+                        <p class="text-sm font-medium text-textMuted uppercase tracking-wide">Avg Msgs / Session</p>
+                        <p class="text-3xl font-bold text-white" id="valAvgMsgs">-</p>
+                    </div>
+                </div>
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 flex items-center hover:border-primary/50 transition-colors">
+                    <div class="rounded-full bg-primary/20 p-4 mr-4"><i class="fas fa-users text-primary text-xl"></i></div>
+                    <div>
+                        <p class="text-sm font-medium text-textMuted uppercase tracking-wide">Active Users (7d)</p>
+                        <p class="text-3xl font-bold text-white" id="valActiveUsers">-</p>
+                    </div>
+                </div>
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 flex items-center hover:border-primary/50 transition-colors">
+                    <div class="rounded-full bg-purple-900/50 p-4 mr-4"><i class="fas fa-coins text-purple-400 text-xl"></i></div>
+                    <div>
+                        <p class="text-sm font-medium text-textMuted uppercase tracking-wide">Tokens Gen.</p>
+                        <p class="text-3xl font-bold text-white" id="valTokens">-</p>
+                    </div>
+                </div>
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 flex items-center hover:border-teal/50 transition-colors relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-teal opacity-10 text-8xl"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="rounded-full bg-teal/20 p-4 mr-4 relative z-10"><i class="fas fa-file-invoice-dollar text-teal text-xl"></i></div>
+                    <div class="relative z-10">
+                        <p class="text-sm font-medium text-textMuted uppercase tracking-wide">Est. API Cost (Month)</p>
+                        <p class="text-3xl font-bold text-white" id="valCostMonth">$-</p>
+                        <p class="text-xs text-textMuted mt-1">Today: <span id="valCostToday" class="text-teal">$-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Topic Breakdown -->
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 col-span-1">
+                    <h2 class="text-lg font-semibold text-white mb-4"><i class="fas fa-chart-pie text-primary mr-2"></i> Topic Categories</h2>
+                    <div class="relative h-64">
+                        <canvas id="topicChart"></canvas>
+                    </div>
+                </div>
+                <!-- Feedback Trend -->
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 col-span-2">
+                    <h2 class="text-lg font-semibold text-white mb-4"><i class="fas fa-chart-line text-primary mr-2"></i> Feedback Score Trend (30 Days)</h2>
+                    <div class="relative h-64">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heatmap and Lists Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Heatmap -->
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 col-span-2">
+                    <h2 class="text-lg font-semibold text-white mb-4"><i class="fas fa-fire text-orange-400 mr-2"></i> Peak Usage Heatmap (7 Days)</h2>
+                    <div class="overflow-x-auto pb-2">
+                        <div class="min-w-[600px]">
+                            <!-- Time headers -->
+                            <div class="grid grid-cols-25 gap-1 mb-1 ml-10">
+                                <div class="col-span-1"></div>
+                                <div class="col-span-24 flex justify-between text-xs text-textMuted px-1">
+                                    <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
+                                </div>
+                            </div>
+                            <!-- Grid -->
+                            <div id="heatmapGrid" class="flex flex-col gap-1">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end mt-4 space-x-2 text-xs text-textMuted">
+                        <span>Less</span>
+                        <div class="w-4 h-4 rounded-sm bg-borderGray"></div>
+                        <div class="w-4 h-4 rounded-sm bg-primary/40"></div>
+                        <div class="w-4 h-4 rounded-sm bg-primary/70"></div>
+                        <div class="w-4 h-4 rounded-sm bg-primary"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+                
+                <!-- Popular Queries -->
+                <div class="bg-cardBg rounded-xl border border-borderGray p-6 col-span-1 flex flex-col">
+                    <h2 class="text-lg font-semibold text-white mb-4"><i class="fas fa-list-ol text-primary mr-2"></i> Popular Queries</h2>
+                    <ul id="popularQueriesList" class="space-y-3 flex-grow">
+                        <!-- Populated by JS -->
+                        <li class="text-center text-textMuted py-4">Loading...</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Unanswered Queries Table -->
+            <div class="bg-cardBg rounded-xl border border-borderGray p-6 mb-8">
+                <h2 class="text-lg font-semibold text-white mb-4"><i class="fas fa-exclamation-circle text-red-400 mr-2"></i> Unanswered / Refused Queries</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-borderGray">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-1/6">Date</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-1/2">User Prompt</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-1/3">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unansweredTableBody" class="divide-y divide-borderGray bg-cardBg/50">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Feedback Analysis -->
+            <div class="bg-cardBg rounded-xl border border-borderGray p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-white flex items-center"><i class="fas fa-search-plus text-primary mr-2"></i> Feedback Analysis & Rectification</h2>
+                    <div class="flex space-x-1 bg-darkBg p-1 rounded-lg border border-borderGray">
+                        <button onclick="switchTab('dislikes')" id="tabDislikes" class="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-cardBg text-red-400 shadow-sm border border-borderGray">
+                            <i class="fas fa-thumbs-down mr-1"></i> Needs Improvement
+                        </button>
+                        <button onclick="switchTab('likes')" id="tabLikes" class="px-4 py-2 rounded-md text-sm font-medium transition-colors text-textMuted hover:text-primary">
+                            <i class="fas fa-thumbs-up mr-1"></i> Successful
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-borderGray">
+                    <table class="min-w-full divide-y divide-borderGray">
+                        <thead class="bg-darkBg">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-32">Date</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-24">Severity</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-1/4">User Prompt</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-textMuted uppercase tracking-wider w-1/3">AI Response</th>
+                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-textMuted uppercase tracking-wider w-24">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackTableBody" class="divide-y divide-borderGray bg-cardBg">
+                            <!-- Data injected here -->
+                            <tr><td colspan="5" class="px-6 py-10 text-center text-textMuted">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Read Full Modal -->
+    <div id="readFullModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+        <div class="bg-cardBg rounded-xl border border-borderGray shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-4 border-b border-borderGray">
+                <h3 class="text-lg font-bold text-white">Full AI Response</h3>
+                <button onclick="closeModal()" class="text-textMuted hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto whitespace-pre-wrap text-sm text-textLight" id="modalContent">
+                <!-- Content here -->
+            </div>
+            <div class="p-4 border-t border-borderGray text-right bg-darkBg rounded-b-xl">
+                <button onclick="closeModal()" class="px-4 py-2 bg-borderGray hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let adminToken = localStorage.getItem('adminToken');
+        let dashboardData = null;
+        let currentTab = 'dislikes';
+        let charts = {};
+
+        // DOM Elements
+        const elLoginOverlay = document.getElementById('loginOverlay');
+        const elMainDashboard = document.getElementById('mainDashboard');
+        const elTokenInput = document.getElementById('tokenInput');
+        const elLoginError = document.getElementById('loginError');
+        const elGlobalError = document.getElementById('globalError');
+        const elGlobalErrorText = document.getElementById('globalErrorText');
+        const elTableBody = document.getElementById('feedbackTableBody');
+
+        // Init
+        if (adminToken) {
+            showDashboard();
+            fetchData();
+        } else {
+            showLogin();
+        }
+
+        // Functions
+        function showLogin() {
+            elLoginOverlay.classList.remove('hidden');
+            elMainDashboard.classList.add('hidden');
+            elTokenInput.value = '';
+        }
+
+        function showDashboard() {
+            elLoginOverlay.classList.add('hidden');
+            elMainDashboard.classList.remove('hidden');
+        }
+
+        function handleLogin() {
+            const token = elTokenInput.value.trim();
+            if (!token) {
+                elLoginError.classList.remove('hidden');
+                return;
+            }
+            adminToken = token;
+            localStorage.setItem('adminToken', token);
+            elLoginError.classList.add('hidden');
+            showDashboard();
+            fetchData();
+        }
+
+        function useTestToken() {
+            elTokenInput.value = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJ1c2VyX3R5cGUiOiJhZG1pbiIsImlzcyI6ImRlZW5saW5rIiwiYXVkIjoiZGVlbmxpbmstYWkiLCJleHAiOjE3NzcwODI5OTB9.gRhZooYVHZknhuCDFHuj8sAwEFGWsKek5IEd9UKPWaXvawcOxkpvQvUKf7pD135SrtD4kRgmgbgAxyFkiLxap-bdehx1G9WIIeFvFEdgzJJu0_UeaqqMt0gNVGo3wQRXoac8Cge3gduIdj66rQyywU7r7TwzXwUVXA1YShgC6pau96gE5bzM8JMWskBmdw-Redcn7P2C_NNaRtzBQ8LIDAnzvUk4lQMdTlBYjsPULf9O4ZzhuCbG-7rtCtJXCh-s-pGV_o3BtI3umrQT9PWasBr26m2GWoeduuYpq8ldkX9-inOHmVeS_pfulsumkJXklNzdZAdTJba87kZsw7uCuA";
+            handleLogin();
+        }
+
+        function logout() {
+            adminToken = null;
+            localStorage.removeItem('adminToken');
+            dashboardData = null;
+            showLogin();
+        }
+
+        async function fetchData() {
+            try {
+                elGlobalError.classList.add('hidden');
+                const apiUrl = window.location.origin + '/api/v2/admin/dashboard/data';
+                
+                const response = await fetch(apiUrl, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                if (response.status === 401 || response.status === 403) {
+                    logout();
+                    elLoginError.textContent = "Session expired or unauthorized.";
+                    elLoginError.classList.remove('hidden');
+                    return;
+                }
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                dashboardData = await response.json();
+                renderAll();
+                
+            } catch (err) {
+                console.error(err);
+                elGlobalErrorText.textContent = "Failed to load data: " + err.message;
+                elGlobalError.classList.remove('hidden');
+            }
+        }
+
+        function renderAll() {
+            if (!dashboardData) return;
+            renderSystemHealth();
+            renderMetrics();
+            renderCharts();
+            renderHeatmap();
+            renderLists();
+            renderTable();
+        }
+
+        function renderSystemHealth() {
+            const h = dashboardData.system_health;
+            document.getElementById('valLatency').textContent = h.response_latency_ms;
+            document.getElementById('valErrorRate').textContent = h.error_rate;
+            document.getElementById('valUptime').textContent = h.uptime;
+
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('healthStatusText');
+            
+            if (h.error_rate > 5 || h.response_latency_ms > 2000) {
+                dot.className = "w-2 h-2 rounded-full mr-2 bg-red-500 animate-pulse";
+                text.textContent = "System Degraded";
+                text.className = "text-red-400";
+            } else if (h.error_rate > 1 || h.response_latency_ms > 1000) {
+                dot.className = "w-2 h-2 rounded-full mr-2 bg-yellow-500 animate-pulse";
+                text.textContent = "System Warning";
+                text.className = "text-yellow-400";
+            } else {
+                dot.className = "w-2 h-2 rounded-full mr-2 bg-primary";
+                text.textContent = "All Systems Operational";
+                text.className = "text-primary";
+            }
+        }
+
+        function renderMetrics() {
+            const m = dashboardData.metrics;
+            document.getElementById('valAvgMsgs').textContent = m.avg_messages_per_session;
+            document.getElementById('valActiveUsers').textContent = m.active_users_7d.toLocaleString();
+            document.getElementById('valTokens').textContent = (m.tokens_total || 0).toLocaleString();
+            
+            const costToday = ((m.tokens_today || 0) / 1000000) * 3;
+            const costMonth = ((m.tokens_month || 0) / 1000000) * 3;
+            
+            document.getElementById('valCostToday').textContent = '$' + costToday.toFixed(2);
+            document.getElementById('valCostMonth').textContent = '$' + costMonth.toFixed(2);
+        }
+
+        function renderCharts() {
+            // Theme colors
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.borderColor = '#334155';
+
+            // 1. Topic Donut Chart
+            const topics = dashboardData.topic_breakdown || {};
+            const topicLabels = Object.keys(topics);
+            const topicData = Object.values(topics);
+            
+            if (charts.topic) charts.topic.destroy();
+            const ctxTopic = document.getElementById('topicChart').getContext('2d');
+            charts.topic = new Chart(ctxTopic, {
+                type: 'doughnut',
+                data: {
+                    labels: topicLabels,
+                    datasets: [{
+                        data: topicData,
+                        backgroundColor: ['#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#f1c40f', '#95a5a6'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } },
+                    cutout: '70%'
+                }
+            });
+
+            // 2. Feedback Trend Line Chart
+            const trend = dashboardData.feedback_trend || {};
+            const trendDates = Object.keys(trend).sort();
+            const successData = trendDates.map(d => trend[d]['Successful']);
+            const needsData = trendDates.map(d => trend[d]['Needs Improvement']);
+
+            if (charts.trend) charts.trend.destroy();
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: trendDates.map(d => d.substring(5)), // MM-DD
+                    datasets: [
+                        {
+                            label: 'Successful',
+                            data: successData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Needs Improvement',
+                            data: needsData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        function renderHeatmap() {
+            const grid = document.getElementById('heatmapGrid');
+            const data = dashboardData.peak_usage || [];
+            
+            // Initialize 7x24 array
+            const matrix = Array(7).fill().map(() => Array(24).fill(0));
+            let maxCount = 0;
+            
+            data.forEach(item => {
+                // isodow: 1=Mon, 7=Sun
+                const dayIdx = item.day - 1; 
+                const hourIdx = item.hour;
+                if(dayIdx >=0 && dayIdx < 7 && hourIdx >=0 && hourIdx < 24) {
+                    matrix[dayIdx][hourIdx] = item.count;
+                    if (item.count > maxCount) maxCount = item.count;
+                }
+            });
+
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            let html = '';
+            
+            for(let d=0; d<7; d++) {
+                html += `<div class="grid grid-cols-25 gap-1 items-center">`;
+                html += `<div class="col-span-1 text-xs text-textMuted font-medium pr-2 text-right">${days[d]}</div>`;
+                html += `<div class="col-span-24 grid grid-cols-24 gap-1">`;
+                
+                for(let h=0; h<24; h++) {
+                    const count = matrix[d][h];
+                    let intensity = 0;
+                    if (maxCount > 0 && count > 0) {
+                        intensity = Math.max(0.2, count / maxCount);
+                    }
+                    
+                    let bgClass = "bg-borderGray";
+                    let style = "";
+                    if (count > 0) {
+                        bgClass = "bg-primary";
+                        style = `opacity: ${intensity}`;
+                    }
+                    
+                    html += `<div class="heatmap-cell ${bgClass}" style="${style}" title="${days[d]} ${h}:00 - ${count} msgs"></div>`;
+                }
+                html += `</div></div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function renderLists() {
+            // Popular Queries
+            const popList = document.getElementById('popularQueriesList');
+            const queries = dashboardData.popular_queries || [];
+            
+            if (queries.length === 0) {
+                popList.innerHTML = `<li class="text-center text-textMuted py-4">No data available</li>`;
+            } else {
+                popList.innerHTML = queries.map((q, i) => `
+                    <li class="flex items-start bg-darkBg p-3 rounded-lg border border-borderGray">
+                        <span class="w-6 h-6 rounded-full bg-borderGray text-textMuted flex items-center justify-center text-xs font-bold mr-3 flex-shrink-0 mt-0.5">${i+1}</span>
+                        <div class="flex-grow">
+                            <p class="text-sm text-textLight line-clamp-2">${q.query}</p>
+                            <p class="text-xs text-primary mt-1">${q.count} requests</p>
+                        </div>
+                    </li>
+                `).join('');
+            }
+
+            // Unanswered Queries
+            const unTable = document.getElementById('unansweredTableBody');
+            const unanswered = dashboardData.unanswered_queries || [];
+            
+            if (unanswered.length === 0) {
+                unTable.innerHTML = `<tr><td colspan="3" class="px-4 py-6 text-center text-textMuted">No unanswered queries recorded.</td></tr>`;
+            } else {
+                unTable.innerHTML = unanswered.map(q => {
+                    const date = new Date(q.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <tr class="hover:bg-darkBg transition-colors">
+                            <td class="px-4 py-3 whitespace-nowrap text-xs text-textMuted align-top">${date}</td>
+                            <td class="px-4 py-3 text-sm text-textLight align-top break-words">"${q.prompt}"</td>
+                            <td class="px-4 py-3 text-xs text-red-400 align-top"><span class="bg-red-900/30 px-2 py-1 rounded border border-red-800/50">${q.reason}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabDislikes = document.getElementById('tabDislikes');
+            const tabLikes = document.getElementById('tabLikes');
+            
+            if (tab === 'dislikes') {
+                tabDislikes.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors bg-cardBg text-red-400 shadow-sm border border-borderGray";
+                tabLikes.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors text-textMuted hover:text-primary";
+            } else {
+                tabLikes.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors bg-cardBg text-primary shadow-sm border border-borderGray";
+                tabDislikes.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors text-textMuted hover:text-red-400";
+            }
+            renderTable();
+        }
+
+        function renderTable() {
+            if (!dashboardData) return;
+            const dataList = currentTab === 'dislikes' ? dashboardData.recent_dislikes : dashboardData.recent_likes;
+            
+            if (!dataList || dataList.length === 0) {
+                elTableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-textMuted bg-darkBg">No data available for this category.</td></tr>`;
+                return;
+            }
+
+            elTableBody.innerHTML = dataList.map(item => {
+                const date = new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const cleanResponse = item.response ? item.response.replace(/<[^>]*>?/gm, '') : 'N/A';
+                
+                // Severity Badge
+                let sevClass = "bg-gray-800 text-gray-300 border-gray-600";
+                if (item.severity === 'High') sevClass = "bg-red-900/50 text-red-300 border-red-700";
+                if (item.severity === 'Medium') sevClass = "bg-yellow-900/50 text-yellow-300 border-yellow-700";
+                if (item.severity === 'Low') sevClass = "bg-blue-900/50 text-blue-300 border-blue-700";
+
+                return `
+                    <tr class="hover:bg-darkBg transition-colors border-b border-borderGray/50">
+                        <td class="px-4 py-4 whitespace-nowrap text-xs text-textMuted align-top">${date}</td>
+                        <td class="px-4 py-4 align-top">
+                            <select onchange="updateFeedback('${item.id}', 'severity', this.value)" class="text-xs ${sevClass} border rounded px-2 py-1 outline-none appearance-none cursor-pointer w-full text-center font-medium">
+                                <option value="Low" ${item.severity === 'Low' ? 'selected' : ''} class="bg-gray-800 text-white">Low</option>
+                                <option value="Medium" ${item.severity === 'Medium' ? 'selected' : ''} class="bg-gray-800 text-white">Medium</option>
+                                <option value="High" ${item.severity === 'High' ? 'selected' : ''} class="bg-gray-800 text-white">High</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-4 text-sm text-textLight font-medium align-top max-w-xs break-words">${item.prompt || 'N/A'}</td>
+                        <td class="px-4 py-4 text-sm text-textMuted align-top max-w-md">
+                            <div class="line-clamp-3 overflow-hidden text-ellipsis">${cleanResponse}</div>
+                            <button class="text-teal hover:text-white text-xs mt-2 font-medium flex items-center" onclick="openModal(\`${encodeURIComponent(cleanResponse)}\`)"><i class="fas fa-expand-alt mr-1"></i> Read Full</button>
+                        </td>
+                        <td class="px-4 py-4 text-center align-top">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" ${item.resolved ? 'checked' : ''} onchange="updateFeedback('${item.id}', 'resolved', this.checked)">
+                                <div class="w-9 h-5 bg-borderGray peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function updateFeedback(id, field, value) {
+            try {
+                const payload = {};
+                payload[field] = value;
+                
+                const response = await fetch(`/api/v2/admin/feedback/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update');
+                
+                // Update local state so it persists across tab switches
+                const list = currentTab === 'dislikes' ? dashboardData.recent_dislikes : dashboardData.recent_likes;
+                const item = list.find(i => i.id === id);
+                if (item) item[field] = value;
+                
+            } catch (err) {
+                console.error(err);
+                alert("Error updating feedback: " + err.message);
+            }
+        }
+
+        function openModal(encodedText) {
+            document.getElementById('modalContent').textContent = decodeURIComponent(encodedText);
+            document.getElementById('readFullModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('readFullModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

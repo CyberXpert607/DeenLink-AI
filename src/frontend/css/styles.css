@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
 * {
     margin: 0;
     padding: 0;
@@ -583,7 +585,6 @@ html, body {
     padding: 12px 16px;
     font-size: 14px;
     line-height: 1.6;
-    /* CRITICAL: Prevent punctuation from wrapping alone */
     word-break: break-word;
     overflow-wrap: break-word;
     white-space: pre-wrap;
@@ -594,7 +595,6 @@ html, body {
     width: 100%;
     max-width: 100%;
     min-height: fit-content;
-    /* Prevent orphan punctuation */
     orphans: 3;
     widows: 3;
 }
@@ -611,14 +611,12 @@ html, body {
     font-weight: 400;
 }
 
-/* FIXED: Paragraph handling - prevent punctuation orphans */
 .message-text p {
     margin: 0 0 8px 0;
     word-break: break-word;
     overflow-wrap: break-word;
     display: block;
     width: 100%;
-    /* Prevent single punctuation on new line */
     orphans: 3;
     widows: 3;
 }
@@ -643,7 +641,7 @@ html, body {
 }
 
 /* ============================================
-   RAG ANSWER FORMATTING - FIXED
+   RAG ANSWER CONTAINER
    ============================================ */
 .rag-answer {
     display: flex;
@@ -651,111 +649,115 @@ html, body {
     gap: 12px;
     width: 100%;
     margin: 8px 0;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .rag-explanation {
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.5;
     color: var(--text-dark);
     margin: 0 0 8px 0;
     padding: 0;
-    font-weight: 400;
 }
 
-/* FIXED: RAG source with badge positioning */
+/* ============================================
+   RAG SOURCE CARD - COMPACT (Single Definition)
+   ============================================ */
 .rag-source {
     position: relative;
     background: var(--light-green);
     border-left: 4px solid var(--primary-green);
-    padding: 10px 12px;
-    padding-top: 28px;
     border-radius: 12px;
-    margin: 6px 0;
+    margin: 8px 0;
+    padding: 12px;
+    padding-top: 32px;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-.rag-source .source-badge {
+.source-badge {
     position: absolute;
     top: 6px;
     left: 6px;
     background: var(--primary-green);
     color: white;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 10px;
     font-weight: 600;
-    z-index: 1;
-    opacity: 0.9;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    line-height: 1;
+    height: 20px;
+    min-width: fit-content;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .rag-arabic {
-    font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', 'Lateef', 'Arial', sans-serif;
-    font-size: 18px;
+    font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', 'Lateef', sans-serif;
+    font-size: 16px;
     color: var(--primary-green);
     direction: rtl;
     text-align: right;
-    line-height: 1.6;
+    line-height: 1.5;
     margin: 0 0 6px 0;
     font-weight: 500;
     word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
 }
 
 .rag-english {
     font-style: italic;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-dark);
     margin: 4px 0;
-    padding: 6px 10px;
-    border-left: 3px solid var(--accent-gold);
+    padding: 4px 8px;
+    border-left: 2px solid var(--accent-gold);
     background: rgba(212, 175, 55, 0.08);
-    border-radius: 0 8px 8px 0;
-    line-height: 1.5;
+    border-radius: 0 6px 6px 0;
+    line-height: 1.4;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 .rag-meta {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--dark-gray);
     text-align: right;
-    margin-top: 4px;
+    margin-top: 6px;
     padding-top: 4px;
     border-top: 1px dashed var(--medium-gray);
-    font-weight: 500;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
 }
 
-.rag-explanation {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-dark);
-    margin: 0 0 4px 0;
-    font-weight: 400;
-}
-
-@media (max-width: 767px) {
-    .feedback-btn span {
-        display: none;
-    }
-    
-    .feedback-btn {
-        padding: 6px;
-    }
-    
-    .rag-source {
-        padding: 8px 10px;
-        padding-top: 26px;
-    }
-    
-    .rag-arabic {
-        font-size: 16px;
-    }
-}
-
+/* Dark theme - KEEPING your nice dark background */
 body.dark-theme .rag-source {
     background: rgba(46, 204, 113, 0.15);
+    border-left-color: #2ecc71;
 }
 
-body.dark-theme .rag-english {
-    background: rgba(243, 156, 18, 0.15);
+body.dark-theme .source-badge {
+    background: #2ecc71;
+    color: #1a2526;
 }
 
+body.dark-theme .rag-arabic {
+    color: #2ecc71;
+}
+
+/* ============================================
+   RAG LOADING INDICATOR
+   ============================================ */
 .rag-loading-indicator {
     display: flex;
     align-items: center;
@@ -768,7 +770,7 @@ body.dark-theme .rag-english {
     font-size: 14px;
     margin: 8px 0;
     animation: pulse 1.5s ease-in-out infinite;
-    min-height: 60px; /* Ensure visibility */
+    min-height: 60px;
 }
 
 .rag-loading-indicator .spinner {
@@ -790,6 +792,9 @@ body.dark-theme .rag-english {
     50% { opacity: 0.6; }
 }
 
+/* ============================================
+   MESSAGE FEEDBACK BUTTONS
+   ============================================ */
 .message-feedback {
     display: flex;
     gap: 8px;
@@ -833,25 +838,6 @@ body.dark-theme .rag-english {
     transform: scale(0.95);
 }
 
-@media (max-width: 767px) {
-    .message.user .message-content {
-        max-width: 90%;
-    }
-    
-    .message.user .message-text {
-        padding: 8px 12px;
-        font-size: 15px;
-    }
-    
-    .feedback-btn span {
-        display: none;
-    }
-    
-    .feedback-btn {
-        padding: 8px;
-    }
-}
-
 .feedback-btn:disabled {
     cursor: not-allowed;
     opacity: 0.3;
@@ -875,6 +861,9 @@ body.dark-theme .rag-english {
     margin-left: auto;
 }
 
+/* ============================================
+   TYPING INDICATORS
+   ============================================ */
 .typing-indicator {
     display: flex;
     gap: 8px;
@@ -904,9 +893,81 @@ body.dark-theme .rag-english {
 }
 
 /* ============================================
-   GLASSMORPHISM INPUT AREA - FIXED (NO GREEN LINE)
+   SEARCH INDICATOR - FIXED
    ============================================ */
+.search-indicator {
+    display: flex;
+    justify-content: flex-start;
+    padding: 8px 0;
+    margin: 4px 0;
+    animation: fadeIn 0.3s ease;
+}
 
+.search-indicator-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+}
+
+.search-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--medium-gray);
+    border-top-color: var(--primary-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.search-text {
+    font-size: 13px;
+    color: var(--dark-gray);
+    font-style: italic;
+}
+
+.typing-indicator-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--ai-bg);
+    border-radius: 18px;
+    border-bottom-left-radius: 6px;
+    width: fit-content;
+    margin: 8px 0;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dot-small {
+    width: 6px;
+    height: 6px;
+    background: var(--dark-gray);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot-small:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot-small:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot-small:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* ============================================
+   GLASSMORPHISM INPUT AREA - FIXED
+   ============================================ */
 .input-area {
     position: fixed;
     left: 16px;
@@ -922,7 +983,6 @@ body.dark-theme .rag-english {
     pointer-events: auto;
 }
 
-/* FIXED: Glassmorphism container - NO FOCUS OUTLINE VISIBLE */
 .input-container {
     display: flex;
     align-items: flex-end;
@@ -968,7 +1028,6 @@ body.dark-theme .input-container::before {
     );
 }
 
-/* FIXED: Textarea - NO VISIBLE FOCUS OUTLINE */
 .message-input {
     flex: 1;
     border: none;
@@ -985,20 +1044,17 @@ body.dark-theme .input-container::before {
     width: 100%;
     position: relative;
     z-index: 1;
-    /* CRITICAL: Remove any focus outline/border */
     -webkit-appearance: none;
     appearance: none;
     box-shadow: none;
 }
 
-/* CRITICAL: Override any browser focus styles */
 .message-input:focus {
     outline: none;
     border: none;
     box-shadow: none;
 }
 
-/* Webkit browsers - remove autofill styling */
 .message-input:-webkit-autofill,
 .message-input:-webkit-autofill:hover,
 .message-input:-webkit-autofill:focus {
@@ -1046,6 +1102,9 @@ body.dark-theme .input-container::before {
     box-shadow: none;
 }
 
+/* ============================================
+   TOASTS
+   ============================================ */
 .success-toast {
     position: fixed;
     top: 70px;
@@ -1061,7 +1120,6 @@ body.dark-theme .input-container::before {
     animation: slideDown 0.3s ease;
 }
 
-/* Error Toast */
 .error-toast {
     position: fixed;
     top: 70px;
@@ -1099,7 +1157,9 @@ body.dark-theme .error-toast {
     background: #ff6b6b;
 }
 
-/* Retry Icon */
+/* ============================================
+   RETRY & LOADING
+   ============================================ */
 .retry-icon {
     margin-left: 8px;
     cursor: pointer;
@@ -1111,51 +1171,252 @@ body.dark-theme .error-toast {
     opacity: 1;
 }
 
-/* Loading State */
 .loading-state {
     text-align: center;
     padding: 40px;
     color: var(--dark-gray);
 }
 
-/* Quran/Hadith Styling */
-.quran-text {
-    font-family: 'Traditional Arabic', 'Scheherazade', serif;
-    font-size: 18px;
-    text-align: right;
-    line-height: 1.5;
-    margin: 10px 0;
-    color: var(--primary-green);
-    direction: rtl;
+/* ============================================
+   SOURCES PANEL - COLLAPSIBLE LIST
+   ============================================ */
+.sources-panel {
+    margin-top: 12px;
+    border-top: 1px solid var(--medium-gray);
+    overflow: hidden;
 }
 
-.quran-translation {
-    font-style: italic;
-    margin-top: 6px;
-    padding-left: 10px;
-    border-left: 2px solid var(--accent-gold);
+.sources-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    cursor: pointer;
+    font-size: 12px;
     color: var(--dark-gray);
-    font-size: 13px;
+    transition: all 0.2s;
+    user-select: none;
 }
 
-.hadith-text {
-    font-style: italic;
-    margin: 10px 0;
-    padding: 10px;
-    background-color: rgba(212, 175, 55, 0.1);
-    border-radius: 6px;
-    border-right: 3px solid var(--accent-gold);
-    font-size: 13px;
+.sources-header:hover {
+    color: var(--primary-green);
 }
 
-.reference {
+.sources-chevron {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+    font-size: 10px;
+}
+
+.sources-panel.expanded .sources-chevron {
+    transform: rotate(180deg);
+}
+
+.sources-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.sources-panel.expanded .sources-content {
+    max-height: 500px;
+    transition: max-height 0.4s ease-in;
+}
+
+.source-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.source-item:last-child {
+    border-bottom: none;
+}
+
+/* Source item badge - DIFFERENT from rag-source badge */
+.source-item .source-badge {
+    position: static; 
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.source-details {
+    flex: 1;
+}
+
+.source-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-bottom: 4px;
+}
+
+.source-details .source-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     font-size: 10px;
     color: var(--dark-gray);
-    margin-top: 3px;
-    text-align: right;
+    margin-bottom: 4px;
 }
 
-/* Desktop Styles (768px and up) */
+.source-details .source-meta i {
+    font-size: 9px;
+    margin-right: 3px;
+}
+
+.source-preview {
+    font-size: 11px;
+    color: var(--text-dark);
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* ============================================
+   STREAMING MESSAGE STYLES
+   ============================================ */
+.message.ai.streaming .message-text {
+    min-height: 40px;
+    position: relative;
+}
+
+.streaming-text {
+    display: inline;
+    line-height: 1.6;
+}
+
+/* Cursor blink effect while streaming */
+.message.ai.streaming .message-text::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+    opacity: 0.7;
+    margin-left: 2px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ============================================
+   MOBILE STYLES (767px and below)
+   ============================================ */
+@media (max-width: 767px) {
+    .menu-button {
+        display: flex !important;
+    }
+    
+    .back-button {
+        display: flex;
+    }
+    
+    .header-left {
+        gap: 6px;
+    }
+    
+    .header-title span {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .message.user .message-content {
+        max-width: 90%;
+    }
+    
+    .message.ai .message-content {
+        max-width: 95%;
+    }
+    
+    .message.user .message-text,
+    .message.ai .message-text {
+        font-size: 15px;
+        padding: 10px 12px;
+    }
+    
+    .input-container {
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+    
+    /* Mobile RAG - COMPACT */
+    .rag-source {
+        padding: 8px;
+        padding-top: 28px;
+        margin: 6px 0;
+    }
+    
+    .rag-source .source-badge {
+        font-size: 9px;
+        padding: 1px 6px;
+        height: 18px;
+        top: 4px;
+        left: 4px;
+    }
+    
+    .rag-arabic {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .rag-english {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .rag-meta {
+        font-size: 8px;
+        gap: 4px;
+    }
+    
+    .message-feedback {
+        gap: 6px;
+    }
+    
+    .feedback-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+    
+    .feedback-btn span {
+        display: none;
+    }
+    
+    .search-indicator-content {
+        padding: 8px 16px;
+    }
+    
+    .search-text {
+        font-size: 12px;
+    }
+    
+    .sources-header {
+        font-size: 11px;
+    }
+    
+    .source-title {
+        font-size: 12px;
+    }
+    
+    .source-meta {
+        font-size: 9px;
+        gap: 6px;
+    }
+    
+    .source-preview {
+        font-size: 10px;
+    }
+}
+
+/* ============================================
+   DESKTOP STYLES (768px and up)
+   ============================================ */
 @media (min-width: 768px) {
     .container.layout {
         max-width: 1400px;
@@ -1311,102 +1572,36 @@ body.dark-theme .error-toast {
         background: var(--primary-green);
     }
     
-    /* Desktop RAG adjustments */
+    /* Desktop RAG - Still compact, not huge */
     .rag-source {
-        padding: 14px 18px;
+        padding: 14px;
         padding-top: 36px;
+        margin: 10px 0;
     }
     
     .rag-source .source-badge {
-        font-size: 12px;
+        font-size: 11px;
         padding: 3px 10px;
-    }
-    
-    .rag-arabic {
-        font-size: 24px;
-    }
-}
-
-/* Mobile Styles (767px and below) */
-@media (max-width: 767px) {
-    .menu-button {
-        display: flex !important;
-    }
-    
-    .back-button {
-        display: flex;
-    }
-    
-    .header-left {
-        gap: 6px;
-    }
-    
-    .header-title span {
-        max-width: 150px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .message.user .message-content {
-        max-width: 90%;
-    }
-    
-    .message.ai .message-content {
-        max-width: 95%;
-    }
-    
-    .message.user .message-text,
-    .message.ai .message-text {
-        font-size: 15px;
-        padding: 10px 12px;
-    }
-    
-    .input-container {
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
-    }
-    
-    /* Mobile RAG adjustments */
-    .rag-source {
-        padding: 10px 12px;
-        padding-top: 28px;
-    }
-    
-    .rag-source .source-badge {
-        font-size: 10px;
-        padding: 2px 6px;
-        top: 6px;
-        left: 6px;
+        height: 22px;
     }
     
     .rag-arabic {
         font-size: 18px;
-        line-height: 1.6;
     }
     
     .rag-english {
         font-size: 12px;
-        padding: 6px 10px;
+        padding: 5px 10px;
     }
     
     .rag-meta {
         font-size: 10px;
     }
-    
-    .message-feedback {
-        gap: 6px;
-    }
-    
-    .feedback-btn {
-        font-size: 11px;
-        padding: 3px 6px;
-    }
-    
-    .feedback-btn span {
-        display: none;
-    }
 }
 
+/* ============================================
+   LARGE DESKTOP (1440px and up)
+   ============================================ */
 @media (min-width: 1440px) {
     .container.layout {
         max-width: 1600px;
@@ -1421,6 +1616,9 @@ body.dark-theme .error-toast {
     }
 }
 
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
 .hidden {
     display: none !important;
 }
@@ -1449,4 +1647,13 @@ button:focus-visible,
 textarea:focus-visible {
     outline: 2px solid var(--primary-green);
     outline-offset: 2px;
+}
+
+/* Dark theme adjustments */
+body.dark-theme .search-indicator-content {
+    background: rgba(44, 62, 80, 0.9);
+}
+
+body.dark-theme .source-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
 }

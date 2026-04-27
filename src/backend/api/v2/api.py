@@ -1,6 +1,7 @@
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
+import os
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from logging import getLogger
@@ -25,8 +26,39 @@ class AskRequest(BaseModel):
     conversation_id: str
     message: str
 
+def format_source_display(payload: dict) -> str:
+    """Format source for display in UI"""
+    if payload.get("source_type") == "hadith":
+        parts = []
+        
+        collection = payload.get("collection", "")
+        if collection:
+            parts.append(collection)
+        
+        hadith_ref = payload.get("hadith_number_display")
+        if hadith_ref:
+            parts.append(hadith_ref)
+        
+        chapter = payload.get("chapter_name_en") or payload.get("chapter_name_ar")
+        if chapter:
+            parts.append(chapter[:40])
+        
+        grade = payload.get("grade")
+        if grade and grade != "Unknown":
+            parts.append(grade)
+        
+        return " · ".join(parts) if parts else "Hadith"
+    
+    elif payload.get("source_type") == "quran":
+        surah = payload.get("surah_name", "")
+        ayah = payload.get("ayah", "")
+        if surah and ayah:
+            return f"Qur'an {surah}:{ayah}"
+        return "Qur'an"
+    
+    return "Islamic Source"
 
-def save_messages_sync(conversation_id: str, user_id: str, query: str, response: str, title_update: str = None):
+def save_messages_sync(conversation_id: str, user_id: str, query: str, response: str, tokens: int = 0, title_update: str = None):
 
     db = SessionLocal()
     try:
@@ -44,6 +76,7 @@ def save_messages_sync(conversation_id: str, user_id: str, query: str, response:
             conversation_id=conversation_id,
             role="user",
             content=query,
+            tokens=0
         )
         db.add(user_msg)
         
@@ -52,6 +85,7 @@ def save_messages_sync(conversation_id: str, user_id: str, query: str, response:
             conversation_id=conversation_id,
             role="assistant",
             content=response,
+            tokens=tokens
         )
         db.add(assistant_msg)
         
@@ -68,6 +102,24 @@ def save_messages_sync(conversation_id: str, user_id: str, query: str, response:
         db.close()
 
 
+import time
+
+RATE_LIMIT_STORE = {}
+RATE_LIMIT_WINDOW = 60
+RATE_LIMIT_MAX_REQUESTS = 10
+
+def check_rate_limit(user_id: str):
+    now = time.time()
+    if user_id not in RATE_LIMIT_STORE:
+        RATE_LIMIT_STORE[user_id] = []
+    
+    RATE_LIMIT_STORE[user_id] = [ts for ts in RATE_LIMIT_STORE[user_id] if now - ts < RATE_LIMIT_WINDOW]
+    
+    if len(RATE_LIMIT_STORE[user_id]) >= RATE_LIMIT_MAX_REQUESTS:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+        
+    RATE_LIMIT_STORE[user_id].append(now)
+
 @router.post("/ask/stream")
 async def ask_stream(
     payload: AskRequest,
@@ -76,6 +128,8 @@ async def ask_stream(
     db: Session = Depends(get_db),
 ):
     user_id = user["user_id"]
+    check_rate_limit(user_id)
+    
     query = payload.message.strip()
 
     convo = (
@@ -143,37 +197,59 @@ async def ask_stream(
         
         local_memory_messages = memory_messages  
         try:
-            # RAG (Quran and Hadith)
             if current_intent in {"rag_quran", "rag_hadith"}:
-                results = search_similar(current_query, 10)
+                yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
+            elif current_intent == "motivation":
+                yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
+        
+            await asyncio.sleep(0.1)
+
+            if current_intent in {"rag_quran", "rag_hadith"}:
+                source_filter = None
+                if current_intent == "rag_quran":
+                    source_filter = "quran"
+                elif current_intent == "rag_hadith":
+                    source_filter = "hadith"
+                
+                results = search_similar(current_query, 10, source_type=source_filter)
                 filtered = [r for r in results if r.score >= 0.30]
                 
-                if current_intent == "rag_quran":
-                    quran_hits = [r for r in filtered if r.source_type == "quran"]
-                    if quran_hits:
-                        filtered = quran_hits
-                elif current_intent == "rag_hadith":
-                    hadith_hits = [r for r in filtered if r.source_type == "hadith"]
-                    if hadith_hits:
-                        filtered = hadith_hits
+                if not filtered and source_filter:
+                    results = search_similar(current_query, 10)
+                    filtered = [r for r in results if r.score >= 0.30]
+                    if current_intent == "rag_quran":
+                        filtered = [r for r in filtered if r.source_type == "quran"]
+                    elif current_intent == "rag_hadith":
+                        filtered = [r for r in filtered if r.source_type == "hadith"]
 
                 if not filtered:
-                    fallback_msg = "No relevant information found in the knowledge base. Here's a general response instead."
+                    fallback_msg = "No relevant information found in the knowledge base. Please try rephrasing your question."
                     full_response += fallback_msg
                     yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
                     has_sent_any_token = True
                 else:
-                    for chunk in stream_rag_answer(current_query, filtered):
+                    sources_data = [{
+                        "source_type": r.source_type,
+                        "score": r.score,
+                        "payload": r.payload,
+                        "display_reference": format_source_display(r.payload)
+                    } for r in filtered]
+                    
+                    yield f"data: {json.dumps({'type': 'sources', 'sources': sources_data})}\n\n"
+                    
+                    rag_context = {
+                        "conversation_history": conversation_history[-3:] if conversation_history else [],
+                        "intent": current_intent
+                    }
+                    
+                    for chunk in stream_rag_answer(current_query, filtered, rag_context):
                         if disconnected:
                             break
-                            
                         if not isinstance(chunk, dict):
-                            chunk_str = str(chunk)
-                            full_response += chunk_str
-                            yield f"data: {json.dumps({'type': 'unknown', 'content': chunk_str})}\n\n"
-                            has_sent_any_token = True
                             continue
-                            
+                    
                         chunk_type = chunk.get("type")
                         if chunk_type == "token":
                             content = chunk.get("content", "")
@@ -183,7 +259,8 @@ async def ask_stream(
                         elif chunk_type == "sources":
                             yield f"data: {json.dumps(chunk)}\n\n"
                         elif chunk_type == "final":
-                            yield f"data: {json.dumps(chunk)}\n\n"
+                            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
 
             elif current_intent == "motivation":
                 results = search_similar(current_query, 5)
@@ -195,6 +272,15 @@ async def ask_stream(
                     yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
                     has_sent_any_token = True
                 else:
+                    sources_data = [{
+                        "source_type": r.source_type,
+                        "score": r.score,
+                        "payload": r.payload,
+                        "display_reference": format_source_display(r.payload)
+                    } for r in filtered]
+                    
+                    yield f"data: {json.dumps({'type': 'sources', 'sources': sources_data})}\n\n"
+                    
                     for chunk in stream_motivation_answer(current_query, filtered):
                         if disconnected:
                             break
@@ -212,7 +298,6 @@ async def ask_stream(
                             yield f"data: {json.dumps(chunk)}\n\n"
 
             else:
-
                 if not local_memory_messages or len(local_memory_messages) == 0:
                     local_memory_messages = [
                         {"role": "system", "content": "You are a helpful AI assistant."},
@@ -264,6 +349,7 @@ async def ask_stream(
             
             if completed and full_response.strip() and not disconnected:
                 title_update = current_query if current_convo.title == "New Chat" else None
+                estimated_tokens = len(full_response) // 4
                 
                 background_tasks.add_task(
                     save_messages_sync,
@@ -271,6 +357,7 @@ async def ask_stream(
                     user_id=current_user_id,
                     query=current_query,
                     response=full_response,
+                    tokens=estimated_tokens,
                     title_update=title_update
                 )
                 logging.info(f"Scheduled background save for conversation {current_convo.id}")
@@ -384,4 +471,219 @@ def delete_conversation(
     db.delete(convo)
     db.commit()
 
+    return {"success": True}
+
+class FeedbackRequest(BaseModel):
+    conversationId: str = None
+    type: str
+    prompt: str = ""
+    response: str = ""
+    timestamp: str = None
+    url: str = None
+
+@router.post("/feedback")
+def submit_feedback(payload: FeedbackRequest, user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    try:
+        from v2.db.models import Feedback
+        fb = Feedback(
+            id=str(uuid.uuid4()),
+            conversation_id=payload.conversationId,
+            user_id=user["user_id"],
+            type=payload.type,
+            prompt=payload.prompt,
+            response=payload.response
+        )
+        db.add(fb)
+        db.commit()
+        return {"success": True}
+    except Exception as e:
+        logging.error(f"Error saving feedback: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save feedback")
+
+@router.get("/admin/dashboard/ui")
+def get_dashboard_ui():
+    html_path = os.path.join(os.path.dirname(__file__), "templates", "dashboard.html")
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Dashboard UI not found")
+
+@router.get("/admin/dashboard/data")
+def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from v2.db.models import Feedback
+    from sqlalchemy import func, text, distinct, or_
+    from datetime import datetime, timedelta
+    
+    # 1. System Health
+    system_health = {
+        "response_latency_ms": 450, # TODO: connect to real API latency middleware
+        "error_rate": 0.5, # TODO: connect to real API error middleware
+        "uptime": 99.9 # TODO: calculate from server start time
+    }
+    
+    # 2. Avg Messages per Session
+    total_convos = db.query(Conversation).count()
+    total_msgs = db.query(Message).count()
+    avg_msgs_per_session = round(total_msgs / total_convos, 1) if total_convos > 0 else 0
+    
+    # 3. Active Users (Last 7 Days)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    active_users_7d = db.query(func.count(distinct(Message.conversation_id))).filter(Message.created_at >= seven_days_ago).scalar() or 0
+    
+    # 4. Token Cost Tracker (Today and Month)
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    first_of_month = today.replace(day=1)
+    
+    tokens_today = db.query(func.sum(Message.tokens)).filter(Message.created_at >= today).scalar() or 0
+    tokens_month = db.query(func.sum(Message.tokens)).filter(Message.created_at >= first_of_month).scalar() or 0
+    total_tokens = db.query(func.sum(Message.tokens)).scalar() or 0
+    total_feedbacks = db.query(Feedback).count()
+    
+    # 5. Topic Category Breakdown (Parsing last 500 user messages)
+    recent_user_msgs = db.query(Message.content).filter(Message.role == 'user').order_by(Message.created_at.desc()).limit(500).all()
+    topics = {"Quran": 0, "Hadith": 0, "Fiqh": 0, "Salah": 0, "Duas": 0, "General": 0}
+    for (msg_content,) in recent_user_msgs:
+        content_lower = msg_content.lower()
+        if any(kw in content_lower for kw in ["quran", "ayah", "surah", "verse"]):
+            topics["Quran"] += 1
+        elif any(kw in content_lower for kw in ["hadith", "prophet", "bukhari", "muslim", "sunnah"]):
+            topics["Hadith"] += 1
+        elif any(kw in content_lower for kw in ["fiqh", "fatwa", "halal", "haram", "ruling"]):
+            topics["Fiqh"] += 1
+        elif any(kw in content_lower for kw in ["salah", "prayer", "wudu", "fajr", "dhuhr", "asr", "maghrib", "isha"]):
+            topics["Salah"] += 1
+        elif any(kw in content_lower for kw in ["dua", "supplication", "pray for", "forgive"]):
+            topics["Duas"] += 1
+        else:
+            topics["General"] += 1
+            
+    # 6. Feedback Score Trend (Last 30 Days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    trend_data = {}
+    try:
+        feedback_trend_query = db.query(
+            func.date_trunc('day', Feedback.created_at).label('day'),
+            Feedback.type,
+            func.count(Feedback.id).label('count')
+        ).filter(Feedback.created_at >= thirty_days_ago)\
+         .group_by('day', Feedback.type)\
+         .order_by('day').all()
+         
+        for day, fb_type, count in feedback_trend_query:
+            day_str = day.strftime('%Y-%m-%d') if isinstance(day, datetime) else str(day)[:10]
+            if day_str not in trend_data:
+                trend_data[day_str] = {"Successful": 0, "Needs Improvement": 0}
+            if fb_type == 'like':
+                trend_data[day_str]["Successful"] += count
+            else:
+                trend_data[day_str]["Needs Improvement"] += count
+    except Exception as e:
+        logging.error(f"Error executing date_trunc: {e}")
+        
+    # 7. Popular Queries Panel
+    popular_queries_raw = db.query(
+        Message.content,
+        func.count(Message.id).label('count')
+    ).filter(Message.role == 'user')\
+     .group_by(Message.content)\
+     .order_by(text('count DESC'))\
+     .limit(5).all()
+     
+    popular_queries = [{"query": row[0][:100], "count": row[1]} for row in popular_queries_raw if row[0]]
+    
+    # 8. Unanswered / Refused Queries
+    refusal_phrases = ["I'm sorry, I couldn't generate a response", "No relevant information found", "fallback"]
+    refusal_filters = [Message.content.ilike(f"%{phrase}%") for phrase in refusal_phrases]
+    
+    unanswered_raw = db.query(Message).filter(Message.role == 'assistant', or_(*refusal_filters)).order_by(Message.created_at.desc()).limit(10).all()
+    unanswered_queries = []
+    for msg in unanswered_raw:
+        user_msg = db.query(Message).filter(
+            Message.conversation_id == msg.conversation_id,
+            Message.role == 'user',
+            Message.created_at <= msg.created_at
+        ).order_by(Message.created_at.desc()).first()
+        
+        if user_msg:
+            reason = "No relevant knowledge found" if "No relevant information" in msg.content else "Generation failed/Refused"
+            unanswered_queries.append({
+                "timestamp": msg.created_at.isoformat(),
+                "prompt": user_msg.content,
+                "reason": reason
+            })
+            
+    # 9. Peak Usage Heatmap (7-day x 24-hour grid)
+    heatmap_data = []
+    try:
+        heatmap_query = db.query(
+            func.extract('isodow', Message.created_at).label('day_of_week'),
+            func.extract('hour', Message.created_at).label('hour_of_day'),
+            func.count(Message.id).label('count')
+        ).filter(Message.created_at >= seven_days_ago)\
+         .group_by('day_of_week', 'hour_of_day').all()
+         
+        for dow, hod, count in heatmap_query:
+            heatmap_data.append({"day": int(dow), "hour": int(hod), "count": count})
+    except Exception as e:
+        logging.error(f"Error executing extract: {e}")
+
+    # Feedback tables
+    recent_likes = db.query(Feedback).filter(Feedback.type == 'like').order_by(Feedback.created_at.desc()).limit(20).all()
+    recent_dislikes = db.query(Feedback).filter(Feedback.type == 'dislike').order_by(Feedback.created_at.desc()).limit(20).all()
+    
+    def format_fb(fb_list):
+        return [
+            {
+                "id": fb.id,
+                "prompt": fb.prompt,
+                "response": fb.response,
+                "severity": getattr(fb, 'severity', 'Low'),
+                "resolved": getattr(fb, 'resolved', False),
+                "created_at": fb.created_at.isoformat() if fb.created_at else None
+            } for fb in fb_list
+        ]
+    
+    return {
+        "system_health": system_health,
+        "metrics": {
+            "avg_messages_per_session": avg_msgs_per_session,
+            "active_users_7d": active_users_7d,
+            "tokens_today": tokens_today,
+            "tokens_month": tokens_month,
+            "tokens_total": total_tokens,
+            "total_feedbacks": total_feedbacks
+        },
+        "topic_breakdown": topics,
+        "feedback_trend": trend_data,
+        "popular_queries": popular_queries,
+        "unanswered_queries": unanswered_queries,
+        "peak_usage": heatmap_data,
+        "recent_likes": format_fb(recent_likes),
+        "recent_dislikes": format_fb(recent_dislikes)
+    }
+
+class FeedbackUpdateRequest(BaseModel):
+    severity: str = None
+    resolved: bool = None
+
+@router.patch("/admin/feedback/{feedback_id}")
+def update_feedback(feedback_id: str, payload: FeedbackUpdateRequest, user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    from v2.db.models import Feedback
+    fb = db.query(Feedback).filter(Feedback.id == feedback_id).first()
+    if not fb:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+        
+    if payload.severity is not None:
+        fb.severity = payload.severity
+    if payload.resolved is not None:
+        fb.resolved = payload.resolved
+        
+    db.commit()
     return {"success": True}

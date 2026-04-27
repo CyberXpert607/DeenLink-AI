@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from v2.embeddings import embed_text
-from v2.vectore_types import VectorSearchResult
+from embeddings import embed_text
+from vectore_types import VectorSearchResult
 from typing import List
 import uuid
 
@@ -45,14 +45,28 @@ def upsert_documents(docs: list[dict]):
     )
 
 
-def search_similar(query: str, limit: int = 5, min_score: float = 0.35) -> List[VectorSearchResult]:
-
+def search_similar(query: str, limit: int = 5, min_score: float = 0.35, source_type: str = None) -> List[VectorSearchResult]:
     vector = embed_text(query)
+
+    # Use filter if source_type specified
+    from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+    
+    query_filter = None
+    if source_type:
+        query_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="source_type",
+                    match=MatchValue(value=source_type)
+                )
+            ]
+        )
 
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=vector,
         limit=limit,
+        query_filter=query_filter,
         with_payload=True
     )
 
@@ -62,15 +76,22 @@ def search_similar(query: str, limit: int = 5, min_score: float = 0.35) -> List[
         if score < min_score:
             continue
         payload = p.payload
-        if "arabic" in payload and "english" in payload:
-            content_text = f"{payload.get('arabic', '')} {payload.get('english', '')}"
-        else:
-            content_text = str(payload)
+        
+        content_parts = []
+        if payload.get("arabic"):
+            content_parts.append(payload["arabic"][:500])
+        if payload.get("english"):
+            content_parts.append(payload["english"][:500])
+        
+        if payload.get("source_type") == "hadith" and payload.get("hadith_number_display"):
+            content_parts.insert(0, f"[{payload.get('hadith_number_display')}]")
+        
+        content_text = " ".join(content_parts) if content_parts else str(payload)
         
         final_results.append(VectorSearchResult(
             content=content_text,
             score=float(score),
-            source_type = payload.get("source_type", "unknown"),
-            payload = payload
+            source_type=payload.get("source_type", "unknown"),
+            payload=payload
         ))
     return final_results
