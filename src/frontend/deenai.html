@@ -57,6 +57,11 @@
                 </button>
             </div>
             <div id="conversationList" class="conversation-list"></div>
+            <div class="sidebar-footer">
+                <button id="settingsBtn" class="sidebar-settings-btn">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </div>
         </aside>
 
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
@@ -105,6 +110,78 @@
             </div>
             
             <div id="error-toast" class="error-toast hidden" role="alert"></div>
+            
+            <!-- Feedback Modal -->
+            <div id="feedbackModal" class="feedback-modal hidden">
+                <div class="feedback-modal-overlay"></div>
+                <div class="feedback-modal-content">
+                    <div class="feedback-modal-header">
+                        <h3>Report Issue</h3>
+                        <button id="closeFeedbackModal" aria-label="Close modal"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="feedback-modal-body">
+                        <p>Please let us know why this response wasn't helpful. Your feedback helps us improve.</p>
+                        <textarea id="feedbackReasonInput" placeholder="e.g., False fatwa, inaccurate source, unhelpful..." rows="3"></textarea>
+                    </div>
+                    <div class="feedback-modal-footer">
+                        <button id="cancelFeedbackBtn" class="feedback-btn-cancel">Cancel</button>
+                        <button id="submitFeedbackBtn" class="feedback-btn-submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settingsModal" class="feedback-modal hidden">
+                <div class="feedback-modal-overlay" id="settingsOverlay"></div>
+                <div class="feedback-modal-content">
+                    <div class="feedback-modal-header">
+                        <h3>Settings</h3>
+                        <button id="closeSettingsModal" aria-label="Close settings"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="feedback-modal-body">
+                        <div class="settings-group">
+                            <label class="settings-label">Response Mode</label>
+                            <p class="settings-desc">Choose how the AI should respond to your questions.</p>
+                            <div class="mode-options">
+                                <label class="mode-option">
+                                    <input type="radio" name="responseMode" value="auto" checked>
+                                    <div class="mode-card">
+                                        <div class="mode-icon"><i class="fas fa-magic"></i></div>
+                                        <div class="mode-info">
+                                            <h4>Auto (Recommended)</h4>
+                                            <span>Automatically decides between chat and knowledge base.</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="mode-option">
+                                    <input type="radio" name="responseMode" value="rag">
+                                    <div class="mode-card">
+                                        <div class="mode-icon"><i class="fas fa-book-quran"></i></div>
+                                        <div class="mode-info">
+                                            <h4>Knowledge Base</h4>
+                                            <span>Strictly searches verified Islamic sources (Quran & Hadith).</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="mode-option">
+                                    <input type="radio" name="responseMode" value="chat">
+                                    <div class="mode-card">
+                                        <div class="mode-icon"><i class="fas fa-comments"></i></div>
+                                        <div class="mode-info">
+                                            <h4>Chat Only</h4>
+                                            <span>Conversational mode without searching sources.</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feedback-modal-footer">
+                        <button id="saveSettingsBtn" class="feedback-btn-submit w-full text-center justify-center">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 

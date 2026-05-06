@@ -1,10 +1,17 @@
+import sys
 import json
 import uuid
 from pathlib import Path
 from itertools import islice
 
 from qdrant_client import QdrantClient
-from embeddings import embed_text
+
+BASE_DIR = Path(__file__).resolve().parent
+API_DIR = BASE_DIR.parent
+if str(API_DIR) not in sys.path:
+    sys.path.insert(0, str(API_DIR))
+
+from v2.embeddings import embed_text
 
 QURAN_DIR = Path(__file__).parent.parent / "data" / "quran" # folder with 114 files
 COLLECTION_NAME = "islamic_sources"

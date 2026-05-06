@@ -17,6 +17,9 @@ const State = {
     isLoadingConversation: false,
     sourcesShown: false,
     currentStreamingElement: null,
+    editingMessageId: null,
+    pendingFeedback: null,
+    responseMode: 'auto',
 };
 
 const Elements = {
@@ -32,6 +35,16 @@ const Elements = {
     errorToast: document.getElementById("error-toast"),
     quickPromptBtns: document.querySelectorAll(".quick-prompt-btn"),
     inputArea: document.querySelector(".input-area"),
+    feedbackModal: document.getElementById("feedbackModal"),
+    closeFeedbackModal: document.getElementById("closeFeedbackModal"),
+    cancelFeedbackBtn: document.getElementById("cancelFeedbackBtn"),
+    submitFeedbackBtn: document.getElementById("submitFeedbackBtn"),
+    feedbackReasonInput: document.getElementById("feedbackReasonInput"),
+    settingsBtn: document.getElementById("settingsBtn"),
+    settingsModal: document.getElementById("settingsModal"),
+    closeSettingsModal: document.getElementById("closeSettingsModal"),
+    saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+    modeRadios: document.querySelectorAll("input[name='responseMode']"),
 };
 
 const PurifyConfig = {
@@ -71,37 +84,29 @@ async function getValidToken() {
     }
 }
 
-async function getValidToken() {
+async function fetchToken() {
     const now = Date.now();
-
-    if (jwtToken && jwtExpiry && now < jwtExpiry) {
-        return jwtToken;
-    }
-
-    const res = await fetch("https://deenlink.org/api/auth/token_server.php", {
+    const res = await fetch(TOKEN_ENDPOINT, {
         method: "POST",
         credentials: "include"
     });
 
     if (!res.ok) {
-        const text = await res.text();
-        console.error("Token server error", text);
+        console.error("Token server error", await res.text());
         throw new Error("Token fetch failed");
     }
 
     const contentType = res.headers.get("content-type");
-
     if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        console.error("Expected JSON but got:", text);
+        console.error("Expected JSON but got:", await res.text());
         throw new Error("Invalid token response format");
     }
 
     const data = await res.json();
-    jwtToken = data.token;
-    jwtExpiry = now + (5 * 60 * 1000);
-
-    return jwtToken;
+    State.jwtToken = data.token;
+    State.jwtExpiry = now + (5 * 60 * 1000);
+    
+    return State.jwtToken;
 }
 
 function showError(message, duration = 4000) {
@@ -140,6 +145,66 @@ function showSuccessToast(message) {
 function updateSendButtonIcon(type = 'send') {
     const icon = type === 'stop' ? 'fa-stop' : 'fa-paper-plane';
     Elements.sendButton.innerHTML = `<i class="fas ${icon}"></i>`;
+}
+
+function createMessageActionButton(iconClass, label, action, extraClass = '') {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `message-action-btn ${extraClass}`.trim();
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    btn.dataset.action = action;
+    btn.innerHTML = `<i class="fas ${iconClass}"></i>`;
+    return btn;
+}
+
+function createUserMessageActions(messageEl, promptText, messageId = '') {
+    const actions = document.createElement('div');
+    actions.className = 'message-actions user-actions';
+
+    const copyBtn = createMessageActionButton('fa-copy', 'Copy prompt', 'copy-prompt');
+    const editBtn = createMessageActionButton('fa-pen', 'Edit prompt', 'edit-prompt');
+
+    editBtn.dataset.prompt = promptText;
+    copyBtn.dataset.prompt = promptText;
+    
+    if (messageId) {
+        editBtn.dataset.messageId = messageId;
+    }
+
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(promptText);
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy', err);
+        }
+    });
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(editBtn);
+    
+    const contentDiv = messageEl.querySelector('.message-content');
+    if (contentDiv) {
+        contentDiv.appendChild(actions);
+    } else {
+        messageEl.appendChild(actions);
+    }
+    
+    return actions;
+}
+
+function createErrorRetryAction(messageEl, promptText) {
+    const actions = document.createElement('div');
+    actions.className = 'message-actions ai-actions';
+    const retryBtn = createMessageActionButton('fa-rotate-right', 'Retry response', 'retry-prompt', 'retry-error-btn');
+    retryBtn.dataset.prompt = promptText;
+    actions.appendChild(retryBtn);
+    messageEl.appendChild(actions);
+    return actions;
 }
 
 function isNearBottom(el, threshold = 200) {
@@ -274,7 +339,6 @@ function createSourcesPanel(sources) {
     const validSources = sources.filter(s => s && s.payload);
     panel.innerHTML = `
         <div class="sources-header" onclick="this.parentElement.classList.toggle('expanded')">
-            <i class="fas fa-book-open"></i>
             <span>${validSources.length} source${validSources.length !== 1 ? 's' : ''} used</span>
             <i class="fas fa-chevron-down sources-chevron"></i>
         </div>
@@ -297,15 +361,23 @@ function createSourcesPanel(sources) {
                             <div class="source-title">${escapeHtml(displayTitle)}</div>
                             <div class="source-meta">
                                 ${isHadith ? 
-                                    `<span><i class="fas fa-scroll"></i> ${escapeHtml(payload.collection || 'Unknown')}</span>
-                                     ${payload.hadith_number_display ? `<span><i class="fas fa-hashtag"></i> ${escapeHtml(payload.hadith_number_display)}</span>` : ''}
-                                     ${payload.grade && payload.grade !== 'Unknown' ? `<span><i class="fas fa-star"></i> ${escapeHtml(payload.grade)}</span>` : ''}`
+                                    `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
+                                     ${payload.hadith_number_display ? `<span>${escapeHtml(payload.hadith_number_display)}</span>` : ''}`
                                     :
-                                    `<span><i class="fas fa-quran"></i> Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
-                                     <span><i class="fas fa-hashtag"></i> Ayah ${payload.ayah || 'Unknown'}</span>`
+                                    `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
+                                     <span>Ayah ${payload.ayah || 'Unknown'}</span>`
                                 }
                             </div>
-                            ${payload.english ? `<div class="source-preview">${escapeHtml(payload.english.substring(0, 100))}...</div>` : ''}
+                            ${payload.arabic ? `
+                            <details class="source-expandable">
+                                <summary>View Arabic Text</summary>
+                                <div class="rag-arabic" dir="rtl">${escapeHtml(payload.arabic)}</div>
+                            </details>` : ''}
+                            ${payload.english ? `
+                            <details class="source-expandable">
+                                <summary>View English Translation</summary>
+                                <div class="rag-english">${escapeHtml(payload.english)}</div>
+                            </details>` : ''}
                         </div>
                     </div>
                 `;
@@ -352,27 +424,44 @@ function createStreamingMessage() {
 }
 
 function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
-    const { container, textEl, feedbackDiv } = messageObj;
-    container.classList.remove('streaming');
+    const { container, textEl } = messageObj;
+    let feedbackDiv = messageObj.feedbackDiv || container.querySelector('.message-feedback');
+    
+    container.classList.remove('streaming', 'loading');
     const streamingText = textEl.querySelector('.streaming-text');
     if (streamingText) {
         streamingText.remove();
     }
+    
+    const indicator = container.querySelector('.typing-indicator');
+    if (indicator) indicator.remove();
+    
     renderContent(textEl, rawContent);
     textEl.classList.add('message-text');
     void textEl.offsetHeight;
+    
     if (textEl.querySelector('.rag-source')) {
         styleRAGSources(textEl);
     }
+    
+    const contentDiv = container.querySelector('.message-content');
+    
     if (sources && sources.length > 0) {
         const existingPanel = container.querySelector('.sources-panel');
         if (existingPanel) existingPanel.remove();
         const sourcesPanel = createSourcesPanel(sources);
-        const contentDiv = container.querySelector('.message-content');
         contentDiv.appendChild(sourcesPanel);
     }
-    feedbackDiv.style.display = 'flex';
-    setupFeedbackButtons(feedbackDiv, textEl, container.dataset.prompt);
+    
+    if (feedbackDiv) {
+        feedbackDiv.style.display = 'flex';
+        setupFeedbackButtons(feedbackDiv, textEl, container.dataset.prompt);
+    } else {
+        feedbackDiv = createFeedbackButtons(contentDiv);
+        feedbackDiv.style.display = 'flex';
+        contentDiv.appendChild(feedbackDiv);
+    }
+    
     if (State.autoScroll) {
         setTimeout(() => {
             Elements.chatMessages.scrollTo({
@@ -420,13 +509,14 @@ function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
     });
 }
 
-function createMessageElement(sender, text = "", incomplete = false, prompt = null) {
+function createMessageElement(sender, text = "", incomplete = false, prompt = null, messageId = null) {
     const el = document.createElement("div");
     el.className = `message ${sender}`;
+    if (incomplete) el.classList.add('error');
     if (prompt) el.dataset.prompt = prompt;
     el.dataset.incomplete = incomplete ? "true" : "false";
     el.dataset.raw = text || "";
-    el.dataset.messageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
 
     const contentDiv = document.createElement("div");
     contentDiv.className = "message-content";
@@ -436,21 +526,6 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
 
     if (sender === "user") {
         textDiv.textContent = text;
-        textDiv.style.cssText = `
-            background: var(--user-bg);
-            color: var(--user-text);
-            padding: 10px 14px;
-            font-size: 14px;
-            line-height: 1.5;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            white-space: pre-wrap;
-            border-radius: 18px;
-            border-bottom-right-radius: 6px;
-            width: fit-content;
-            max-width: 100%;
-            display: inline-block;
-        `;
     } else {
         if (isHTMLContent(text)) {
             textDiv.innerHTML = DOMPurify.sanitize(text, PurifyConfig);
@@ -467,6 +542,11 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
     }
 
     el.appendChild(contentDiv);
+    if (sender === "user") {
+        createUserMessageActions(el, text || prompt || "", el.dataset.messageId);
+    } else if (sender === "ai" && incomplete) {
+        createErrorRetryAction(el, prompt || "");
+    }
     Elements.chatMessages.appendChild(el);
 
     if (State.autoScroll) {
@@ -524,11 +604,12 @@ function replaceLoadingWithAIMessage(loadingObj, incomplete = false) {
     return textEl;
 }
 
-function appendMessage(sender, text) {
+function appendMessage(sender, text, options = {}) {
+    const { messageId = null } = options;
     const shouldScroll = isNearBottom(Elements.chatMessages);
     const el = document.createElement("div");
     el.className = `message ${sender}`;
-    el.dataset.messageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
     const contentDiv = document.createElement("div");
     contentDiv.className = "message-content";
     const textDiv = document.createElement("div");
@@ -548,6 +629,9 @@ function appendMessage(sender, text) {
         contentDiv.appendChild(feedbackButtons);
     }
     el.appendChild(contentDiv);
+    if (sender === "user") {
+        createUserMessageActions(el, text, el.dataset.messageId);
+    }
     Elements.chatMessages.appendChild(el);
     if (shouldScroll) {
         Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
@@ -589,13 +673,13 @@ function createFeedbackButtons(messageContent) {
     
     dislikeBtn.addEventListener('click', async () => {
         const msgContainer = messageContent.closest('.message');
-        const prompt = msgContainer?.dataset.prompt || msgContainer?.previousElementSibling?.querySelector('.message-text')?.innerText || '';
+        const promptStr = msgContainer?.dataset.prompt || msgContainer?.previousElementSibling?.querySelector('.message-text')?.innerText || '';
         const response = textEl?.innerText || '';
-        dislikeBtn.classList.add('active');
-        dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>Not helpful</span>';
-        likeBtn.disabled = true;
-        await sendFeedback('dislike', prompt, response);
-        showSuccessToast('Thanks for your feedback!');
+        
+        State.pendingFeedback = { prompt: promptStr, response: response, dislikeBtn: dislikeBtn, likeBtn: likeBtn };
+        
+        if (Elements.feedbackReasonInput) Elements.feedbackReasonInput.value = '';
+        if (Elements.feedbackModal) Elements.feedbackModal.classList.remove('hidden');
     });
     
     copyBtn.addEventListener('click', async () => {
@@ -613,13 +697,14 @@ function createFeedbackButtons(messageContent) {
     return feedbackDiv;
 }
 
-async function sendFeedback(type, prompt, response) {
+async function sendFeedback(type, prompt, response, reason = null) {
     try {
         const token = await getValidToken();
         const feedbackData = {
             type,
             prompt,
             response,
+            reason,
             conversationId: State.activeConversationId,
             timestamp: new Date().toISOString(),
             url: window.location.href
@@ -772,9 +857,39 @@ async function loadConversation(id) {
         throw new Error("Invalid conversation data");
     }
     data.messages.forEach(msg => {
-        appendMessage(msg.role === "user" ? "user" : "ai", msg.content);
+        appendMessage(
+            msg.role === "user" ? "user" : "ai",
+            msg.content,
+            { messageId: msg.id || null }
+        );
     });
     Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
+}
+
+async function editConversationFromMessage(conversationId, messageId, editedText) {
+    const token = await getValidToken();
+    const res = await fetchWithRetry(`${API_BASE_URL}/conversations/${conversationId}/edit`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            message_id: messageId,
+            message: editedText
+        })
+    });
+    if (!res.ok) {
+        let detail = "Failed to edit conversation";
+        try {
+            const errorData = await res.json();
+            detail = errorData?.detail || detail;
+        } catch (_) {
+            // no-op
+        }
+        throw new Error(detail);
+    }
+    return res.json();
 }
 
 async function deleteConversation(conversationId) {
@@ -872,6 +987,7 @@ async function sendMessage(retryData = null) {
         resetInputState();
         return;
     }
+    const editingMessageId = retryData?.editMessageId || State.editingMessageId;
 
     if (!retryData) State.lastUserPrompt = text;
 
@@ -889,6 +1005,20 @@ async function sendMessage(retryData = null) {
     if (!retryData) {
         Elements.messageInput.value = "";
         Elements.messageInput.style.height = "auto";
+    }
+
+    if (editingMessageId && State.activeConversationId) {
+        try {
+            await editConversationFromMessage(State.activeConversationId, editingMessageId, text);
+            await loadConversation(State.activeConversationId);
+            showSuccessToast('Message updated and regenerated');
+        } catch (err) {
+            State.editingMessageId = null;
+            resetInputState();
+            showError(err?.message || "Failed to edit message");
+            return;
+        }
+        State.editingMessageId = null;
     }
     
     appendMessage("user", text);
@@ -915,7 +1045,8 @@ async function sendMessage(retryData = null) {
             },
             body: JSON.stringify({
                 message: text,
-                conversation_id: State.activeConversationId
+                conversation_id: State.activeConversationId,
+                mode: State.responseMode
             }),
             signal: State.streamController.signal
         });
@@ -1012,9 +1143,8 @@ async function sendMessage(retryData = null) {
             streamingMsg.container.remove();
         } else {
             streamingMsg.container.remove();
-            const errorMsg = `**Error:** ${err.message}. [Click to retry]`;
-            const errorDiv = createMessageElement("ai", errorMsg, true, text);
-            errorDiv.dataset.prompt = text;
+            const safeError = err?.message || "Something went wrong";
+            createMessageElement("ai", `Error: ${safeError}`, true, text);
         }
     } finally {
         resetInputState();
@@ -1203,6 +1333,7 @@ function initEventListeners() {
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", () => {
+            if (!Elements.inputArea) return;
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
             if (keyboardHeight > 150) {
                 Elements.inputArea.style.bottom = keyboardHeight + 16 + "px";
@@ -1214,6 +1345,157 @@ function initEventListeners() {
             }
         });
     }
+
+    Elements.chatMessages.addEventListener('click', async (e) => {
+        const actionBtn = e.target.closest('.message-action-btn');
+        if (!actionBtn) return;
+
+        const prompt = actionBtn.dataset.prompt || '';
+        const action = actionBtn.dataset.action;
+        if (!prompt) return;
+
+        if (action === 'edit-prompt') {
+            const messageId = actionBtn.dataset.messageId || '';
+            if (!messageId || !State.activeConversationId) {
+                showError("Cannot edit this message");
+                return;
+            }
+            
+            const messageEl = actionBtn.closest('.message');
+            const messageTextEl = messageEl.querySelector('.message-text');
+            const actionsEl = messageEl.querySelector('.message-actions');
+            
+            // Store original content
+            const originalHTML = messageTextEl.innerHTML;
+            
+            // Hide actions
+            actionsEl.style.display = 'none';
+            
+            // Create edit interface
+            const editContainer = document.createElement('div');
+            editContainer.className = 'edit-container';
+            
+            const textarea = document.createElement('textarea');
+            textarea.className = 'edit-textarea';
+            textarea.value = prompt;
+            
+            // Auto resize
+            textarea.addEventListener("input", () => {
+                textarea.style.height = "auto";
+                textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+            });
+            
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'edit-btn-container';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'cancel-edit-btn';
+            cancelBtn.textContent = 'Cancel';
+            
+            const sendBtn = document.createElement('button');
+            sendBtn.className = 'send-edit-btn';
+            sendBtn.textContent = 'Send';
+            
+            btnContainer.appendChild(cancelBtn);
+            btnContainer.appendChild(sendBtn);
+            
+            editContainer.appendChild(textarea);
+            editContainer.appendChild(btnContainer);
+            
+            messageTextEl.innerHTML = '';
+            messageTextEl.appendChild(editContainer);
+            messageTextEl.classList.add('editing');
+            
+            textarea.style.height = "auto";
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+            textarea.focus();
+            
+            cancelBtn.addEventListener('click', () => {
+                messageTextEl.innerHTML = originalHTML;
+                messageTextEl.classList.remove('editing');
+                actionsEl.style.display = 'flex';
+            });
+            
+            sendBtn.addEventListener('click', () => {
+                const newText = textarea.value.trim();
+                if (!newText) return;
+                
+                messageTextEl.innerHTML = originalHTML;
+                messageTextEl.classList.remove('editing');
+                actionsEl.style.display = 'flex';
+                
+                State.editingMessageId = messageId;
+                sendMessage({ message: newText, editMessageId: messageId });
+            });
+            
+            return;
+        }
+
+        if (action === 'retry-prompt') {
+            if (State.streamingActive) return;
+            
+            // Remove the error message bubble if this retry came from an error state
+            const messageEl = actionBtn.closest('.message');
+            if (messageEl && messageEl.classList.contains('error')) {
+                messageEl.remove();
+            }
+            
+            sendMessage({ message: prompt });
+            return;
+        }
+    });
+
+    // Feedback Modal Event Listeners
+    const closeFeedback = () => {
+        if (Elements.feedbackModal) Elements.feedbackModal.classList.add('hidden');
+        State.pendingFeedback = null;
+    };
+
+    Elements.closeFeedbackModal?.addEventListener('click', closeFeedback);
+    Elements.cancelFeedbackBtn?.addEventListener('click', closeFeedback);
+
+    Elements.submitFeedbackBtn?.addEventListener('click', async () => {
+        if (!State.pendingFeedback) return;
+        const { prompt, response, dislikeBtn, likeBtn } = State.pendingFeedback;
+        const reason = Elements.feedbackReasonInput?.value.trim() || null;
+        
+        closeFeedback();
+
+        dislikeBtn.classList.add('active');
+        dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>Not helpful</span>';
+        likeBtn.disabled = true;
+        
+        await sendFeedback('dislike', prompt, response, reason);
+        showSuccessToast('Thanks for your feedback!');
+    });
+
+    // Settings Modal Logic
+    const openSettings = () => {
+        // Set the correct radio button based on current state
+        Elements.modeRadios?.forEach(radio => {
+            radio.checked = (radio.value === State.responseMode);
+        });
+        if (Elements.settingsModal) Elements.settingsModal.classList.remove('hidden');
+        closeSidebar();
+    };
+
+    const closeSettings = () => {
+        if (Elements.settingsModal) Elements.settingsModal.classList.add('hidden');
+    };
+
+    Elements.settingsBtn?.addEventListener('click', openSettings);
+    Elements.closeSettingsModal?.addEventListener('click', closeSettings);
+    
+    Elements.saveSettingsBtn?.addEventListener('click', () => {
+        let selectedMode = 'auto';
+        Elements.modeRadios?.forEach(radio => {
+            if (radio.checked) selectedMode = radio.value;
+        });
+        State.responseMode = selectedMode;
+        localStorage.setItem('responseMode', selectedMode);
+        closeSettings();
+        showSuccessToast('Settings saved!');
+    });
 }
 
 window.addEventListener("load", async () => {
@@ -1224,6 +1506,11 @@ window.addEventListener("load", async () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
         document.body.classList.add("dark-theme");
+    }
+
+    const savedMode = localStorage.getItem("responseMode");
+    if (savedMode) {
+        State.responseMode = savedMode;
     }
 
     await loadConversations();

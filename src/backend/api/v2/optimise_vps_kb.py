@@ -1,3 +1,4 @@
+import sys
 import json
 import uuid
 import gc
@@ -6,11 +7,14 @@ import collections
 from pathlib import Path
 from itertools import islice
 
-from vectoreStore import client, COLLECTION_NAME
-from embeddings import embed_text
-
 BASE_DIR = Path(__file__).resolve().parent
 API_DIR = BASE_DIR.parent
+if str(API_DIR) not in sys.path:
+    sys.path.insert(0, str(API_DIR))
+
+from v2.vectoreStore import client, COLLECTION_NAME
+from v2.embeddings import embed_text
+
 DATA_DIR = API_DIR / "data" / "hadith"
 
 BATCH_SIZE = 64          

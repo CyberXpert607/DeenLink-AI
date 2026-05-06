@@ -6,14 +6,22 @@ def upgrade_feedbacks_table():
     print("Upgrading database schema...")
     db = SessionLocal()
     try:
-        # Check if columns exist
         db.execute(text("ALTER TABLE feedbacks ADD COLUMN severity VARCHAR DEFAULT 'Low';"))
         db.execute(text("ALTER TABLE feedbacks ADD COLUMN resolved BOOLEAN DEFAULT FALSE;"))
         db.commit()
-        print("Successfully added severity and resolved columns to feedbacks table!")
+        print("Successfully added severity and resolved columns.")
     except Exception as e:
-        print(f"Error (columns might already exist): {e}")
+        print(f"Severity/resolved might already exist: {e}")
         db.rollback()
+        
+    try:
+        db.execute(text("ALTER TABLE feedbacks ADD COLUMN reason TEXT;"))
+        db.commit()
+        print("Successfully added reason column.")
+    except Exception as e:
+        print(f"Reason might already exist: {e}")
+        db.rollback()
+        
     finally:
         db.close()
 

@@ -3,7 +3,7 @@ import logging
 from config import MODEL
 from v2.prompts import RAG_SYSTEM_PROMPT
 
-client = Groq()
+client = Groq(timeout=120.0)
 
 def stream_rag_answer(question: str, retrieved_docs: list, context: dict = None):
     try:

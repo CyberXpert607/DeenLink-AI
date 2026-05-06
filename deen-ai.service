@@ -1,12 +1,12 @@
 [Unit]
-Description=Deen-AI FastAPI Backend
+Description=deenlink-AI FastAPI Backend
 After=network.target
 
 [Service]
 # Change this to the actual user running the app on your VPS (e.g., ubuntu, root, deen)
-User=root
+User=ubuntu
 # Change this to the actual path where you cloned the repository
-WorkingDirectory=/path/to/Deen-AI
+WorkingDirectory=/home/ubuntu/DeenLink-AI
 
 # The uv package manager allows running scripts within the project's virtual environment
 # Update the path to uv if it's not in standard PATH (e.g., /root/.cargo/bin/uv)

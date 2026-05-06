@@ -1,7 +1,7 @@
 from groq import Groq
 from config import MODEL, GROQ_API_KEY
 
-client = Groq(api_key=GROQ_API_KEY)
+client = Groq(api_key=GROQ_API_KEY, timeout=120.0)
 
 
 def stream_chat_response(messages: list):

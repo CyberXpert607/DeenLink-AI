@@ -1,7 +1,7 @@
 from groq import Groq
 from config import MODEL
 
-client = Groq()
+client = Groq(timeout=120.0)
 
 MOTIVATION_PROMPT = """
 You are an Islamic motivational assistant.
@@ -20,7 +20,6 @@ def format_hadith_reference(payload: dict) -> str:
     collection = payload.get('collection', 'Hadith')
     parts.append(collection)
     
-    # Use our generated display reference
     hadith_ref = payload.get('hadith_number_display')
     if hadith_ref:
         parts.append(hadith_ref)

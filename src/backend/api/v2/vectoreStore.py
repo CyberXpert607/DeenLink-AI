@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from embeddings import embed_text
-from vectore_types import VectorSearchResult
+from v2.embeddings import embed_text
+from v2.vectore_types import VectorSearchResult
 from typing import List
 import uuid
 

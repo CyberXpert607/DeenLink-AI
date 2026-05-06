@@ -17,6 +17,7 @@ from v2.agent import stream_chat_response
 from v2.agent_stream import stream_rag_answer
 from v2.agent_motivation import stream_motivation_answer
 from v2.vectoreStore import search_similar
+from v2.prompts import CHAT_SYSTEM_PROMPT
 
 
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
@@ -25,9 +26,13 @@ logging = getLogger(__name__)
 class AskRequest(BaseModel):
     conversation_id: str
     message: str
+    mode: str = "auto"
+
+class EditMessageRequest(BaseModel):
+    message_id: str
+    message: str
 
 def format_source_display(payload: dict) -> str:
-    """Format source for display in UI"""
     if payload.get("source_type") == "hadith":
         parts = []
         
@@ -144,21 +149,25 @@ async def ask_stream(
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-
-    if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
-        intent = "rag_quran"
-    elif any(kw in query.lower() for kw in ["hadith", "prophet", "bukhari", "muslim"]):
-        intent = "rag_hadith"
-    elif any(kw in query.lower() for kw in ["motivate", "inspire", "encourage"]):
-        intent = "motivation"
+    if payload.mode == "chat":
+        intent = "chat"
+    elif payload.mode == "rag":
+        intent = "rag_all"
     else:
-        classification = await classify_query_llm(query)
-        intent = classification.get("intent")
-
+        # Default to Auto
+        if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
+            intent = "rag_quran"
+        elif any(kw in query.lower() for kw in ["hadith", "prophet", "bukhari", "muslim"]):
+            intent = "rag_hadith"
+        elif any(kw in query.lower() for kw in ["motivate", "inspire", "encourage"]):
+            intent = "motivation"
+        else:
+            classification = await classify_query_llm(query)
+            intent = classification.get("intent")
     memory_messages = None
     conversation_history = []
     
-    if intent not in {"rag_quran", "rag_hadith", "motivation"}:
+    if intent not in {"rag_quran", "rag_hadith", "rag_all", "motivation"}:
         memory_messages = build_prompt_with_memory(db, convo)
 
         if memory_messages is None:
@@ -197,7 +206,7 @@ async def ask_stream(
         
         local_memory_messages = memory_messages  
         try:
-            if current_intent in {"rag_quran", "rag_hadith"}:
+            if current_intent in {"rag_quran", "rag_hadith", "rag_all"}:
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
             elif current_intent == "motivation":
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
@@ -206,7 +215,7 @@ async def ask_stream(
         
             await asyncio.sleep(0.1)
 
-            if current_intent in {"rag_quran", "rag_hadith"}:
+            if current_intent in {"rag_quran", "rag_hadith", "rag_all"}:
                 source_filter = None
                 if current_intent == "rag_quran":
                     source_filter = "quran"
@@ -300,7 +309,7 @@ async def ask_stream(
             else:
                 if not local_memory_messages or len(local_memory_messages) == 0:
                     local_memory_messages = [
-                        {"role": "system", "content": "You are a helpful AI assistant."},
+                        {"role": "system", "content": CHAT_SYSTEM_PROMPT},
                         {"role": "user", "content": current_query}
                     ]
                     logging.warning(f"memory_messages was empty, created fallback with {len(local_memory_messages)} messages")
@@ -426,12 +435,64 @@ def get_conversation(
         "title": convo.title,
         "messages": [
             {
+                "id": m.id,
                 "role": m.role,
                 "content": m.content,
                 "created_at": m.created_at,
             }
             for m in messages
         ],
+    }
+
+@router.post("/conversations/{conversation_id}/edit")
+def edit_conversation_from_message(
+    conversation_id: str,
+    payload: EditMessageRequest,
+    user=Depends(verify_jwt),
+    db: Session = Depends(get_db),
+):
+    updated_text = payload.message.strip()
+    if not updated_text:
+        raise HTTPException(status_code=400, detail="Edited message cannot be empty")
+
+    convo = (
+        db.query(Conversation)
+        .filter(
+            Conversation.id == conversation_id,
+            Conversation.user_id == user["user_id"],
+        )
+        .first()
+    )
+    if not convo:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    target_msg = (
+        db.query(Message)
+        .filter(
+            Message.id == payload.message_id,
+            Message.conversation_id == conversation_id,
+            Message.role == "user",
+        )
+        .first()
+    )
+    if not target_msg:
+        raise HTTPException(status_code=404, detail="User message not found")
+
+    deleted_count = (
+        db.query(Message)
+        .filter(
+            Message.conversation_id == conversation_id,
+            Message.created_at >= target_msg.created_at,
+        )
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+
+    return {
+        "success": True,
+        "conversation_id": conversation_id,
+        "deleted_messages": deleted_count,
+        "edited_message": updated_text,
     }
 
 @router.post("/conversations/new")
@@ -480,6 +541,7 @@ class FeedbackRequest(BaseModel):
     response: str = ""
     timestamp: str = None
     url: str = None
+    reason: str = None
 
 @router.post("/feedback")
 def submit_feedback(payload: FeedbackRequest, user=Depends(verify_jwt), db: Session = Depends(get_db)):
@@ -491,7 +553,9 @@ def submit_feedback(payload: FeedbackRequest, user=Depends(verify_jwt), db: Sess
             user_id=user["user_id"],
             type=payload.type,
             prompt=payload.prompt,
-            response=payload.response
+            response=payload.response,
+            reason=payload.reason,
+            severity="High" if payload.reason else "Low"
         )
         db.add(fb)
         db.commit()
@@ -518,23 +582,32 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
     from sqlalchemy import func, text, distinct, or_
     from datetime import datetime, timedelta
     
-    # 1. System Health
+    from metrics import SYSTEM_METRICS, START_TIME
+    import time
+    
+    #System Health
+    total_reqs = SYSTEM_METRICS["total_requests"]
+    avg_latency = round(SYSTEM_METRICS["total_latency_ms"] / total_reqs, 1) if total_reqs > 0 else 0
+    err_rate = round((SYSTEM_METRICS["total_errors"] / total_reqs) * 100, 2) if total_reqs > 0 else 0
+    uptime_seconds = time.time() - START_TIME
+    uptime_hours = round(uptime_seconds / 3600, 1)
+
     system_health = {
-        "response_latency_ms": 450, # TODO: connect to real API latency middleware
-        "error_rate": 0.5, # TODO: connect to real API error middleware
-        "uptime": 99.9 # TODO: calculate from server start time
+        "response_latency_ms": avg_latency,
+        "error_rate": err_rate,
+        "uptime": uptime_hours
     }
     
-    # 2. Avg Messages per Session
+    # Avg Messages per Session
     total_convos = db.query(Conversation).count()
     total_msgs = db.query(Message).count()
     avg_msgs_per_session = round(total_msgs / total_convos, 1) if total_convos > 0 else 0
     
-    # 3. Active Users (Last 7 Days)
+    #Active Users (Last 7 Days)
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     active_users_7d = db.query(func.count(distinct(Message.conversation_id))).filter(Message.created_at >= seven_days_ago).scalar() or 0
     
-    # 4. Token Cost Tracker (Today and Month)
+    #Token Cost Tracker (Today and Month)
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     first_of_month = today.replace(day=1)
     
@@ -543,7 +616,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
     total_tokens = db.query(func.sum(Message.tokens)).scalar() or 0
     total_feedbacks = db.query(Feedback).count()
     
-    # 5. Topic Category Breakdown (Parsing last 500 user messages)
+    #Topic Category Breakdown (Parsing last 500 user messages)
     recent_user_msgs = db.query(Message.content).filter(Message.role == 'user').order_by(Message.created_at.desc()).limit(500).all()
     topics = {"Quran": 0, "Hadith": 0, "Fiqh": 0, "Salah": 0, "Duas": 0, "General": 0}
     for (msg_content,) in recent_user_msgs:
@@ -561,7 +634,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
         else:
             topics["General"] += 1
             
-    # 6. Feedback Score Trend (Last 30 Days)
+    # Feedback Score Trend (Last 30 Days)
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     trend_data = {}
     try:
@@ -584,7 +657,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
     except Exception as e:
         logging.error(f"Error executing date_trunc: {e}")
         
-    # 7. Popular Queries Panel
+    #Popular Queries Panel
     popular_queries_raw = db.query(
         Message.content,
         func.count(Message.id).label('count')
@@ -595,7 +668,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
      
     popular_queries = [{"query": row[0][:100], "count": row[1]} for row in popular_queries_raw if row[0]]
     
-    # 8. Unanswered / Refused Queries
+    # Unanswered / Refused Queries
     refusal_phrases = ["I'm sorry, I couldn't generate a response", "No relevant information found", "fallback"]
     refusal_filters = [Message.content.ilike(f"%{phrase}%") for phrase in refusal_phrases]
     
@@ -616,7 +689,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
                 "reason": reason
             })
             
-    # 9. Peak Usage Heatmap (7-day x 24-hour grid)
+    #Peak Usage Heatmap (7-day x 24-hour grid)
     heatmap_data = []
     try:
         heatmap_query = db.query(
@@ -641,6 +714,7 @@ def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db
                 "id": fb.id,
                 "prompt": fb.prompt,
                 "response": fb.response,
+                "reason": getattr(fb, 'reason', None),
                 "severity": getattr(fb, 'severity', 'Low'),
                 "resolved": getattr(fb, 'resolved', False),
                 "created_at": fb.created_at.isoformat() if fb.created_at else None

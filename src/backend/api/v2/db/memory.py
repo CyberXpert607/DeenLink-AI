@@ -1,4 +1,5 @@
 from v2.db.models import Message
+from v2.prompts import CHAT_SYSTEM_PROMPT
 
 MAX_RECENT = 12
 
@@ -9,7 +10,7 @@ def build_prompt_with_memory(db, conversation):
 
     messages.append({
         "role": "system",
-        "content": "You are DeenLink AI assistant."
+        "content": CHAT_SYSTEM_PROMPT
     })
 
 
