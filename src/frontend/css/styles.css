@@ -505,6 +505,11 @@ html, body {
     position: relative;
     scroll-padding-bottom: 140px;
     -webkit-overflow-scrolling: touch;
+    /* Prevent the chat scroll from leaking out to the page/body.
+       Without this, iOS passes the scroll gesture through the fixed
+       input bar to the underlying scroll container, making the bar
+       appear to drift upward when swiping near it. */
+    overscroll-behavior-y: contain;
 }
 
 /* Chat Messages Container */
@@ -522,9 +527,9 @@ html, body {
 .chat-messages::after {
     content: '';
     display: block;
-    height: 120px;
+    height: 160px;
     flex-shrink: 0;
-    min-height: 120px;
+    min-height: 160px;
 }
 
 /* ============================================
@@ -563,6 +568,7 @@ html, body {
     white-space: pre-wrap;
     border-radius: 18px;
     border-bottom-right-radius: 4px;
+    width: fit-content;
     max-width: 100%;
     margin: 0;
 }
@@ -585,7 +591,7 @@ html, body {
     line-height: 1.6;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: pre-wrap;
+    white-space: normal;
     hyphens: none;
     text-overflow: clip;
     border-radius: 18px;
@@ -595,6 +601,10 @@ html, body {
     min-height: fit-content;
     orphans: 3;
     widows: 3;
+}
+
+.message.ai.streaming .message-text {
+    white-space: pre-wrap;
 }
 
 /* ERROR MESSAGE STYLING */
@@ -702,13 +712,22 @@ body.dark-theme .message.user .message-action-btn:hover {
     word-break: break-word;
     overflow-wrap: break-word;
     display: block;
-    width: 100%;
     orphans: 3;
     widows: 3;
 }
 
 .message-text p:last-child {
     margin-bottom: 0;
+}
+
+.message-text ul,
+.message-text ol {
+    margin: 4px 0 8px 0;
+    padding-left: 20px;
+}
+
+.message-text li {
+    margin-bottom: 2px;
 }
 
 /* FIXED: All nested elements */
@@ -1063,6 +1082,11 @@ body.dark-theme .rag-arabic {
     z-index: 1000;
     background: transparent;
     pointer-events: none;
+    /* Promote to its own compositor layer so bottom changes don't cause
+       full-page repaints and the bar tracks the keyboard without lag */
+    will-change: bottom;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .input-area .input-container {
@@ -2175,4 +2199,45 @@ body.dark-theme .mode-option input:checked + .mode-card .mode-icon {
 .mode-info span {
     font-size: 11px;
     color: var(--dark-gray);
+}
+
+/* ============================================
+   SCROLL TO BOTTOM BUTTON
+   ============================================ */
+.scroll-to-bottom-btn {
+    position: absolute;
+    bottom: 90px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-green);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: all 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+body.dark-theme .scroll-to-bottom-btn {
+    background: #2ecc71;
+    color: #1a2526;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.scroll-to-bottom-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.scroll-to-bottom-btn.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
 }

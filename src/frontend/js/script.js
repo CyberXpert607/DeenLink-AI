@@ -1,5 +1,5 @@
 const API_BASE_URL = 'https://api.deenlink.org/api/v2';
-const TOKEN_ENDPOINT = 'https://deenlink.org/api/auth/token_server.php';
+const TOKEN_ENDPOINT = 'https://deenlink.org/api/auth/ai_token.php';
 
 const State = {
     activeConversationId: null,
@@ -45,6 +45,7 @@ const Elements = {
     closeSettingsModal: document.getElementById("closeSettingsModal"),
     saveSettingsBtn: document.getElementById("saveSettingsBtn"),
     modeRadios: document.querySelectorAll("input[name='responseMode']"),
+    scrollToBottomBtn: document.getElementById("scrollToBottomBtn"),
 };
 
 const PurifyConfig = {
@@ -86,9 +87,26 @@ async function getValidToken() {
 
 async function fetchToken() {
     const now = Date.now();
+
+    // The backend `require_csrf()` automatically adopts any provided token for same-origin requests
+    // So if we don't have one in the HTML, we can provide a fallback token.
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]') || document.querySelector('meta[name="csrf"]');
+    let csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : (window.csrfToken || window.csrf_token || '');
+    if (!csrfToken) {
+        csrfToken = 'deenlink_ai_auto_csrf';
+    }
+
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+
     const res = await fetch(TOKEN_ENDPOINT, {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: {
+            'X-CSRF-Token': csrfToken,
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: formData
     });
 
     if (!res.ok) {
@@ -103,9 +121,10 @@ async function fetchToken() {
     }
 
     const data = await res.json();
-    State.jwtToken = data.token;
+    // The PHP script returns 'ai_jwt', not 'token'
+    State.jwtToken = data.ai_jwt || data.token;
     State.jwtExpiry = now + (5 * 60 * 1000);
-    
+
     return State.jwtToken;
 }
 
@@ -142,6 +161,60 @@ function showSuccessToast(message) {
     }, 2000);
 }
 
+/**
+ * Converts raw backend/network error messages into clean, user-friendly strings.
+ * Prevents Python byte-repr, stack traces, and collection errors leaking into the UI.
+ */
+function getUserFriendlyError(rawMessage) {
+    if (!rawMessage || typeof rawMessage !== 'string') {
+        return "Something went wrong. Please try again.";
+    }
+
+    const msg = rawMessage.toLowerCase();
+
+    // Backend collection / vector-store not ready
+    if (msg.includes("collection") && (msg.includes("doesn't exist") || msg.includes("does not exist") || msg.includes("not found"))) {
+        return "The knowledge base is temporarily unavailable. Please try again in a moment.";
+    }
+
+    // Raw Python bytes repr leaking  e.g.  b'{"status":...}'
+    if (/b'[\s\S]*'/.test(rawMessage) || /b"[\s\S]*"/.test(rawMessage)) {
+        return "The server returned an unexpected response. Please try again.";
+    }
+
+    // HTTP status codes
+    if (msg.includes("404") || msg.includes("not found")) {
+        return "The requested resource was not found. Please try a different question.";
+    }
+    if (msg.includes("401") || msg.includes("403") || msg.includes("unauthorized") || msg.includes("forbidden")) {
+        return "Session expired. Please refresh the page and try again.";
+    }
+    if (msg.includes("500") || msg.includes("internal server")) {
+        return "The server encountered an error. Please try again shortly.";
+    }
+    if (msg.includes("503") || msg.includes("unavailable")) {
+        return "The service is temporarily unavailable. Please try again later.";
+    }
+
+    // Network / timeout
+    if (msg.includes("timeout") || msg.includes("timed out") || msg.includes("network") || msg.includes("failed to fetch")) {
+        return "A network error occurred. Please check your connection and try again.";
+    }
+
+    // Abort
+    if (msg.includes("abort") || msg.includes("aborted") || msg.includes("cancelled")) {
+        return "Request was cancelled.";
+    }
+
+    // Generic verbose messages — strip everything after a newline / "Raw response"
+    const firstLine = rawMessage.split(/\n|Raw response/i)[0].trim();
+    if (firstLine.length > 0 && firstLine.length <= 120) {
+        return firstLine;
+    }
+
+    return "Something went wrong. Please try again.";
+}
+
 function updateSendButtonIcon(type = 'send') {
     const icon = type === 'stop' ? 'fa-stop' : 'fa-paper-plane';
     Elements.sendButton.innerHTML = `<i class="fas ${icon}"></i>`;
@@ -167,7 +240,7 @@ function createUserMessageActions(messageEl, promptText, messageId = '') {
 
     editBtn.dataset.prompt = promptText;
     copyBtn.dataset.prompt = promptText;
-    
+
     if (messageId) {
         editBtn.dataset.messageId = messageId;
     }
@@ -186,14 +259,14 @@ function createUserMessageActions(messageEl, promptText, messageId = '') {
 
     actions.appendChild(copyBtn);
     actions.appendChild(editBtn);
-    
+
     const contentDiv = messageEl.querySelector('.message-content');
     if (contentDiv) {
         contentDiv.appendChild(actions);
     } else {
         messageEl.appendChild(actions);
     }
-    
+
     return actions;
 }
 
@@ -344,29 +417,29 @@ function createSourcesPanel(sources) {
         </div>
         <div class="sources-content">
             ${validSources.map((src, idx) => {
-                const isHadith = src.source_type === 'hadith';
-                const payload = src.payload || {};
-                let displayTitle = isHadith ? 'Hadith' : 'Qur\'an';
-                if (src.display_reference) {
-                    displayTitle = src.display_reference;
-                } else if (isHadith && payload.hadith_number_display) {
-                    displayTitle = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
-                } else if (!isHadith && payload.surah_name && payload.ayah) {
-                    displayTitle = `${payload.surah_name}:${payload.ayah}`;
-                }
-                return `
+        const isHadith = src.source_type === 'hadith';
+        const payload = src.payload || {};
+        let displayTitle = isHadith ? 'Hadith' : 'Qur\'an';
+        if (src.display_reference) {
+            displayTitle = src.display_reference;
+        } else if (isHadith && payload.hadith_number_display) {
+            displayTitle = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
+        } else if (!isHadith && payload.surah_name && payload.ayah) {
+            displayTitle = `${payload.surah_name}:${payload.ayah}`;
+        }
+        return `
                     <div class="source-item">
                         <div class="source-badge">${idx + 1}</div>
                         <div class="source-details">
                             <div class="source-title">${escapeHtml(displayTitle)}</div>
                             <div class="source-meta">
-                                ${isHadith ? 
-                                    `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
+                                ${isHadith ?
+                `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
                                      ${payload.hadith_number_display ? `<span>${escapeHtml(payload.hadith_number_display)}</span>` : ''}`
-                                    :
-                                    `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
+                :
+                `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
                                      <span>Ayah ${payload.ayah || 'Unknown'}</span>`
-                                }
+            }
                             </div>
                             ${payload.arabic ? `
                             <details class="source-expandable">
@@ -381,7 +454,7 @@ function createSourcesPanel(sources) {
                         </div>
                     </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
     `;
     return panel;
@@ -426,33 +499,33 @@ function createStreamingMessage() {
 function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
     const { container, textEl } = messageObj;
     let feedbackDiv = messageObj.feedbackDiv || container.querySelector('.message-feedback');
-    
+
     container.classList.remove('streaming', 'loading');
     const streamingText = textEl.querySelector('.streaming-text');
     if (streamingText) {
         streamingText.remove();
     }
-    
+
     const indicator = container.querySelector('.typing-indicator');
     if (indicator) indicator.remove();
-    
+
     renderContent(textEl, rawContent);
     textEl.classList.add('message-text');
     void textEl.offsetHeight;
-    
+
     if (textEl.querySelector('.rag-source')) {
         styleRAGSources(textEl);
     }
-    
+
     const contentDiv = container.querySelector('.message-content');
-    
+
     if (sources && sources.length > 0) {
         const existingPanel = container.querySelector('.sources-panel');
         if (existingPanel) existingPanel.remove();
         const sourcesPanel = createSourcesPanel(sources);
         contentDiv.appendChild(sourcesPanel);
     }
-    
+
     if (feedbackDiv) {
         feedbackDiv.style.display = 'flex';
         setupFeedbackButtons(feedbackDiv, textEl, container.dataset.prompt);
@@ -461,22 +534,29 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
         feedbackDiv.style.display = 'flex';
         contentDiv.appendChild(feedbackDiv);
     }
-    
-    if (State.autoScroll) {
-        setTimeout(() => {
-            Elements.chatMessages.scrollTo({
-                top: Elements.chatMessages.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 100);
-    }
+
+    // Always run after DOM settles so scrollHeight is final
+    setTimeout(() => {
+        const scrollable = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
+        const target = scrollable || Elements.chatMessages;
+        const distFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+
+        if (distFromBottom <= 80) {
+            // Already at the bottom — just make sure we're fully there
+            target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' });
+        } else {
+            // User scrolled up — reveal the start of this response
+            // so they can read it from the beginning (like Claude.ai does)
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 80);
 }
 
 function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
     const likeBtn = feedbackDiv.querySelector('.like-btn');
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
-    
+
     likeBtn.addEventListener('click', async () => {
         const response = textEl?.innerText || '';
         likeBtn.classList.add('active');
@@ -485,7 +565,7 @@ function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
         await sendFeedback('like', prompt, response);
         showSuccessToast('Thanks for your feedback!');
     });
-    
+
     dislikeBtn.addEventListener('click', async () => {
         const response = textEl?.innerText || '';
         dislikeBtn.classList.add('active');
@@ -494,7 +574,7 @@ function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
         await sendFeedback('dislike', prompt, response);
         showSuccessToast('Thanks for your feedback!');
     });
-    
+
     copyBtn.addEventListener('click', async () => {
         const text = textEl?.innerText || '';
         try {
@@ -659,7 +739,7 @@ function createFeedbackButtons(messageContent) {
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
     const textEl = messageContent.querySelector('.message-text');
-    
+
     likeBtn.addEventListener('click', async () => {
         const msgContainer = messageContent.closest('.message');
         const prompt = msgContainer?.dataset.prompt || msgContainer?.previousElementSibling?.querySelector('.message-text')?.innerText || '';
@@ -670,18 +750,18 @@ function createFeedbackButtons(messageContent) {
         await sendFeedback('like', prompt, response);
         showSuccessToast('Thanks for your feedback!');
     });
-    
+
     dislikeBtn.addEventListener('click', async () => {
         const msgContainer = messageContent.closest('.message');
         const promptStr = msgContainer?.dataset.prompt || msgContainer?.previousElementSibling?.querySelector('.message-text')?.innerText || '';
         const response = textEl?.innerText || '';
-        
+
         State.pendingFeedback = { prompt: promptStr, response: response, dislikeBtn: dislikeBtn, likeBtn: likeBtn };
-        
+
         if (Elements.feedbackReasonInput) Elements.feedbackReasonInput.value = '';
         if (Elements.feedbackModal) Elements.feedbackModal.classList.remove('hidden');
     });
-    
+
     copyBtn.addEventListener('click', async () => {
         const text = textEl?.innerText || '';
         try {
@@ -863,7 +943,17 @@ async function loadConversation(id) {
             { messageId: msg.id || null }
         );
     });
+    
+    // Ensure we scroll to the bottom after images/content renders
     Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
+    requestAnimationFrame(() => {
+        Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
+        setTimeout(() => {
+            if (Elements.chatMessages) {
+                Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
+            }
+        }, 150);
+    });
 }
 
 async function editConversationFromMessage(conversationId, messageId, editedText) {
@@ -927,7 +1017,7 @@ function styleRAGSources(el) {
     if (!el) return;
     const sources = el.querySelectorAll('.rag-source');
     const totalSources = sources.length;
-    
+
     sources.forEach((source, index) => {
         // Only add badge for multiple sources
         if (totalSources > 1) {
@@ -939,7 +1029,7 @@ function styleRAGSources(el) {
             }
             badge.textContent = `${index + 1}/${totalSources}`;
         }
-        
+
         // Remove any existing inline styles that might conflict
         source.style.cssText = '';
     });
@@ -1020,12 +1110,12 @@ async function sendMessage(retryData = null) {
         }
         State.editingMessageId = null;
     }
-    
+
     appendMessage("user", text);
     const streamingMsg = appendLoadingMessage();
     streamingMsg.container.dataset.prompt = text;
     streamingMsg.container.style.display = 'none';
-    
+
     let collectedSources = null;
     let fullContent = '';
     let aiMessageEl = streamingMsg.textEl;
@@ -1098,7 +1188,7 @@ async function sendMessage(retryData = null) {
                             removeSearchIndicator();
                             removeTypingIndicator();
                             streamingMsg.container.style.display = 'flex';
-                            
+
                             if (data.content.trim().startsWith('<')) {
                                 isHTML = true;
                             }
@@ -1106,7 +1196,7 @@ async function sendMessage(retryData = null) {
 
                         const content = data.content;
                         hasReceivedContent = true;
-                        
+
                         if (isHTML) {
                             fullContent += content;
                             aiMessageEl.innerHTML = DOMPurify.sanitize(fullContent, PurifyConfig);
@@ -1119,7 +1209,7 @@ async function sendMessage(retryData = null) {
                         break;
 
                     case 'error':
-                        throw new Error(data.message || "Stream error");
+                        throw new Error(getUserFriendlyError(data.message || "Stream error"));
 
                     case 'done':
                         break;
@@ -1131,20 +1221,20 @@ async function sendMessage(retryData = null) {
         if (!rawFinalContent || !hasReceivedContent) {
             rawFinalContent = "I'm sorry, I couldn't generate a response. Please try again.";
         }
-        
+
         finalizeStreamingMessage(streamingMsg, rawFinalContent, collectedSources);
         await loadConversations();
 
     } catch (err) {
         removeSearchIndicator();
         removeTypingIndicator();
-        
+
         if (err.name === 'AbortError') {
             streamingMsg.container.remove();
         } else {
             streamingMsg.container.remove();
-            const safeError = err?.message || "Something went wrong";
-            createMessageElement("ai", `Error: ${safeError}`, true, text);
+            const safeError = getUserFriendlyError(err?.message);
+            createMessageElement("ai", safeError, true, text);
         }
     } finally {
         resetInputState();
@@ -1154,22 +1244,22 @@ async function sendMessage(retryData = null) {
 // FIXED: Removed duplicate definition, faster typing to prevent cursor blink delay
 async function streamTokenWithTypingEffect(element, token) {
     if (!element) return;
-    
+
     const chars = token.split('');
-    
+
     for (let i = 0; i < chars.length; i++) {
         if (!State.streamingActive) break;
-        
+
         element.textContent += chars[i];
-        
+
         // FASTER typing - reduced delays to prevent visible pauses
         let delay = 5; // Reduced from 15
         if (chars[i] === '.' || chars[i] === '!' || chars[i] === '?') delay = 40; // Reduced from 120
         else if (chars[i] === ',' || chars[i] === ';') delay = 15; // Reduced from 50
         else if (chars[i] === ' ') delay = 2; // Reduced from 8
-        
+
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         if (State.autoScroll && !State.isUserScrolling) {
             Elements.chatMessages.scrollTo({
                 top: Elements.chatMessages.scrollHeight,
@@ -1266,6 +1356,25 @@ function initEventListeners() {
         }
     });
 
+    // --- Prevent the fixed input bar from scrolling the chat behind it ---
+    // On iOS, a swipe over the input container is treated as a page scroll
+    // because the container itself isn't scrollable. This handler swallows
+    // vertical swipe gestures on the bar so only the messages-area scrolls.
+    const inputContainer = document.querySelector('.input-container');
+    if (inputContainer) {
+        inputContainer.addEventListener('touchmove', (e) => {
+            // If the user is scrolling inside the textarea (multi-line overflow),
+            // let that happen — otherwise block the gesture reaching the page.
+            const onTextarea = e.target === Elements.messageInput;
+            const textareaScrollable = onTextarea &&
+                Elements.messageInput.scrollHeight > Elements.messageInput.clientHeight;
+            if (!textareaScrollable) {
+                e.preventDefault();
+            }
+        }, { passive: false }); // passive: false is required to call preventDefault
+    }
+    // --------------------------------------------------------------------
+
     Elements.messageInput.addEventListener("input", () => {
         Elements.messageInput.style.height = "auto";
         const newHeight = Math.min(Elements.messageInput.scrollHeight, 200);
@@ -1287,6 +1396,14 @@ function initEventListeners() {
             Elements.chatMessages.scrollTop -
             Elements.chatMessages.clientHeight;
 
+        if (Elements.scrollToBottomBtn) {
+            if (distanceFromBottom > 250) {
+                Elements.scrollToBottomBtn.classList.remove('hidden');
+            } else {
+                Elements.scrollToBottomBtn.classList.add('hidden');
+            }
+        }
+
         if (State.streamingActive) {
             if (distanceFromBottom > 300) {
                 State.isUserScrolling = true;
@@ -1303,6 +1420,15 @@ function initEventListeners() {
             State.isUserScrolling = false;
         }, 150);
     });
+
+    if (Elements.scrollToBottomBtn) {
+        Elements.scrollToBottomBtn.addEventListener('click', () => {
+            Elements.chatMessages.scrollTo({
+                top: Elements.chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
+    }
 
     Elements.themeToggle?.addEventListener("click", () => {
         document.body.classList.toggle("dark-theme");
@@ -1332,18 +1458,31 @@ function initEventListeners() {
     });
 
     if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", () => {
+        let _vpRafId = null;
+
+        const updateInputPosition = () => {
             if (!Elements.inputArea) return;
+            // keyboard height = difference between full screen and the visible viewport.
+            // Do NOT subtract offsetTop — that value changes when the user scrolls the
+            // page and would make the bar drift upward while swiping through messages.
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
-            if (keyboardHeight > 150) {
-                Elements.inputArea.style.bottom = keyboardHeight + 16 + "px";
-                setTimeout(() => {
-                    Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
-                }, 100);
+
+            if (keyboardHeight > 50) {
+                Elements.inputArea.style.bottom = (keyboardHeight + 16) + 'px';
             } else {
-                Elements.inputArea.style.bottom = "calc(18px + env(safe-area-inset-bottom))";
+                Elements.inputArea.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
             }
-        });
+        };
+
+        const scheduleVpUpdate = () => {
+            if (_vpRafId) cancelAnimationFrame(_vpRafId);
+            _vpRafId = requestAnimationFrame(updateInputPosition);
+        };
+
+        // Only 'resize' — fires when the keyboard opens/closes (viewport height changes).
+        // Do NOT add a 'scroll' listener: visualViewport scroll fires on every page
+        // scroll and would push the input bar up whenever the user swipes the chat.
+        window.visualViewport.addEventListener('resize', scheduleVpUpdate);
     }
 
     Elements.chatMessages.addEventListener('click', async (e) => {
@@ -1360,86 +1499,86 @@ function initEventListeners() {
                 showError("Cannot edit this message");
                 return;
             }
-            
+
             const messageEl = actionBtn.closest('.message');
             const messageTextEl = messageEl.querySelector('.message-text');
             const actionsEl = messageEl.querySelector('.message-actions');
-            
+
             // Store original content
             const originalHTML = messageTextEl.innerHTML;
-            
+
             // Hide actions
             actionsEl.style.display = 'none';
-            
+
             // Create edit interface
             const editContainer = document.createElement('div');
             editContainer.className = 'edit-container';
-            
+
             const textarea = document.createElement('textarea');
             textarea.className = 'edit-textarea';
             textarea.value = prompt;
-            
+
             // Auto resize
             textarea.addEventListener("input", () => {
                 textarea.style.height = "auto";
                 textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
             });
-            
+
             const btnContainer = document.createElement('div');
             btnContainer.className = 'edit-btn-container';
-            
+
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'cancel-edit-btn';
             cancelBtn.textContent = 'Cancel';
-            
+
             const sendBtn = document.createElement('button');
             sendBtn.className = 'send-edit-btn';
             sendBtn.textContent = 'Send';
-            
+
             btnContainer.appendChild(cancelBtn);
             btnContainer.appendChild(sendBtn);
-            
+
             editContainer.appendChild(textarea);
             editContainer.appendChild(btnContainer);
-            
+
             messageTextEl.innerHTML = '';
             messageTextEl.appendChild(editContainer);
             messageTextEl.classList.add('editing');
-            
+
             textarea.style.height = "auto";
             textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
             textarea.focus();
-            
+
             cancelBtn.addEventListener('click', () => {
                 messageTextEl.innerHTML = originalHTML;
                 messageTextEl.classList.remove('editing');
                 actionsEl.style.display = 'flex';
             });
-            
+
             sendBtn.addEventListener('click', () => {
                 const newText = textarea.value.trim();
                 if (!newText) return;
-                
+
                 messageTextEl.innerHTML = originalHTML;
                 messageTextEl.classList.remove('editing');
                 actionsEl.style.display = 'flex';
-                
+
                 State.editingMessageId = messageId;
                 sendMessage({ message: newText, editMessageId: messageId });
             });
-            
+
             return;
         }
 
         if (action === 'retry-prompt') {
             if (State.streamingActive) return;
-            
+
             // Remove the error message bubble if this retry came from an error state
             const messageEl = actionBtn.closest('.message');
             if (messageEl && messageEl.classList.contains('error')) {
                 messageEl.remove();
             }
-            
+
             sendMessage({ message: prompt });
             return;
         }
@@ -1458,13 +1597,13 @@ function initEventListeners() {
         if (!State.pendingFeedback) return;
         const { prompt, response, dislikeBtn, likeBtn } = State.pendingFeedback;
         const reason = Elements.feedbackReasonInput?.value.trim() || null;
-        
+
         closeFeedback();
 
         dislikeBtn.classList.add('active');
         dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>Not helpful</span>';
         likeBtn.disabled = true;
-        
+
         await sendFeedback('dislike', prompt, response, reason);
         showSuccessToast('Thanks for your feedback!');
     });
@@ -1485,7 +1624,7 @@ function initEventListeners() {
 
     Elements.settingsBtn?.addEventListener('click', openSettings);
     Elements.closeSettingsModal?.addEventListener('click', closeSettings);
-    
+
     Elements.saveSettingsBtn?.addEventListener('click', () => {
         let selectedMode = 'auto';
         Elements.modeRadios?.forEach(radio => {
@@ -1516,3 +1655,18 @@ window.addEventListener("load", async () => {
     await loadConversations();
     Elements.messageInput?.focus();
 });
+
+const backBtn = document.getElementById('backBtn');
+
+if (backBtn) {
+    backBtn.addEventListener('click', function() {
+        // Check if there's a previous page in browser history
+        if (document.referrer && document.referrer.includes('deenlink.org')) {
+            // Go back in history if coming from within your site
+            window.history.back();
+        } else {
+            // Otherwise go directly to homepage
+            window.location.href = 'https://deenlink.org/index.html';
+        }
+    });
+}
