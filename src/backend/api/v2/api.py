@@ -534,14 +534,16 @@ def delete_conversation(
 
     return {"success": True}
 
+from typing import Optional
+
 class FeedbackRequest(BaseModel):
-    conversationId: str = None
+    conversationId: Optional[str] = None
     type: str
     prompt: str = ""
     response: str = ""
-    timestamp: str = None
-    url: str = None
-    reason: str = None
+    timestamp: Optional[str] = None
+    url: Optional[str] = None
+    reason: Optional[str] = None
 
 @router.post("/feedback")
 def submit_feedback(payload: FeedbackRequest, user=Depends(verify_jwt), db: Session = Depends(get_db)):
