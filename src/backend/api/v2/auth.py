@@ -18,6 +18,7 @@ def verify_jwt(
                 algorithms=["RS256"],
                 audience=AI_JWT_AUD, 
                 issuer=AI_JWT_ISS,
+                options={"verify_sub": False}
             )
     except PyJWTError as e:
         print(f"JWT Verification Error: {e}", flush=True)
