@@ -32,7 +32,7 @@ def verify_jwt(
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
     return {
-        "user_id": user_id,
+        "user_id": str(user_id),
         "username": payload.get("username"),
         "user_type": payload.get("user_type"),
     }
