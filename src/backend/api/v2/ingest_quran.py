@@ -89,6 +89,17 @@ def ingest_quran():
         print(f"Loaded Surah {surah_number}: {surah_name}")
 
     print(f"\nTotal Quran ayahs prepared: {len(points)}")
+    print("Ensuring collection exists...")
+    
+    from qdrant_client.http.models import Distance, VectorParams
+    collections = [c.name for c in client.get_collections().collections]
+    if COLLECTION_NAME not in collections:
+        print(f"Creating collection '{COLLECTION_NAME}'...")
+        client.create_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=384, distance=Distance.COSINE)
+        )
+        
     print("Starting batched upsert...\n")
 
     total_upserted = 0
