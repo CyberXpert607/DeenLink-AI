@@ -8,9 +8,8 @@ User=ubuntu
 # Change this to the actual path where you cloned the repository
 WorkingDirectory=/home/ubuntu/DeenLink-AI
 
-# The uv package manager allows running scripts within the project's virtual environment
-# Update the path to uv if it's not in standard PATH (e.g., /root/.cargo/bin/uv)
-ExecStart=uv run uvicorn src.backend.api.main:app --host 127.0.0.1 --port 8000
+# Bypass uv completely to avoid snap system profile parsing bugs
+ExecStart=/home/ubuntu/DeenLink-AI/.venv/bin/python -m uvicorn src.backend.api.main:app --host 127.0.0.1 --port 8000
 
 # Automatically restart if it crashes
 Restart=always

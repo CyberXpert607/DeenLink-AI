@@ -19,10 +19,11 @@ def verify_jwt(
                 audience=AI_JWT_AUD, 
                 issuer=AI_JWT_ISS,
             )
-    except PyJWTError:
+    except PyJWTError as e:
+        print(f"JWT Verification Error: {e}", flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
+            detail=f"Invalid or expired token: {e}",
         )
 
     user_id = payload.get("sub")
