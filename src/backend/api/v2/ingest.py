@@ -13,7 +13,7 @@ API_DIR = BASE_DIR.parent
 if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
-from v2.vectoreStore import client, COLLECTION_NAME
+from v2.vectoreStore import client, COLLECTION_NAME, ensure_collection
 from v2.embeddings import embed_text
 
 DATA_DIR = API_DIR / "data" / "hadith"
@@ -327,6 +327,8 @@ def ingest_hadith_fast():
     
     # 3. Stream & Process
     print(f"\n[2/3] & [3/3] Embedding & Upserting (chunk={EMBED_CHUNK_SIZE}, batch={BATCH_SIZE})...")
+    
+    ensure_collection()
     
     doc_generator = load_and_prepare_documents()
     

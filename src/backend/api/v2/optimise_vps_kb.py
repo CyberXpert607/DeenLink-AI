@@ -12,13 +12,13 @@ API_DIR = BASE_DIR.parent
 if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
-from v2.vectoreStore import client, COLLECTION_NAME
+from v2.vectoreStore import client, COLLECTION_NAME, ensure_collection
 from v2.embeddings import embed_text
 
 DATA_DIR = API_DIR / "data" / "hadith"
 
-BATCH_SIZE = 64          
-EMBED_CHUNK_SIZE = 16    
+BATCH_SIZE = 256          
+EMBED_CHUNK_SIZE = 64    
 CHECKPOINT_FILE = Path("checkpoint_vps.json")
 FAILED_EMBEDS_LOG = Path("failed_embeds_vps.log")
 FAILED_UPSERTS_LOG = Path("failed_upserts_vps.log")
@@ -298,6 +298,8 @@ def ingest_vps():
     speed_history = collections.deque(maxlen=500)
     
     print(f"\n[2/3] Embedding & Upserting (chunk={EMBED_CHUNK_SIZE}, batch={BATCH_SIZE})...")
+    
+    ensure_collection()
     
     doc_generator = load_and_prepare_documents()
     
