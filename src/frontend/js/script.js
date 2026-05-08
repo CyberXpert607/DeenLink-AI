@@ -87,9 +87,6 @@ async function getValidToken() {
 
 async function fetchToken() {
     const now = Date.now();
-
-    // The backend `require_csrf()` automatically adopts any provided token for same-origin requests
-    // So if we don't have one in the HTML, we can provide a fallback token.
     const csrfMeta = document.querySelector('meta[name="csrf-token"]') || document.querySelector('meta[name="csrf"]');
     let csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : (window.csrfToken || window.csrf_token || '');
     if (!csrfToken) {
@@ -121,7 +118,6 @@ async function fetchToken() {
     }
 
     const data = await res.json();
-    // The PHP script returns 'ai_jwt', not 'token'
     State.jwtToken = data.ai_jwt || data.token;
     State.jwtExpiry = now + (5 * 60 * 1000);
 
@@ -161,10 +157,6 @@ function showSuccessToast(message) {
     }, 2000);
 }
 
-/**
- * Converts raw backend/network error messages into clean, user-friendly strings.
- * Prevents Python byte-repr, stack traces, and collection errors leaking into the UI.
- */
 function getUserFriendlyError(rawMessage) {
     if (!rawMessage || typeof rawMessage !== 'string') {
         return "Something went wrong. Please try again.";
@@ -172,17 +164,19 @@ function getUserFriendlyError(rawMessage) {
 
     const msg = rawMessage.toLowerCase();
 
-    // Backend collection / vector-store not ready
     if (msg.includes("collection") && (msg.includes("doesn't exist") || msg.includes("does not exist") || msg.includes("not found"))) {
         return "The knowledge base is temporarily unavailable. Please try again in a moment.";
     }
 
-    // Raw Python bytes repr leaking  e.g.  b'{"status":...}'
     if (/b'[\s\S]*'/.test(rawMessage) || /b"[\s\S]*"/.test(rawMessage)) {
         return "The server returned an unexpected response. Please try again.";
     }
 
-    // HTTP status codes
+    // FIX #1b: "message not found" errors from edit on old messages - treat gracefully
+    if (msg.includes("message not found") || msg.includes("message_not_found")) {
+        return null; // Return null to signal we should silently retry as new message
+    }
+
     if (msg.includes("404") || msg.includes("not found")) {
         return "The requested resource was not found. Please try a different question.";
     }
@@ -196,17 +190,14 @@ function getUserFriendlyError(rawMessage) {
         return "The service is temporarily unavailable. Please try again later.";
     }
 
-    // Network / timeout
     if (msg.includes("timeout") || msg.includes("timed out") || msg.includes("network") || msg.includes("failed to fetch")) {
         return "A network error occurred. Please check your connection and try again.";
     }
 
-    // Abort
     if (msg.includes("abort") || msg.includes("aborted") || msg.includes("cancelled")) {
         return "Request was cancelled.";
     }
 
-    // Generic verbose messages — strip everything after a newline / "Raw response"
     const firstLine = rawMessage.split(/\n|Raw response/i)[0].trim();
     if (firstLine.length > 0 && firstLine.length <= 120) {
         return firstLine;
@@ -290,6 +281,15 @@ function isHTMLContent(str) {
     return trimmed.startsWith('<') && trimmed.includes('</');
 }
 
+// FIX #2: Remove leading whitespace/indent from last paragraphs in markdown output
+function cleanMarkdownOutput(rawContent) {
+    // Remove leading spaces/tabs from lines that would cause indent on last paragraphs
+    return rawContent
+        .replace(/^[ \t]+(?=[^\s])/gm, '') // Remove leading whitespace on each line
+        .replace(/\n{3,}/g, '\n\n')          // Collapse multiple blank lines
+        .trim();
+}
+
 function renderContent(element, rawContent) {
     const cleaned = rawContent
         .replace(/>\s+</g, '><')
@@ -301,13 +301,24 @@ function renderContent(element, rawContent) {
         html = cleaned;
     } else {
         try {
-            html = DOMPurify.sanitize(marked.parse(cleaned, { async: false }), PurifyConfig);
+            // FIX #2: Clean content before parsing to prevent indent on last paragraph
+            const cleanedForMd = cleanMarkdownOutput(rawContent);
+            html = DOMPurify.sanitize(marked.parse(cleanedForMd, { async: false }), PurifyConfig);
         } catch (e) {
-            html = DOMPurify.sanitize(cleaned.replace(/\n/g, '<br>'), PurifyConfig);
+            html = DOMPurify.sanitize(rawContent.replace(/\n/g, '<br>'), PurifyConfig);
         }
     }
 
     element.innerHTML = html;
+
+    // FIX #2: Remove any text-indent or padding-left that may have been applied to last <p>
+    const paragraphs = element.querySelectorAll('p');
+    paragraphs.forEach(p => {
+        p.style.textIndent = '0';
+        p.style.paddingLeft = '0';
+        p.style.marginLeft = '0';
+    });
+
     element.querySelectorAll('a').forEach(link => {
         if (link.hostname !== window.location.hostname) {
             link.setAttribute('target', '_blank');
@@ -404,6 +415,16 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+// FIX #4: Filter sources to only the most relevant one(s)
+function filterBestSources(sources) {
+    if (!sources || sources.length === 0) return sources;
+    // If only 1-2 sources, return as-is
+    if (sources.length <= 2) return sources;
+    // Return only the first/best source (most relevant by backend ranking)
+    // The backend already ranks by relevance, index 0 is most relevant
+    return [sources[0]];
 }
 
 function createSourcesPanel(sources) {
@@ -519,10 +540,12 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
 
     const contentDiv = container.querySelector('.message-content');
 
+    // FIX #4: Filter to best source only before rendering panel
     if (sources && sources.length > 0) {
+        const bestSources = filterBestSources(sources);
         const existingPanel = container.querySelector('.sources-panel');
         if (existingPanel) existingPanel.remove();
-        const sourcesPanel = createSourcesPanel(sources);
+        const sourcesPanel = createSourcesPanel(bestSources);
         contentDiv.appendChild(sourcesPanel);
     }
 
@@ -535,18 +558,14 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
         contentDiv.appendChild(feedbackDiv);
     }
 
-    // Always run after DOM settles so scrollHeight is final
     setTimeout(() => {
         const scrollable = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
         const target = scrollable || Elements.chatMessages;
         const distFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
 
         if (distFromBottom <= 80) {
-            // Already at the bottom — just make sure we're fully there
             target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' });
         } else {
-            // User scrolled up — reveal the start of this response
-            // so they can read it from the beginning (like Claude.ai does)
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, 80);
@@ -611,7 +630,8 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
             textDiv.innerHTML = DOMPurify.sanitize(text, PurifyConfig);
             setTimeout(() => styleRAGSources(textDiv), 10);
         } else {
-            textDiv.innerHTML = DOMPurify.sanitize(marked.parse(text, { async: false }), PurifyConfig);
+            const cleanedText = cleanMarkdownOutput(text);
+            textDiv.innerHTML = DOMPurify.sanitize(marked.parse(cleanedText, { async: false }), PurifyConfig);
         }
     }
 
@@ -943,16 +963,21 @@ async function loadConversation(id) {
             { messageId: msg.id || null }
         );
     });
-    
-    // Ensure we scroll to the bottom after images/content renders
-    Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
-    requestAnimationFrame(() => {
+
+    // FIX #3: Scroll to BOTTOM (most recent message) after loading conversation
+    // Use multiple frames to ensure all content (including images) is rendered
+    const scrollToBottom = () => {
+        const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
+        const target = messagesArea || Elements.chatMessages;
+        target.scrollTop = target.scrollHeight;
         Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
-        setTimeout(() => {
-            if (Elements.chatMessages) {
-                Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
-            }
-        }, 150);
+    };
+
+    scrollToBottom();
+    requestAnimationFrame(() => {
+        scrollToBottom();
+        setTimeout(scrollToBottom, 100);
+        setTimeout(scrollToBottom, 300);
     });
 }
 
@@ -1012,14 +1037,12 @@ async function createNewConversation() {
     return await res.json();
 }
 
-// FIXED: Removed ALL inline styles - let CSS handle everything
 function styleRAGSources(el) {
     if (!el) return;
     const sources = el.querySelectorAll('.rag-source');
     const totalSources = sources.length;
 
     sources.forEach((source, index) => {
-        // Only add badge for multiple sources
         if (totalSources > 1) {
             let badge = source.querySelector('.source-badge');
             if (!badge) {
@@ -1030,7 +1053,6 @@ function styleRAGSources(el) {
             badge.textContent = `${index + 1}/${totalSources}`;
         }
 
-        // Remove any existing inline styles that might conflict
         source.style.cssText = '';
     });
 }
@@ -1097,18 +1119,28 @@ async function sendMessage(retryData = null) {
         Elements.messageInput.style.height = "auto";
     }
 
+    // FIX #1b: Handle edit with "message not found" gracefully - fall back to new message
     if (editingMessageId && State.activeConversationId) {
         try {
             await editConversationFromMessage(State.activeConversationId, editingMessageId, text);
             await loadConversation(State.activeConversationId);
             showSuccessToast('Message updated and regenerated');
-        } catch (err) {
             State.editingMessageId = null;
             resetInputState();
-            showError(err?.message || "Failed to edit message");
             return;
+        } catch (err) {
+            State.editingMessageId = null;
+            const friendlyErr = getUserFriendlyError(err?.message);
+            // If it's a "message not found" error, silently send as new message instead
+            if (friendlyErr === null) {
+                console.warn('Message not found for edit, sending as new message');
+                // Continue below to send as normal new message
+            } else {
+                resetInputState();
+                showError(friendlyErr || "Failed to edit message");
+                return;
+            }
         }
-        State.editingMessageId = null;
     }
 
     appendMessage("user", text);
@@ -1203,7 +1235,6 @@ async function sendMessage(retryData = null) {
                             styleRAGSources(aiMessageEl);
                         } else {
                             fullContent += content;
-                            // FIXED: Use faster typing effect - no delay between tokens
                             await streamTokenWithTypingEffect(aiMessageEl, content);
                         }
                         break;
@@ -1234,14 +1265,15 @@ async function sendMessage(retryData = null) {
         } else {
             streamingMsg.container.remove();
             const safeError = getUserFriendlyError(err?.message);
-            createMessageElement("ai", safeError, true, text);
+            if (safeError) {
+                createMessageElement("ai", safeError, true, text);
+            }
         }
     } finally {
         resetInputState();
     }
 }
 
-// FIXED: Removed duplicate definition, faster typing to prevent cursor blink delay
 async function streamTokenWithTypingEffect(element, token) {
     if (!element) return;
 
@@ -1252,11 +1284,10 @@ async function streamTokenWithTypingEffect(element, token) {
 
         element.textContent += chars[i];
 
-        // FASTER typing - reduced delays to prevent visible pauses
-        let delay = 5; // Reduced from 15
-        if (chars[i] === '.' || chars[i] === '!' || chars[i] === '?') delay = 40; // Reduced from 120
-        else if (chars[i] === ',' || chars[i] === ';') delay = 15; // Reduced from 50
-        else if (chars[i] === ' ') delay = 2; // Reduced from 8
+        let delay = 5;
+        if (chars[i] === '.' || chars[i] === '!' || chars[i] === '?') delay = 40;
+        else if (chars[i] === ',' || chars[i] === ';') delay = 15;
+        else if (chars[i] === ' ') delay = 2;
 
         await new Promise(resolve => setTimeout(resolve, delay));
 
@@ -1347,6 +1378,26 @@ const PWA = {
     }
 };
 
+// FIX #1: Edit message - scroll edit area into view when keyboard opens
+function scrollEditIntoView(editContainer) {
+    // Small delay to let keyboard open
+    setTimeout(() => {
+        // Scroll the edit container into view within the messages area
+        editContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Also ensure the messages area scrolls to show the edit field above keyboard
+        const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
+        if (messagesArea) {
+            const containerRect = editContainer.getBoundingClientRect();
+            const areaRect = messagesArea.getBoundingClientRect();
+            
+            if (containerRect.bottom > areaRect.bottom - 50) {
+                messagesArea.scrollTop += (containerRect.bottom - areaRect.bottom + 80);
+            }
+        }
+    }, 350); // Wait for keyboard animation
+}
+
 function initEventListeners() {
     Elements.sendButton.addEventListener("click", () => {
         if (State.streamingActive && State.streamController) {
@@ -1356,24 +1407,17 @@ function initEventListeners() {
         }
     });
 
-    // --- Prevent the fixed input bar from scrolling the chat behind it ---
-    // On iOS, a swipe over the input container is treated as a page scroll
-    // because the container itself isn't scrollable. This handler swallows
-    // vertical swipe gestures on the bar so only the messages-area scrolls.
     const inputContainer = document.querySelector('.input-container');
     if (inputContainer) {
         inputContainer.addEventListener('touchmove', (e) => {
-            // If the user is scrolling inside the textarea (multi-line overflow),
-            // let that happen — otherwise block the gesture reaching the page.
             const onTextarea = e.target === Elements.messageInput;
             const textareaScrollable = onTextarea &&
                 Elements.messageInput.scrollHeight > Elements.messageInput.clientHeight;
             if (!textareaScrollable) {
                 e.preventDefault();
             }
-        }, { passive: false }); // passive: false is required to call preventDefault
+        }, { passive: false });
     }
-    // --------------------------------------------------------------------
 
     Elements.messageInput.addEventListener("input", () => {
         Elements.messageInput.style.height = "auto";
@@ -1389,20 +1433,32 @@ function initEventListeners() {
         }
     });
 
-    Elements.chatMessages.addEventListener("scroll", () => {
+    // FIX #3: scroll-to-bottom button visibility - use correct scrollable container
+    const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
+    const scrollContainer = messagesArea || Elements.chatMessages;
+
+    const updateScrollButton = () => {
+        if (!Elements.scrollToBottomBtn) return;
+        const distanceFromBottom = scrollContainer.scrollHeight -
+            scrollContainer.scrollTop -
+            scrollContainer.clientHeight;
+
+        if (distanceFromBottom > 250) {
+            Elements.scrollToBottomBtn.classList.remove('hidden');
+        } else {
+            Elements.scrollToBottomBtn.classList.add('hidden');
+        }
+    };
+
+    // Listen on BOTH the messages area AND chatMessages for scroll events
+    scrollContainer.addEventListener("scroll", () => {
         if (State.scrollTimeout) clearTimeout(State.scrollTimeout);
 
-        const distanceFromBottom = Elements.chatMessages.scrollHeight -
-            Elements.chatMessages.scrollTop -
-            Elements.chatMessages.clientHeight;
+        updateScrollButton();
 
-        if (Elements.scrollToBottomBtn) {
-            if (distanceFromBottom > 250) {
-                Elements.scrollToBottomBtn.classList.remove('hidden');
-            } else {
-                Elements.scrollToBottomBtn.classList.add('hidden');
-            }
-        }
+        const distanceFromBottom = scrollContainer.scrollHeight -
+            scrollContainer.scrollTop -
+            scrollContainer.clientHeight;
 
         if (State.streamingActive) {
             if (distanceFromBottom > 300) {
@@ -1421,8 +1477,19 @@ function initEventListeners() {
         }, 150);
     });
 
+    // Also listen on chatMessages directly in case it's the scroll target
+    if (scrollContainer !== Elements.chatMessages) {
+        Elements.chatMessages.addEventListener("scroll", () => {
+            updateScrollButton();
+        });
+    }
+
     if (Elements.scrollToBottomBtn) {
         Elements.scrollToBottomBtn.addEventListener('click', () => {
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
             Elements.chatMessages.scrollTo({
                 top: Elements.chatMessages.scrollHeight,
                 behavior: 'smooth'
@@ -1462,9 +1529,6 @@ function initEventListeners() {
 
         const updateInputPosition = () => {
             if (!Elements.inputArea) return;
-            // keyboard height = difference between full screen and the visible viewport.
-            // Do NOT subtract offsetTop — that value changes when the user scrolls the
-            // page and would make the bar drift upward while swiping through messages.
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
 
             if (keyboardHeight > 50) {
@@ -1479,9 +1543,6 @@ function initEventListeners() {
             _vpRafId = requestAnimationFrame(updateInputPosition);
         };
 
-        // Only 'resize' — fires when the keyboard opens/closes (viewport height changes).
-        // Do NOT add a 'scroll' listener: visualViewport scroll fires on every page
-        // scroll and would push the input bar up whenever the user swipes the chat.
         window.visualViewport.addEventListener('resize', scheduleVpUpdate);
     }
 
@@ -1504,13 +1565,10 @@ function initEventListeners() {
             const messageTextEl = messageEl.querySelector('.message-text');
             const actionsEl = messageEl.querySelector('.message-actions');
 
-            // Store original content
             const originalHTML = messageTextEl.innerHTML;
 
-            // Hide actions
             actionsEl.style.display = 'none';
 
-            // Create edit interface
             const editContainer = document.createElement('div');
             editContainer.className = 'edit-container';
 
@@ -1518,7 +1576,6 @@ function initEventListeners() {
             textarea.className = 'edit-textarea';
             textarea.value = prompt;
 
-            // Auto resize
             textarea.addEventListener("input", () => {
                 textarea.style.height = "auto";
                 textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
@@ -1549,6 +1606,9 @@ function initEventListeners() {
             textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
             textarea.focus();
 
+            // FIX #1: Scroll edit container into view when keyboard opens
+            scrollEditIntoView(editContainer);
+
             cancelBtn.addEventListener('click', () => {
                 messageTextEl.innerHTML = originalHTML;
                 messageTextEl.classList.remove('editing');
@@ -1573,7 +1633,6 @@ function initEventListeners() {
         if (action === 'retry-prompt') {
             if (State.streamingActive) return;
 
-            // Remove the error message bubble if this retry came from an error state
             const messageEl = actionBtn.closest('.message');
             if (messageEl && messageEl.classList.contains('error')) {
                 messageEl.remove();
@@ -1610,7 +1669,6 @@ function initEventListeners() {
 
     // Settings Modal Logic
     const openSettings = () => {
-        // Set the correct radio button based on current state
         Elements.modeRadios?.forEach(radio => {
             radio.checked = (radio.value === State.responseMode);
         });
@@ -1660,12 +1718,9 @@ const backBtn = document.getElementById('backBtn');
 
 if (backBtn) {
     backBtn.addEventListener('click', function() {
-        // Check if there's a previous page in browser history
         if (document.referrer && document.referrer.includes('deenlink.org')) {
-            // Go back in history if coming from within your site
             window.history.back();
         } else {
-            // Otherwise go directly to homepage
             window.location.href = 'https://deenlink.org/index.html';
         }
     });
