@@ -1104,7 +1104,7 @@ body.dark-theme .rag-arabic {
     position: fixed;
     left: 16px;
     right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    bottom: calc(4px + env(safe-area-inset-bottom));
     width: auto;
     z-index: 1000;
     background: transparent;

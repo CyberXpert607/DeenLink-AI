@@ -417,13 +417,8 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// FIX #4: Filter sources to only the most relevant one(s)
 function filterBestSources(sources) {
     if (!sources || sources.length === 0) return sources;
-    // If only 1-2 sources, return as-is
-    if (sources.length <= 2) return sources;
-    // Return only the first/best source (most relevant by backend ranking)
-    // The backend already ranks by relevance, index 0 is most relevant
     return [sources[0]];
 }
 
@@ -1532,9 +1527,9 @@ function initEventListeners() {
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
 
             if (keyboardHeight > 50) {
-                Elements.inputArea.style.bottom = (keyboardHeight + 16) + 'px';
+                Elements.inputArea.style.bottom = keyboardHeight + 'px';
             } else {
-                Elements.inputArea.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
+                Elements.inputArea.style.bottom = 'calc(4px + env(safe-area-inset-bottom))';
             }
         };
 
