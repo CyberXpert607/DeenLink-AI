@@ -10,7 +10,7 @@ import uuid
 
 from v2.db.database import get_db, SessionLocal
 from v2.auth import verify_jwt
-from v2.db.models import Conversation, Message
+from v2.db.models import Conversation, Message, Feedback, UserMemory
 from v2.db.memory import build_prompt_with_memory
 from v2.llm_classify import classify_query_llm
 from v2.agent import stream_chat_response
@@ -18,6 +18,8 @@ from v2.agent_stream import stream_rag_answer
 from v2.agent_motivation import stream_motivation_answer
 from v2.vectoreStore import search_similar
 from v2.prompts import CHAT_SYSTEM_PROMPT
+from v2.agent_search import stream_web_search_answer
+import datetime
 
 
 router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
@@ -205,11 +207,25 @@ async def ask_stream(
         has_sent_any_token = False
         
         local_memory_messages = memory_messages  
+        
+        # Launch memory extraction concurrently
+        # Extract user history from local_memory_messages and filter for user messages
+        user_history = []
+        if local_memory_messages:
+            user_history = [{"id": m.id, "fact": m.fact} for m in db.query(UserMemory).filter(UserMemory.user_id == current_user_id).all()]
+        
+        memory_task = None
+        if current_intent in {"chat", "web_search", "ambiguous"}:
+            from v2.agent_memory import extract_memory_facts
+            memory_task = asyncio.create_task(extract_memory_facts(current_query, user_history))
+            
         try:
             if current_intent in {"rag_quran", "rag_hadith", "rag_all"}:
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
             elif current_intent == "motivation":
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
+            elif current_intent == "web_search":
+                yield f"data: {json.dumps({'type': 'web_search_start'})}\n\n"
             else:
                 yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
         
@@ -306,13 +322,39 @@ async def ask_stream(
                         elif chunk_type == "final":
                             yield f"data: {json.dumps(chunk)}\n\n"
 
+            elif current_intent == "web_search":
+                for chunk in stream_web_search_answer(current_query, conversation_history):
+                    if disconnected:
+                        break
+                    try:
+                        parsed = json.loads(chunk.strip())
+                        chunk_type = parsed.get("type")
+                        if chunk_type == "token":
+                            content = parsed.get("content", "")
+                            full_response += content
+                            yield f"data: {chunk}\n\n"
+                            has_sent_any_token = True
+                        elif chunk_type == "sources":
+                            yield f"data: {chunk}\n\n"
+                        elif chunk_type == "done":
+                            yield f"data: {chunk}\n\n"
+                    except:
+                        pass
+                        
             else:
+                current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+                dynamic_system_prompt = f"{CHAT_SYSTEM_PROMPT}\n\nCurrent Date: {current_date}"
+                
                 if not local_memory_messages or len(local_memory_messages) == 0:
                     local_memory_messages = [
-                        {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+                        {"role": "system", "content": dynamic_system_prompt},
                         {"role": "user", "content": current_query}
                     ]
                     logging.warning(f"memory_messages was empty, created fallback with {len(local_memory_messages)} messages")
+                else:
+                    # Update system prompt if it exists
+                    if local_memory_messages[0]["role"] == "system":
+                        local_memory_messages[0]["content"] = dynamic_system_prompt
                 
                 logging.info(f"Streaming chat with {len(local_memory_messages)} messages")
                 token_count = 0
@@ -333,6 +375,35 @@ async def ask_stream(
                 yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
 
             if not disconnected:
+                if memory_task:
+                    try:
+                        mem_result = await memory_task
+                        if mem_result and mem_result.get("action") in ["add", "update", "delete"]:
+                            action = mem_result["action"]
+                            fact = mem_result.get("fact", "")
+                            orig_id = mem_result.get("original_memory_id")
+                            
+                            db_updated = False
+                            if action == "add" and fact:
+                                new_mem = UserMemory(id=str(uuid.uuid4()), user_id=current_user_id, fact=fact)
+                                db.add(new_mem)
+                                db_updated = True
+                            elif action == "update" and fact and orig_id:
+                                existing_mem = db.query(UserMemory).filter(UserMemory.id == orig_id, UserMemory.user_id == current_user_id).first()
+                                if existing_mem:
+                                    existing_mem.fact = fact
+                                    db_updated = True
+                            elif action == "delete" and orig_id:
+                                existing_mem = db.query(UserMemory).filter(UserMemory.id == orig_id, UserMemory.user_id == current_user_id).first()
+                                if existing_mem:
+                                    db.delete(existing_mem)
+                                    db_updated = True
+                            
+                            if db_updated:
+                                db.commit()
+                                yield f"data: {json.dumps({'type': 'memory_updated', 'action': action, 'fact': fact})}\n\n"
+                    except Exception as e:
+                        logging.error(f"Memory extraction failed: {e}")
                 completed = True
 
         except asyncio.CancelledError:
@@ -381,6 +452,13 @@ async def ask_stream(
             "Connection": "keep-alive",
         }
     )
+
+@router.get("/user/me")
+def get_user_profile(user=Depends(verify_jwt)):
+    return {
+        "user_id": user["user_id"],
+        "username": user.get("username", "Guest")
+    }
 
 @router.get("/conversations")
 def list_conversations(
@@ -761,5 +839,28 @@ def update_feedback(feedback_id: str, payload: FeedbackUpdateRequest, user=Depen
     if payload.resolved is not None:
         fb.resolved = payload.resolved
         
+    db.commit()
+    return {"success": True}
+
+@router.get("/user/memories")
+def get_user_memories(user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    user_id = str(user.get("user_id"))
+    memories = db.query(UserMemory).filter(UserMemory.user_id == user_id).order_by(UserMemory.created_at.desc()).all()
+    return [{"id": m.id, "fact": m.fact, "created_at": m.created_at.isoformat()} for m in memories]
+
+@router.delete("/user/memories/{memory_id}")
+def delete_user_memory(memory_id: str, user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    user_id = str(user.get("user_id"))
+    mem = db.query(UserMemory).filter(UserMemory.id == memory_id, UserMemory.user_id == user_id).first()
+    if not mem:
+        raise HTTPException(status_code=404, detail="Memory not found")
+    db.delete(mem)
+    db.commit()
+    return {"success": True}
+
+@router.delete("/user/memories")
+def clear_user_memories(user=Depends(verify_jwt), db: Session = Depends(get_db)):
+    user_id = str(user.get("user_id"))
+    db.query(UserMemory).filter(UserMemory.user_id == user_id).delete()
     db.commit()
     return {"success": True}

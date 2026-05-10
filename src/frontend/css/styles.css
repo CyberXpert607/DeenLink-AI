@@ -353,6 +353,7 @@ html, body {
     overflow: hidden;
 }
 
+/* Menu button - HIDDEN by default (desktop), visible on mobile */
 .menu-button {
     background: none;
     border: none;
@@ -374,6 +375,7 @@ html, body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Back button - ALWAYS VISIBLE */
 .back-button {
     background: none;
     border: none;
@@ -503,6 +505,10 @@ html, body {
     position: relative;
     scroll-padding-bottom: 140px;
     -webkit-overflow-scrolling: touch;
+    /* Prevent the chat scroll from leaking out to the page/body.
+       Without this, iOS passes the scroll gesture through the fixed
+       input bar to the underlying scroll container, making the bar
+       appear to drift upward when swiping near it. */
     overscroll-behavior-y: contain;
 }
 
@@ -517,7 +523,8 @@ html, body {
     padding-bottom: 20px;
 }
 
-/* Bottom spacer for floating input visibility */
+/* Bottom spacer — must be taller than the floating input bar (≈52px)
+   plus the feedback-buttons row (≈40px) plus comfortable breathing room. */
 .chat-messages::after {
     content: '';
     display: block;
@@ -527,7 +534,7 @@ html, body {
 }
 
 /* ============================================
-   MESSAGE STYLES
+   MESSAGE STYLES - FIXED PUNCTUATION WRAPPING
    ============================================ */
 .message {
     display: flex;
@@ -548,6 +555,8 @@ html, body {
 
 .message.user .message-content {
     max-width: 85%;
+    width: fit-content;       /* shrink to hug text, not stretch to 85% always */
+    align-self: flex-end;     /* keep it pinned right inside the message row */
     align-items: flex-end;
 }
 
@@ -562,8 +571,9 @@ html, body {
     white-space: pre-wrap;
     border-radius: 18px;
     border-bottom-right-radius: 4px;
-    width: fit-content;
-    max-width: 100%;
+    width: fit-content;       /* bubble only as wide as its text */
+    max-width: 100%;          /* never wider than the content container */
+    min-width: 0;
     margin: 0;
 }
 
@@ -576,6 +586,7 @@ html, body {
     align-items: flex-start;
 }
 
+/* FIXED: AI message - NO ORPHAN PUNCTUATION */
 .message.ai .message-text {
     background: var(--ai-bg);
     color: var(--text-dark);
@@ -584,7 +595,8 @@ html, body {
     line-height: 1.6;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: normal;
+    white-space: normal; /* was pre-wrap — content is rendered HTML; pre-wrap was
+                            making marked's trailing \n render as a blank line */
     hyphens: none;
     text-overflow: clip;
     border-radius: 18px;
@@ -594,10 +606,6 @@ html, body {
     min-height: fit-content;
     orphans: 3;
     widows: 3;
-}
-
-.message.ai.streaming .message-text {
-    white-space: pre-wrap;
 }
 
 /* ERROR MESSAGE STYLING */
@@ -700,69 +708,25 @@ body.dark-theme .message.user .message-action-btn:hover {
     font-weight: 400;
 }
 
-/* ============================================
-   FIX #2: NO INDENT ON ANY PARAGRAPH - EVER
-   ============================================ */
 .message-text p {
     margin: 0 0 8px 0;
-    padding: 0 !important;
-    text-indent: 0 !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
     word-break: break-word;
     overflow-wrap: break-word;
     display: block;
+    width: 100%;
     orphans: 3;
     widows: 3;
 }
 
 .message-text p:last-child {
     margin-bottom: 0;
-    padding-left: 0 !important;
-    text-indent: 0 !important;
-    margin-left: 0 !important;
 }
 
-/* Force NO indent on EVERY element inside message-text */
-.message-text p,
-.message-text p:first-child,
-.message-text p:last-child,
-.message-text p + p,
-.message-text > p {
-    text-indent: 0 !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-}
-
-.message-text ul,
-.message-text ol {
-    margin: 4px 0 8px 0;
-    padding-left: 20px;
-}
-
-.message-text li {
-    margin-bottom: 2px;
-}
-
-/* FIX #2: All nested elements - no indent */
+/* FIXED: All nested elements */
 .message-text * {
     max-width: 100%;
     word-break: break-word;
     overflow-wrap: break-word;
-}
-
-/* Specifically target paragraph after list items or other blocks */
-.message-text li + p,
-.message-text blockquote + p,
-.message-text h1 + p,
-.message-text h2 + p,
-.message-text h3 + p,
-.message-text h4 + p,
-.message-text h5 + p,
-.message-text h6 + p {
-    text-indent: 0 !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
 }
 
 .message-text pre,
@@ -795,7 +759,7 @@ body.dark-theme .message.user .message-action-btn:hover {
 }
 
 /* ============================================
-   RAG SOURCE CARD - COMPACT
+   RAG SOURCE CARD - COMPACT (Single Definition)
    ============================================ */
 .rag-source {
     position: relative;
@@ -873,6 +837,7 @@ body.dark-theme .message.user .message-action-btn:hover {
     gap: 6px;
 }
 
+/* Dark theme - KEEPING your nice dark background */
 body.dark-theme .rag-source {
     background: rgba(46, 204, 113, 0.15);
     border-left-color: #2ecc71;
@@ -1025,7 +990,7 @@ body.dark-theme .rag-arabic {
 }
 
 /* ============================================
-   SEARCH INDICATOR
+   SEARCH INDICATOR - FIXED
    ============================================ */
 .search-indicator {
     display: flex;
@@ -1098,17 +1063,19 @@ body.dark-theme .rag-arabic {
 }
 
 /* ============================================
-   GLASSMORPHISM INPUT AREA
+   GLASSMORPHISM INPUT AREA - FIXED
    ============================================ */
 .input-area {
     position: fixed;
     left: 16px;
     right: 16px;
-    bottom: calc(4px + env(safe-area-inset-bottom));
+    bottom: calc(16px + env(safe-area-inset-bottom));
     width: auto;
     z-index: 1000;
     background: transparent;
     pointer-events: none;
+    /* Promote to its own compositor layer so bottom changes don't cause
+       full-page repaints and the bar tracks the keyboard without lag */
     will-change: bottom;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
@@ -1135,6 +1102,7 @@ body.dark-theme .rag-arabic {
     position: relative;
 }
 
+/* Subtle gradient border overlay */
 .input-container::before {
     content: '';
     position: absolute;
@@ -1368,6 +1336,7 @@ body.dark-theme .error-toast {
     border-bottom: none;
 }
 
+/* Source item badge - DIFFERENT from rag-source badge */
 .source-item .source-badge {
     position: static; 
     width: 24px;
@@ -1409,6 +1378,12 @@ body.dark-theme .error-toast {
     font-style: italic;
 }
 
+
+/* User bubble: any <p> the markdown renderer adds must have zero height overhead */
+.message.user .message-text p {
+    margin: 0;
+    padding: 0;
+}
 /* ============================================
    STREAMING MESSAGE STYLES
    ============================================ */
@@ -1422,6 +1397,7 @@ body.dark-theme .error-toast {
     line-height: 1.6;
 }
 
+/* Cursor blink effect while streaming */
 .message.ai.streaming .message-text::after {
     content: '▋';
     animation: blink 1s step-end infinite;
@@ -1437,52 +1413,420 @@ body.dark-theme .error-toast {
 }
 
 /* ============================================
-   FIX #3: SCROLL TO BOTTOM BUTTON
-   Always rendered, positioned correctly
+   SCROLL-TO-BOTTOM FLOATING BUTTON
    ============================================ */
 .scroll-to-bottom-btn {
     position: fixed;
-    /* Position it above the input bar on mobile */
-    bottom: 90px;
+    /* sits above the floating input bar (~52px tall + 16px bottom offset) */
+    bottom: calc(82px + env(safe-area-inset-bottom));
     right: 20px;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background: var(--primary-green);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    cursor: pointer;
+    background: var(--white);
+    border: 1px solid var(--medium-gray);
+    color: var(--dark-gray);
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
     z-index: 999;
-    transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
-    opacity: 1;
-    visibility: visible;
+    /* hidden by default */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    font-size: 13px;
 }
 
-body.dark-theme .scroll-to-bottom-btn {
-    background: #2ecc71;
-    color: #1a2526;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+.scroll-to-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 .scroll-to-bottom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    background: var(--primary-green);
+    color: white;
+    border-color: var(--primary-green);
+    box-shadow: 0 4px 12px rgba(29, 111, 66, 0.3);
 }
 
-/* Use opacity+visibility instead of display:none for smooth animation */
-.scroll-to-bottom-btn.hidden {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    transform: translateY(20px) !important;
-    pointer-events: none;
+body.dark-theme .scroll-to-bottom-btn {
+    background: var(--light-gray);
+    border-color: var(--medium-gray);
+    color: var(--text-dark);
 }
 
 /* ============================================
-   FIX #1: EDIT CONTAINER - visible above keyboard
+   MOBILE STYLES (767px and below)
+   ============================================ */
+@media (max-width: 767px) {
+    .menu-button {
+        display: flex !important;
+    }
+    
+    .back-button {
+        display: flex;
+    }
+    
+    .header-left {
+        gap: 6px;
+    }
+    
+    .header-title span {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .message.user .message-content {
+        max-width: 90%;
+    }
+    
+    .message.ai .message-content {
+        max-width: 95%;
+    }
+    
+    .message.user .message-text,
+    .message.ai .message-text {
+        font-size: 15px;
+        padding: 10px 12px;
+    }
+    
+    .input-container {
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+    
+    /* Mobile RAG - COMPACT */
+    .rag-source {
+        padding: 8px;
+        padding-top: 28px;
+        margin: 6px 0;
+    }
+    
+    .rag-source .source-badge {
+        font-size: 9px;
+        padding: 1px 6px;
+        height: 18px;
+        top: 4px;
+        left: 4px;
+    }
+    
+    .rag-arabic {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .rag-english {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .rag-meta {
+        font-size: 8px;
+        gap: 4px;
+    }
+    
+    .message-feedback {
+        gap: 6px;
+    }
+    
+    .feedback-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+    
+    .feedback-btn span {
+        display: none;
+    }
+
+    .message-action-btn {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .search-indicator-content {
+        padding: 8px 16px;
+    }
+    
+    .search-text {
+        font-size: 12px;
+    }
+    
+    .sources-header {
+        font-size: 11px;
+    }
+    
+    .source-title {
+        font-size: 12px;
+    }
+    
+    .source-meta {
+        font-size: 9px;
+        gap: 6px;
+    }
+    
+    .source-preview {
+        font-size: 10px;
+    }
+}
+
+/* ============================================
+   DESKTOP STYLES (768px and up)
+   ============================================ */
+@media (min-width: 768px) {
+    .container.layout {
+        max-width: 1400px;
+        width: 90%;
+        margin: 2vh auto;
+        height: 96vh;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar {
+        transform: translateX(0);
+        position: relative;
+        width: 300px;
+        max-width: none;
+        border-radius: 24px 0 0 24px;
+        flex-shrink: 0;
+        display: flex;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .main-chat {
+        border-radius: 0 24px 24px 0;
+        overflow: hidden;
+        flex: 1;
+        position: relative;
+    }
+    
+    .header-section {
+        padding: 16px 24px;
+        height: 70px;
+        min-height: 70px;
+    }
+    
+    .header-title {
+        font-size: 20px;
+    }
+    
+    .header-title i {
+        font-size: 22px;
+    }
+    
+    .menu-button {
+        display: none !important;
+    }
+    
+    .back-button {
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .header-action-btn {
+        font-size: 18px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .quick-prompts {
+        padding: 16px 24px 12px;
+        gap: 12px;
+    }
+    
+    .quick-prompt-btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+    
+    .messages-area {
+        padding: 24px;
+        gap: 20px;
+        scroll-padding-bottom: 160px;
+    }
+    
+    .message.user .message-content {
+        max-width: 70%;
+    }
+    
+    .message.ai .message-content {
+        max-width: 75%;
+    }
+    
+    .message.user .message-text,
+    .message.ai .message-text {
+        font-size: 15px;
+        padding: 12px 18px;
+    }
+    
+    /* Desktop Glassmorphism Floating Input */
+    .input-area {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+        width: auto;
+        padding: 0;
+        background: transparent;
+        border: none;
+        pointer-events: none;
+    }
+    
+    .input-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-radius: 32px;
+        padding: 14px 24px;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow), 0 8px 32px rgba(0, 0, 0, 0.12);
+        min-height: 60px;
+        max-height: 160px;
+    }
+    
+    .input-container::before {
+        border-radius: 32px;
+    }
+    
+    .message-input {
+        font-size: 15px;
+        max-height: 140px;
+    }
+    
+    .send-button {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+    
+    .chat-messages::after {
+        height: 180px;   /* input bar taller on desktop + feedback rows */
+        min-height: 180px;
+    }
+
+    .scroll-to-bottom-btn {
+        /* On desktop the input bar is position:absolute inside the panel;
+           the button stays fixed but pushed up to clear it (~60px tall + 24px gap) */
+        bottom: 110px;
+        right: 40px;
+    }
+    
+    .messages-area::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .messages-area::-webkit-scrollbar-track {
+        background: var(--light-gray);
+        border-radius: 4px;
+    }
+    
+    .messages-area::-webkit-scrollbar-thumb {
+        background: var(--medium-gray);
+        border-radius: 4px;
+    }
+    
+    .messages-area::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-green);
+    }
+    
+    /* Desktop RAG - Still compact, not huge */
+    .rag-source {
+        padding: 14px;
+        padding-top: 36px;
+        margin: 10px 0;
+    }
+    
+    .rag-source .source-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        height: 22px;
+    }
+    
+    .rag-arabic {
+        font-size: 18px;
+    }
+    
+    .rag-english {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+    
+    .rag-meta {
+        font-size: 10px;
+    }
+}
+
+/* ============================================
+   LARGE DESKTOP (1440px and up)
+   ============================================ */
+@media (min-width: 1440px) {
+    .container.layout {
+        max-width: 1600px;
+    }
+    
+    .sidebar {
+        width: 320px;
+    }
+    
+    .header-title {
+        font-size: 22px;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.hidden {
+    display: none !important;
+}
+
+.message-text img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.message-text a {
+    word-break: break-all;
+    overflow-wrap: break-word;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+button {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+button:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
+/* Dark theme adjustments */
+body.dark-theme .search-indicator-content {
+    background: rgba(44, 62, 80, 0.9);
+}
+
+body.dark-theme .source-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   INLINE EDITING STYLES
    ============================================ */
 .message.user .message-text.editing {
     background: transparent;
@@ -1490,8 +1834,6 @@ body.dark-theme .scroll-to-bottom-btn {
     color: var(--text-dark);
     padding: 12px;
     border-radius: 18px;
-    /* Ensure editing area is always scrolled into view */
-    scroll-margin-bottom: 200px;
 }
 
 .edit-container {
@@ -1499,8 +1841,6 @@ body.dark-theme .scroll-to-bottom-btn {
     flex-direction: column;
     gap: 8px;
     width: 100%;
-    /* Scroll margin so keyboard doesn't cover it */
-    scroll-margin-bottom: 250px;
 }
 
 .edit-textarea {
@@ -1515,8 +1855,6 @@ body.dark-theme .scroll-to-bottom-btn {
     font-size: 14px;
     line-height: 1.5;
     padding: 0;
-    /* Ensure textarea is scrollable when keyboard is up */
-    scroll-margin-bottom: 250px;
 }
 
 .edit-textarea:focus,
@@ -1915,374 +2253,146 @@ body.dark-theme .mode-option input:checked + .mode-card .mode-icon {
     color: var(--dark-gray);
 }
 
-/* ============================================
-   MOBILE STYLES (767px and below)
-   ============================================ */
-@media (max-width: 767px) {
-    .menu-button {
-        display: flex !important;
-    }
-    
-    .back-button {
-        display: flex;
-    }
-    
-    .header-left {
-        gap: 6px;
-    }
-    
-    .header-title span {
-        max-width: 150px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .message.user .message-content {
-        max-width: 90%;
-    }
-    
-    .message.ai .message-content {
-        max-width: 95%;
-    }
-    
-    .message.user .message-text,
-    .message.ai .message-text {
-        font-size: 15px;
-        padding: 10px 12px;
-    }
-    
-    .input-container {
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
-    }
-    
-    .rag-source {
-        padding: 8px;
-        padding-top: 28px;
-        margin: 6px 0;
-    }
-    
-    .rag-source .source-badge {
-        font-size: 9px;
-        padding: 1px 6px;
-        height: 18px;
-        top: 4px;
-        left: 4px;
-    }
-    
-    .rag-arabic {
-        font-size: 14px;
-        line-height: 1.4;
-    }
-    
-    .rag-english {
-        font-size: 10px;
-        padding: 3px 6px;
-    }
-    
-    .rag-meta {
-        font-size: 8px;
-        gap: 4px;
-    }
-    
-    .message-feedback {
-        gap: 6px;
-    }
-    
-    .feedback-btn {
-        font-size: 11px;
-        padding: 3px 6px;
-    }
-    
-    .feedback-btn span {
-        display: none;
-    }
-
-    .message-action-btn {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .search-indicator-content {
-        padding: 8px 16px;
-    }
-    
-    .search-text {
-        font-size: 12px;
-    }
-    
-    .sources-header {
-        font-size: 11px;
-    }
-    
-    .source-title {
-        font-size: 12px;
-    }
-    
-    .source-meta {
-        font-size: 9px;
-        gap: 6px;
-    }
-    
-    .source-preview {
-        font-size: 10px;
-    }
-
-    /* FIX #3: Scroll button on mobile - above input bar */
-    .scroll-to-bottom-btn {
-        bottom: 85px;
-        right: 16px;
-        width: 36px;
-        height: 36px;
-    }
+.input-disclaimer {
+    font-size: 11px;
+    text-align: center;
+    color: var(--dark-gray);
+    margin-top: 8px;
+    opacity: 0.8;
 }
 
-/* ============================================
-   DESKTOP STYLES (768px and up)
-   ============================================ */
-@media (min-width: 768px) {
-    .container.layout {
-        max-width: 1400px;
-        width: 90%;
-        margin: 2vh auto;
-        height: 96vh;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sidebar {
-        transform: translateX(0);
-        position: relative;
-        width: 300px;
-        max-width: none;
-        border-radius: 24px 0 0 24px;
-        flex-shrink: 0;
-        display: flex;
-    }
-    
-    .sidebar-overlay {
-        display: none !important;
-    }
-    
-    .main-chat {
-        border-radius: 0 24px 24px 0;
-        overflow: hidden;
-        flex: 1;
-        position: relative;
-    }
-    
-    .header-section {
-        padding: 16px 24px;
-        height: 70px;
-        min-height: 70px;
-    }
-    
-    .header-title {
-        font-size: 20px;
-    }
-    
-    .header-title i {
-        font-size: 22px;
-    }
-    
-    .menu-button {
-        display: none !important;
-    }
-    
-    .back-button {
-        font-size: 20px;
-        width: 40px;
-        height: 40px;
-    }
-    
-    .header-action-btn {
-        font-size: 18px;
-        width: 40px;
-        height: 40px;
-    }
-    
-    .quick-prompts {
-        padding: 16px 24px 12px;
-        gap: 12px;
-    }
-    
-    .quick-prompt-btn {
-        padding: 10px 18px;
-        font-size: 14px;
-    }
-    
-    .messages-area {
-        padding: 24px;
-        gap: 20px;
-        scroll-padding-bottom: 160px;
-    }
-    
-    .message.user .message-content {
-        max-width: 70%;
-    }
-    
-    .message.ai .message-content {
-        max-width: 75%;
-    }
-    
-    .message.user .message-text,
-    .message.ai .message-text {
-        font-size: 15px;
-        padding: 12px 18px;
-    }
-    
-    /* Desktop: input is absolute inside main-chat */
-    .input-area {
-        position: absolute;
-        left: 24px;
-        right: 24px;
-        bottom: 24px;
-        width: auto;
-        padding: 0;
-        background: transparent;
-        border: none;
-        pointer-events: none;
-    }
-    
-    .input-container {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-radius: 32px;
-        padding: 14px 24px;
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--glass-shadow), 0 8px 32px rgba(0, 0, 0, 0.12);
-        min-height: 60px;
-        max-height: 160px;
-    }
-    
-    .input-container::before {
-        border-radius: 32px;
-    }
-    
-    .message-input {
-        font-size: 15px;
-        max-height: 140px;
-    }
-    
-    .send-button {
-        width: 44px;
-        height: 44px;
-        font-size: 18px;
-    }
-    
-    .chat-messages::after {
-        height: 140px;
-        min-height: 140px;
-    }
-    
-    .messages-area::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .messages-area::-webkit-scrollbar-track {
-        background: var(--light-gray);
-        border-radius: 4px;
-    }
-    
-    .messages-area::-webkit-scrollbar-thumb {
-        background: var(--medium-gray);
-        border-radius: 4px;
-    }
-    
-    .messages-area::-webkit-scrollbar-thumb:hover {
-        background: var(--primary-green);
-    }
-    
-    .rag-source {
-        padding: 14px;
-        padding-top: 36px;
-        margin: 10px 0;
-    }
-    
-    .rag-source .source-badge {
-        font-size: 11px;
-        padding: 3px 10px;
-        height: 22px;
-    }
-    
-    .rag-arabic {
-        font-size: 18px;
-    }
-    
-    .rag-english {
-        font-size: 12px;
-        padding: 5px 10px;
-    }
-    
-    .rag-meta {
-        font-size: 10px;
-    }
-
-    /* FIX #3: Scroll button on desktop - inside container */
-    .scroll-to-bottom-btn {
-        position: absolute;
-        bottom: 100px;
-        right: 24px;
-    }
+.empty-chat-greeting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px 20px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
 }
 
-/* ============================================
-   LARGE DESKTOP (1440px and up)
-   ============================================ */
-@media (min-width: 1440px) {
-    .container.layout {
-        max-width: 1600px;
-    }
-    
-    .sidebar {
-        width: 320px;
-    }
-    
-    .header-title {
-        font-size: 22px;
-    }
+.empty-chat-greeting h2 {
+    font-size: 24px;
+    color: var(--primary-green);
+    margin: 0 0 8px 0;
+    font-weight: 700;
 }
 
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
-.hidden {
-    display: none !important;
+body.dark-theme .empty-chat-greeting h2 {
+    color: #2ecc71;
 }
 
-.message-text img {
-    max-width: 100%;
-    height: auto;
+.empty-chat-greeting p {
+    font-size: 14px;
+    color: var(--dark-gray);
+    margin: 0;
+}
+
+/* Memory UI Styles */
+.memory-updated-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #202123;
+    color: #ececf1;
+    padding: 12px 16px;
     border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    animation: slideDownFade 0.3s ease;
+    font-size: 13px;
+    border: 1px solid #4d4d4f;
+    max-width: 90vw;
 }
 
-.message-text a {
-    word-break: break-all;
-    overflow-wrap: break-word;
+body.light-theme .memory-updated-toast {
+    background: #ffffff;
+    color: #353740;
+    border: 1px solid #e5e5e5;
 }
 
-html {
-    scroll-behavior: smooth;
+.memory-updated-toast.hide {
+    animation: fadeOutUp 0.3s ease forwards;
 }
 
-button {
-    user-select: none;
-    -webkit-user-select: none;
+@keyframes slideDownFade {
+    0% { top: -20px; opacity: 0; }
+    100% { top: 20px; opacity: 1; }
 }
 
-button:focus-visible,
-textarea:focus-visible {
-    outline: 2px solid var(--primary-green);
-    outline-offset: 2px;
+@keyframes fadeOutUp {
+    0% { top: 20px; opacity: 1; }
+    100% { top: -20px; opacity: 0; }
 }
 
-/* Dark theme adjustments */
-body.dark-theme .search-indicator-content {
-    background: rgba(44, 62, 80, 0.9);
+.memory-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-body.dark-theme .source-item {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: var(--bg-hover);
+    color: var(--text-color);
+    border: 1px solid var(--border-light);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.memories-list {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.memories-ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.memory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.memory-item:last-child {
+    border-bottom: none;
+}
+
+.memory-fact {
+    font-size: 13px;
+    color: var(--text-color);
+    flex: 1;
+    margin-right: 10px;
+}
+
+.memory-delete {
+    background: none;
+    border: none;
+    color: var(--dark-gray);
+    cursor: pointer;
+}
+.memory-delete:hover {
+    color: #e74c3c;
 }

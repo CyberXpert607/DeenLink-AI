@@ -13,6 +13,16 @@ def build_prompt_with_memory(db, conversation):
         "content": CHAT_SYSTEM_PROMPT
     })
 
+    from v2.db.models import UserMemory
+    user_memories = db.query(UserMemory).filter(UserMemory.user_id == conversation.user_id).order_by(UserMemory.created_at.asc()).all()
+    if user_memories:
+        facts = "\n".join([f"- {m.fact}" for m in user_memories])
+        memory_content = f"Information about the user based on previous interactions:\n{facts}\n\nUse this information naturally when relevant, but do not state that you are reading from memory."
+        messages.append({
+            "role": "system",
+            "content": memory_content
+        })
+
 
     if conversation.summary:
         messages.append({

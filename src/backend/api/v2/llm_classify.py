@@ -20,6 +20,7 @@ Classify the user's message into ONE of these labels:
 - rag_quran -> explicitly wants Quran verses
 - rag_hadith -> explicitly wants hadith or prophetic traditions
 - motivation -> wants encouragement, life advice, patience, hope, reassurance USING Islamic sources
+- web_search -> wants latest information, current events, dates, facts outside of Islamic scriptures, or asks the AI to search the web
 - ambiguous -> unclear intent, needs clarification
 
 Rules for Hadith Detection:
@@ -37,12 +38,16 @@ Rules for Motivation:
 - User expresses distress, sadness, anxiety, or seeks hope
 - User asks for encouragement, patience (sabr), trust in Allah (tawakkul)
 
+Rules for Web Search:
+- User asks about current events, dates, news, or worldly facts (e.g., "what year is it", "who won the match").
+- User explicitly requests a web search.
+
 Respond ONLY in JSON format.
 Do not include markdown, comments, or extra text.
 
 Schema:
 {
-"intent": "chat | rag_quran | rag_hadith | motivation | ambiguous",
+"intent": "chat | rag_quran | rag_hadith | motivation | web_search | ambiguous",
 "confidence": number,
 "reason": "string",
 "detected_entities": {
@@ -59,6 +64,7 @@ ALLOWED_INTENTS = {
     "rag_quran",
     "rag_hadith",
     "motivation",
+    "web_search",
     "ambiguous",
 }
 

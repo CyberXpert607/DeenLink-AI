@@ -124,6 +124,24 @@ async function fetchToken() {
     return State.jwtToken;
 }
 
+async function fetchUserProfile() {
+    try {
+        const token = await getValidToken();
+        const res = await fetchWithRetry(`${API_BASE_URL}/user/me`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const userNameDisplay = document.getElementById("userNameDisplay");
+            if (userNameDisplay && data.username) {
+                userNameDisplay.textContent = data.username;
+            }
+        }
+    } catch (e) {
+        console.warn("Could not fetch user profile", e);
+    }
+}
+
 function showError(message, duration = 4000) {
     const toast = Elements.errorToast;
     toast.textContent = message;
@@ -347,16 +365,22 @@ async function streamTokenToElement(element, token) {
     }
 }
 
-function showSearchIndicator() {
+function showSearchIndicator(text = "Searching knowledge base...", iconType = "database") {
     removeSearchIndicator();
     removeTypingIndicator();
     const indicator = document.createElement('div');
     indicator.className = 'search-indicator';
     indicator.id = 'searchIndicator';
+    
+    let iconHtml = '<div class="search-spinner"></div>';
+    if (iconType === "web") {
+        iconHtml = '<i class="fas fa-globe search-spinner-icon" style="animation: spin 2s linear infinite; margin-right: 8px;"></i>';
+    }
+    
     indicator.innerHTML = `
         <div class="search-indicator-content">
-            <div class="search-spinner"></div>
-            <span class="search-text">Searching knowledge base...</span>
+            ${iconHtml}
+            <span class="search-text">${text}</span>
         </div>
     `;
     Elements.chatMessages.appendChild(indicator);
@@ -428,34 +452,41 @@ function createSourcesPanel(sources) {
     const validSources = sources.filter(s => s && s.payload);
     panel.innerHTML = `
         <div class="sources-header" onclick="this.parentElement.classList.toggle('expanded')">
-            <span>${validSources.length} source${validSources.length !== 1 ? 's' : ''} used</span>
+            <span>Sources <i class="${validSources.some(s => s.source_type === 'web') ? 'fas fa-globe' : 'far fa-compass'}"></i></span>
             <i class="fas fa-chevron-down sources-chevron"></i>
         </div>
         <div class="sources-content">
             ${validSources.map((src, idx) => {
         const isHadith = src.source_type === 'hadith';
+        const isWeb = src.source_type === 'web';
         const payload = src.payload || {};
         let displayTitle = isHadith ? 'Hadith' : 'Qur\'an';
         if (src.display_reference) {
             displayTitle = src.display_reference;
         } else if (isHadith && payload.hadith_number_display) {
             displayTitle = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
-        } else if (!isHadith && payload.surah_name && payload.ayah) {
+        } else if (!isHadith && !isWeb && payload.surah_name && payload.ayah) {
             displayTitle = `${payload.surah_name}:${payload.ayah}`;
         }
+        
+        let metaHtml = '';
+        if (isWeb) {
+            metaHtml = `<span><a href="${escapeHtml(payload.url || '#')}" target="_blank" style="color:var(--primary-green); text-decoration:none;">${escapeHtml(payload.url || '')}</a></span>`;
+        } else if (isHadith) {
+            metaHtml = `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
+                       ${payload.hadith_number_display ? `<span>${escapeHtml(payload.hadith_number_display)}</span>` : ''}`;
+        } else {
+            metaHtml = `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
+                       <span>Ayah ${payload.ayah || 'Unknown'}</span>`;
+        }
+        
         return `
                     <div class="source-item">
                         <div class="source-badge">${idx + 1}</div>
                         <div class="source-details">
                             <div class="source-title">${escapeHtml(displayTitle)}</div>
                             <div class="source-meta">
-                                ${isHadith ?
-                `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
-                                     ${payload.hadith_number_display ? `<span>${escapeHtml(payload.hadith_number_display)}</span>` : ''}`
-                :
-                `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
-                                     <span>Ayah ${payload.ayah || 'Unknown'}</span>`
-            }
+                                ${metaHtml}
                             </div>
                             ${payload.arabic ? `
                             <details class="source-expandable">
@@ -466,6 +497,11 @@ function createSourcesPanel(sources) {
                             <details class="source-expandable">
                                 <summary>View English Translation</summary>
                                 <div class="rag-english">${escapeHtml(payload.english)}</div>
+                            </details>` : ''}
+                            ${payload.snippet ? `
+                            <details class="source-expandable">
+                                <summary>View Web Snippet</summary>
+                                <div class="rag-english">${escapeHtml(payload.snippet)}</div>
                             </details>` : ''}
                         </div>
                     </div>
@@ -698,6 +734,22 @@ function replaceLoadingWithAIMessage(loadingObj, incomplete = false) {
     }
     return textEl;
 }
+function updateEmptyStateVisibility() {
+    const emptyGreeting = document.getElementById("emptyChatGreeting");
+    const quickPrompts = document.getElementById("quickPrompts");
+    
+    const hasMessages = Array.from(Elements.chatMessages.children).some(
+        child => !child.classList.contains("loading-state") && !child.id.includes("Indicator")
+    );
+    
+    if (hasMessages) {
+        if (emptyGreeting) emptyGreeting.style.display = 'none';
+        if (quickPrompts) quickPrompts.style.display = 'none';
+    } else {
+        if (emptyGreeting) emptyGreeting.style.display = 'flex';
+        if (quickPrompts) quickPrompts.style.display = 'flex';
+    }
+}
 
 function appendMessage(sender, text, options = {}) {
     const { messageId = null } = options;
@@ -731,6 +783,7 @@ function appendMessage(sender, text, options = {}) {
     if (shouldScroll) {
         Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
     }
+    updateEmptyStateVisibility();
 }
 
 function createFeedbackButtons(messageContent) {
@@ -959,6 +1012,8 @@ async function loadConversation(id) {
         );
     });
 
+    updateEmptyStateVisibility();
+
     // FIX #3: Scroll to BOTTOM (most recent message) after loading conversation
     // Use multiple frames to ensure all content (including images) is rendered
     const scrollToBottom = () => {
@@ -1029,7 +1084,9 @@ async function createNewConversation() {
         }
     });
     if (!res.ok) throw new Error("Failed to create conversation");
-    return await res.json();
+    const jsonRes = await res.json();
+    updateEmptyStateVisibility();
+    return jsonRes;
 }
 
 function styleRAGSources(el) {
@@ -1200,6 +1257,10 @@ async function sendMessage(retryData = null) {
                     case 'search_start':
                         showSearchIndicator();
                         break;
+                        
+                    case 'web_search_start':
+                        showSearchIndicator("Getting info from the internet...", "web");
+                        break;
 
                     case 'chat_start':
                         showTypingIndicator();
@@ -1238,6 +1299,12 @@ async function sendMessage(retryData = null) {
                         throw new Error(getUserFriendlyError(data.message || "Stream error"));
 
                     case 'done':
+                        break;
+                        
+                    case 'memory_updated':
+                        if (data.action === "add" || data.action === "update") {
+                            showMemoryUpdatedToast(data.fact);
+                        }
                         break;
                 }
             }
@@ -1512,6 +1579,7 @@ function initEventListeners() {
             const newConv = await createNewConversation();
             State.activeConversationId = newConv.id;
             Elements.chatMessages.innerHTML = "";
+            updateEmptyStateVisibility();
             closeSidebar();
             await loadConversations();
         } catch (err) {
@@ -1705,7 +1773,9 @@ window.addEventListener("load", async () => {
         State.responseMode = savedMode;
     }
 
+    fetchUserProfile();
     await loadConversations();
+    updateEmptyStateVisibility();
     Elements.messageInput?.focus();
 });
 
@@ -1720,3 +1790,114 @@ if (backBtn) {
         }
     });
 }
+
+/* Memory UI Logic */
+function showMemoryUpdatedToast(fact) {
+    const existing = document.getElementById('memoryToast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.id = 'memoryToast';
+    toast.className = 'memory-updated-toast';
+    toast.innerHTML = `
+        <i class="fas fa-brain" style="color: var(--primary-green);"></i>
+        <div style="display:flex; flex-direction:column;">
+            <strong style="margin-bottom:2px;">Memory updated</strong>
+            <span style="opacity:0.8;">${escapeHtml(fact)}</span>
+            <a href="#" id="manageMemoriesLink" style="color: var(--primary-green); text-decoration: none; margin-top: 4px; font-weight: 500;">Manage memories <i class="fas fa-chevron-right" style="font-size:10px;"></i></a>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    document.getElementById('manageMemoriesLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 300);
+        openSettings();
+        document.getElementById('viewMemoriesBtn').click();
+    });
+    
+    setTimeout(() => {
+        if(document.body.contains(toast)) {
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
+}
+
+document.getElementById('viewMemoriesBtn')?.addEventListener('click', async () => {
+    const container = document.getElementById('memoriesListContainer');
+    const loading = document.getElementById('memoriesListLoading');
+    const ul = document.getElementById('memoriesList');
+    const empty = document.getElementById('memoriesEmpty');
+    
+    container.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    ul.innerHTML = '';
+    empty.classList.add('hidden');
+    
+    try {
+        const token = await getValidToken();
+        const res = await fetch(`${API_BASE_URL}/user/memories`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed to fetch memories");
+        const memories = await res.json();
+        
+        loading.classList.add('hidden');
+        if (memories.length === 0) {
+            empty.classList.remove('hidden');
+        } else {
+            memories.forEach(m => {
+                const li = document.createElement('li');
+                li.className = 'memory-item';
+                li.innerHTML = `
+                    <div class="memory-fact">${escapeHtml(m.fact)}</div>
+                    <button class="memory-delete" data-id="${m.id}" title="Delete Memory"><i class="fas fa-trash"></i></button>
+                `;
+                ul.appendChild(li);
+            });
+            
+            ul.querySelectorAll('.memory-delete').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    try {
+                        const delRes = await fetch(`${API_BASE_URL}/user/memories/${id}`, {
+                            method: 'DELETE',
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+                        if (delRes.ok) {
+                            e.currentTarget.closest('.memory-item').remove();
+                            if (ul.children.length === 0) empty.classList.remove('hidden');
+                        }
+                    } catch (err) {
+                        console.error("Error deleting memory", err);
+                    }
+                });
+            });
+        }
+    } catch (err) {
+        loading.classList.add('hidden');
+        empty.classList.remove('hidden');
+        empty.textContent = "Failed to load memories.";
+    }
+});
+
+document.getElementById('clearMemoriesBtn')?.addEventListener('click', async () => {
+    if (!confirm("Are you sure you want to clear all your memories? This cannot be undone.")) return;
+    try {
+        const token = await getValidToken();
+        const res = await fetch(`${API_BASE_URL}/user/memories`, {
+            method: 'DELETE',
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            document.getElementById('memoriesList').innerHTML = '';
+            document.getElementById('memoriesEmpty').classList.remove('hidden');
+            showSuccessToast("All memories cleared.");
+        }
+    } catch (err) {
+        showError("Failed to clear memories");
+    }
+});

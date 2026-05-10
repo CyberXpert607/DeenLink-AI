@@ -45,3 +45,11 @@ class Feedback(Base):
     severity = Column(String, default="Low") # Low, Medium, High
     resolved = Column(sqlalchemy.Boolean, default=False)
     reason = Column(Text, nullable=True)
+
+class UserMemory(Base):
+    __tablename__ = "user_memories"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, index=True, nullable=False)
+    fact = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

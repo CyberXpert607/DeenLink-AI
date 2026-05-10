@@ -91,7 +91,11 @@
 
             <div class="chat-container">
                 <div class="messages-area">
-                    <div class="quick-prompts">
+                    <div class="empty-chat-greeting" id="emptyChatGreeting">
+                        <h2>Salam, <span id="userNameDisplay">Guest</span>!</h2>
+                        <p>How can I help you today?</p>
+                    </div>
+                    <div class="quick-prompts" id="quickPrompts">
                         <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">Salah Importance</button>
                         <button class="quick-prompt-btn" data-prompt="Give me a verse about patience">Patience Verse</button>
                         <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">Five Pillars</button>
@@ -105,6 +109,9 @@
                         <button class="send-button" id="sendButton" aria-label="Send message">
                             <i class="fas fa-paper-plane"></i>
                         </button>
+                    </div>
+                    <div class="input-disclaimer">
+                        DeenLink AI can make mistakes. Double check information.
                     </div>
                 </div>
                 
@@ -177,6 +184,23 @@
                                         </div>
                                     </div>
                                 </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-group" style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 24px;">
+                            <label class="settings-label">Personal Memory</label>
+                            <p class="settings-desc">DeenLink AI remembers details about you across conversations to provide better answers.</p>
+                            
+                            <div class="memory-manager">
+                                <div class="memory-actions">
+                                    <button id="viewMemoriesBtn" class="btn btn-secondary"><i class="fas fa-list"></i> View Memories</button>
+                                    <button id="clearMemoriesBtn" class="btn btn-danger"><i class="fas fa-trash"></i> Clear All</button>
+                                </div>
+                                <div id="memoriesListContainer" class="memories-list hidden">
+                                    <div id="memoriesListLoading" class="hidden">Loading memories...</div>
+                                    <ul id="memoriesList" class="memories-ul"></ul>
+                                    <div id="memoriesEmpty" class="hidden" style="color: var(--text-muted); font-size: 0.9rem;">No memories found.</div>
+                                </div>
                             </div>
                         </div>
                     </div>

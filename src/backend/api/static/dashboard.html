@@ -47,8 +47,7 @@
     </div>
 
     <script>
-        // Note: For simplicity, we are getting a token as if we are a normal user,
-        // but in production, this should check for admin specific token/session.
+
         const API_BASE_URL = '/api/v2';
         let jwtToken = null;
         let jwtExpiry = null;
@@ -113,7 +112,6 @@
             }
         }
 
-        // Fetch on load
         fetchMetrics();
     </script>
 </body>
