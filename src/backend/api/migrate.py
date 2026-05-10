@@ -24,6 +24,11 @@ def upgrade_feedbacks_table():
         
     finally:
         db.close()
+        
+    print("Ensuring all new tables exist...")
+    from v2.db.models import Base
+    Base.metadata.create_all(bind=engine)
+    print("Done!")
 
 if __name__ == "__main__":
     upgrade_feedbacks_table()
