@@ -29,6 +29,7 @@ class Message(Base):
     content = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     tokens = Column(sqlalchemy.Integer, default=0)
+    sources_json = Column(Text, nullable=True)  # JSON-serialised sources for persistence
 
     conversation = relationship("Conversation", back_populates="messages")
 

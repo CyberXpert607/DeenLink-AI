@@ -42,6 +42,44 @@
             border-color: #4a6572;
             border-top-color: #2ecc71;
         }
+
+        /* Web source chip with favicon */
+        .source-chip.web-chip {
+            text-decoration: none !important;
+            color: inherit;
+        }
+        .source-chip.web-chip:hover {
+            text-decoration: none !important;
+        }
+        .source-favicon {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .source-chip-ext {
+            font-size: 9px;
+            opacity: 0.6;
+            margin-left: 2px;
+        }
+
+        /* Memory manage button */
+        .memory-inline-manage {
+            background: none;
+            border: 1px solid currentColor;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0.75;
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+        .memory-inline-manage:hover { opacity: 1; }
     </style>
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -96,9 +134,14 @@
                         <p>How can I help you today?</p>
                     </div>
                     <div class="quick-prompts" id="quickPrompts">
-                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">Salah Importance</button>
-                        <button class="quick-prompt-btn" data-prompt="Give me a verse about patience">Patience Verse</button>
-                        <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">Five Pillars</button>
+                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">🕌 Salah Importance</button>
+                        <button class="quick-prompt-btn" data-prompt="Give me a Quranic verse about patience">📖 Patience Verse</button>
+                        <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">🌙 Five Pillars</button>
+                        <button class="quick-prompt-btn" data-prompt="What is the significance of Ramadan?">🌙 Ramadan</button>
+                        <button class="quick-prompt-btn" data-prompt="How do I perform Wudu correctly?">💧 Wudu Guide</button>
+                        <button class="quick-prompt-btn" data-prompt="What does Islam say about kindness to parents?">❤️ Parents in Islam</button>
+                        <button class="quick-prompt-btn" data-prompt="What is Zakat and who must pay it?">🤲 Zakat</button>
+                        <button class="quick-prompt-btn" data-prompt="Tell me about the life of Prophet Muhammad ﷺ">☀️ Prophet's Life</button>
                     </div>
                     <div class="chat-messages" id="chatMessages"></div>
                 </div>

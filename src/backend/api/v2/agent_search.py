@@ -1,89 +1,257 @@
+"""
+agent_search.py  —  Web-search agent for DeenLink AI.
+
+Strategy:
+  1. Rewrite the raw user query into an optimised search query using the LLM.
+  2. Search DuckDuckGo and keep only results whose URL originates from a
+     hand-curated trusted-domain allowlist.
+  3. If fewer than 2 trusted results are found, fall back to the best non-trusted
+     results so the user always gets an answer.
+  4. Feed results + conversation context + user memory into the LLM and stream
+     the response back.
+  5. Yield a final `sources` event so the frontend can render persistent source cards.
+"""
+
 from duckduckgo_search import DDGS
 from groq import Groq
 import logging
 import json
+import datetime
+from urllib.parse import urlparse
 from config import MODEL
 
+logger = logging.getLogger(__name__)
 client = Groq(timeout=120.0)
 
-def perform_web_search(query: str, max_results: int = 3) -> list:
-    """Performs a web search using DuckDuckGo."""
+# ---------------------------------------------------------------------------
+# Trusted domain allowlist
+# ---------------------------------------------------------------------------
+TRUSTED_DOMAINS = {
+    # Islamic knowledge
+    "islamqa.info",
+    "sunnah.com",
+    "islamweb.net",
+    "seekersguidance.org",
+    "quran.com",
+    "daruliftaa.com",
+    "muftionline.co.za",
+    "islamicfinder.org",
+    # General fact / news
+    "wikipedia.org",
+    "timeanddate.com",
+    "bbc.com",
+    "bbc.co.uk",
+    "aljazeera.com",
+    "reuters.com",
+    "apnews.com",
+    # Nigerian context
+    "punchng.com",
+    "vanguardngr.com",
+}
+
+
+def _domain_of(url: str) -> str:
+    """Return the registered domain from a URL, stripping www."""
     try:
-        results = []
+        host = urlparse(url).netloc.lower().lstrip("www.")
+        # handle subdomains — keep last two parts
+        parts = host.split(".")
+        return ".".join(parts[-2:]) if len(parts) >= 2 else host
+    except Exception:
+        return ""
+
+
+def _is_trusted(url: str) -> bool:
+    dom = _domain_of(url)
+    return any(dom == td or dom.endswith("." + td) for td in TRUSTED_DOMAINS)
+
+
+# ---------------------------------------------------------------------------
+# Query rewriter
+# ---------------------------------------------------------------------------
+def _rewrite_query(user_query: str, context_summary: str = "") -> str:
+    """
+    Ask the LLM to turn the raw user message into a focused search query.
+    Falls back to the original query on any error.
+    """
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    context_clause = f"\nConversation context: {context_summary}" if context_summary else ""
+    prompt = (
+        f"Today is {today}.{context_clause}\n\n"
+        "Rewrite the following user message into a concise, effective web-search query "
+        "(max 10 words). Output ONLY the search query — no explanation, no quotes.\n\n"
+        f"User message: {user_query}"
+    )
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=30,
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as exc:
+        logger.warning(f"Query rewrite failed: {exc}")
+        return user_query
+
+
+# ---------------------------------------------------------------------------
+# Search helper
+# ---------------------------------------------------------------------------
+def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
+    """
+    Returns (trusted_results, fallback_results).
+    trusted_results — from TRUSTED_DOMAINS
+    fallback_results — everything else (used only if trusted is thin)
+    """
+    try:
+        trusted, others = [], []
         with DDGS() as ddgs:
             for r in ddgs.text(query, max_results=max_results):
-                results.append({
+                entry = {
                     "title": r.get("title", ""),
                     "url": r.get("href", ""),
-                    "body": r.get("body", "")
-                })
-        return results
-    except Exception as e:
-        logging.error(f"DuckDuckGo search error: {e}")
-        return []
+                    "body": r.get("body", ""),
+                }
+                if _is_trusted(entry["url"]):
+                    trusted.append(entry)
+                else:
+                    others.append(entry)
+        return trusted, others
+    except Exception as exc:
+        logger.error(f"DuckDuckGo search error: {exc}")
+        return [], []
 
-def stream_web_search_answer(question: str, context_history: list = None):
-    """Streams a response using web search results."""
-    # First, perform the search
-    search_results = perform_web_search(question)
-    
-    if not search_results:
-        yield json.dumps({"type": "token", "content": "I tried searching the web for this, but I couldn't find any relevant results."}) + "\n\n"
+
+# ---------------------------------------------------------------------------
+# Context summariser (extract recent user facts from history)
+# ---------------------------------------------------------------------------
+def _context_summary(context_history: list) -> str:
+    """Build a short human-readable summary of recent conversation turns."""
+    if not context_history:
+        return ""
+    lines = []
+    for m in context_history[-6:]:  # last 3 pairs
+        role = "User" if m.get("role") == "user" else "AI"
+        lines.append(f"{role}: {str(m.get('content', ''))[:120]}")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Main streaming function
+# ---------------------------------------------------------------------------
+def stream_web_search_answer(
+    question: str,
+    context_history: list = None,
+    user_memories: list = None,
+):
+    """
+    Generator that yields JSON-encoded SSE data strings.
+    """
+    context_history = context_history or []
+    user_memories = user_memories or []
+
+    today = datetime.datetime.now().strftime("%A, %d %B %Y")
+
+    # Build a context summary for query rewriting
+    ctx_summary = _context_summary(context_history)
+
+    # Rewrite the user's query for better search results
+    search_query = _rewrite_query(question, ctx_summary)
+    logger.info(f"Web search | original='{question}' | rewritten='{search_query}'")
+
+    # Perform search
+    trusted, fallback = perform_web_search(search_query)
+
+    # Prefer trusted; pad with fallback only if we have fewer than 2 trusted hits
+    results = trusted[:3]
+    if len(results) < 2:
+        results += fallback[: (2 - len(results))]
+
+    if not results:
+        yield json.dumps({
+            "type": "token",
+            "content": "I searched the web but couldn't find any relevant results for your question."
+        }) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"
         return
-        
-    # Format the sources
-    sources_text = "\n\n".join([f"Source {i+1}: {r['title']}\nURL: {r['url']}\nSnippet: {r['body']}" for i, r in enumerate(search_results)])
-    
-    system_prompt = (
-        "You are DeenLink AI, an intelligent assistant. You have just performed a web search to answer the user's question.\n"
-        "Use the provided search results to answer the question accurately and concisely.\n"
-        "Always cite your sources using inline links [Source Name](URL) at the end of relevant sentences.\n"
-        "If the search results do not contain the answer, explicitly state that."
+
+    # Format sources context for the LLM
+    sources_text = "\n\n".join(
+        f"[Source {i+1}] {r['title']}\nURL: {r['url']}\nSnippet: {r['body']}"
+        for i, r in enumerate(results)
     )
-    
+
+    # Build memory block
+    memory_block = ""
+    if user_memories:
+        facts = "\n".join(f"- {m}" for m in user_memories)
+        memory_block = f"\nKnown facts about the user (use when relevant):\n{facts}\n"
+
+    system_prompt = (
+        f"You are DeenLink AI, a helpful and knowledgeable Islamic assistant.\n"
+        f"Today's date is {today}.\n"
+        f"{memory_block}\n"
+        "You have performed a web search. Use the search results below to answer "
+        "the user's question accurately and concisely.\n"
+        "Rules:\n"
+        "- Answer directly; no filler phrases.\n"
+        "- Cite sources inline using [Source N] notation.\n"
+        "- If search results don't answer the question, say so clearly.\n"
+        "- For Islamic questions, always end with 'Wallahu A'lam'.\n"
+        "- Do NOT make up information not present in the sources.\n\n"
+        f"Search results:\n{sources_text}"
+    )
+
     messages = [{"role": "system", "content": system_prompt}]
+
+    # Include recent conversation history for context
     if context_history:
-        messages.extend(context_history)
-        
-    messages.append({
-        "role": "user", 
-        "content": f"Question: {question}\n\nSearch Results:\n{sources_text}"
-    })
-    
+        for m in context_history[-6:]:
+            if m.get("role") in ("user", "assistant"):
+                messages.append({"role": m["role"], "content": str(m.get("content", ""))})
+
+    messages.append({"role": "user", "content": question})
+
     try:
         stream = client.chat.completions.create(
             model=MODEL,
             messages=messages,
             temperature=0.3,
-            stream=True
+            stream=True,
         )
-        
+
         for chunk in stream:
             delta = chunk.choices[0].delta.content
             if delta:
                 yield json.dumps({"type": "token", "content": delta}) + "\n\n"
-                
-        # Send sources as well so UI can display them
-        # Convert DDG results to our source format
+
+        # Yield sources for UI rendering
         sources_data = []
-        for r in search_results:
+        for r in results:
+            hostname = _domain_of(r["url"])
             sources_data.append({
                 "source_type": "web",
                 "score": 1.0,
                 "payload": {
                     "title": r["title"],
                     "url": r["url"],
-                    "snippet": r["body"],
-                    "display_reference": r["title"]
+                    "snippet": r["body"][:300],
+                    "hostname": hostname,
+                    "is_trusted": _is_trusted(r["url"]),
+                    "favicon_url": f"https://www.google.com/s2/favicons?domain={hostname}&sz=32",
+                    "display_reference": r["title"],
                 },
-                "display_reference": r["title"]
+                "display_reference": r["title"],
             })
-            
+
         yield json.dumps({"type": "sources", "sources": sources_data}) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"
-        
-    except Exception as e:
-        logging.error(f"Error streaming web search answer: {e}")
-        yield json.dumps({"type": "token", "content": "I encountered an error while processing the search results."}) + "\n\n"
+
+    except Exception as exc:
+        logger.error(f"Error streaming web search answer: {exc}")
+        yield json.dumps({
+            "type": "token",
+            "content": "I encountered an error while processing the search results. Please try again."
+        }) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"

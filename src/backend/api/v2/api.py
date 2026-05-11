@@ -65,7 +65,15 @@ def format_source_display(payload: dict) -> str:
     
     return "Islamic Source"
 
-def save_messages_sync(conversation_id: str, user_id: str, query: str, response: str, tokens: int = 0, title_update: str = None):
+def save_messages_sync(
+    conversation_id: str,
+    user_id: str,
+    query: str,
+    response: str,
+    tokens: int = 0,
+    title_update: str = None,
+    sources_json: str = None,
+):
 
     db = SessionLocal()
     try:
@@ -92,7 +100,8 @@ def save_messages_sync(conversation_id: str, user_id: str, query: str, response:
             conversation_id=conversation_id,
             role="assistant",
             content=response,
-            tokens=tokens
+            tokens=tokens,
+            sources_json=sources_json,
         )
         db.add(assistant_msg)
         
@@ -156,24 +165,36 @@ async def ask_stream(
     elif payload.mode == "rag":
         intent = "rag_all"
     else:
-        # Default to Auto
+        # Default to Auto — check keyword shortcuts first (cheap), then LLM classifier
         if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
             intent = "rag_quran"
-        elif any(kw in query.lower() for kw in ["hadith", "prophet", "bukhari", "muslim"]):
+        elif any(kw in query.lower() for kw in ["hadith", "bukhari", "muslim", "tirmidhi"]):
             intent = "rag_hadith"
         elif any(kw in query.lower() for kw in ["motivate", "inspire", "encourage"]):
             intent = "motivation"
         else:
-            classification = await classify_query_llm(query)
+            # Fetch memories first so classifier can use them
+            memories_for_classifier = [
+                {"id": m.id, "fact": m.fact}
+                for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
+            ]
+            classification = await classify_query_llm(query, memories_for_classifier)
             intent = classification.get("intent")
     memory_messages = None
     conversation_history = []
+    user_memories_list = []  # flat list of {id, fact} for passing to classifier/search
     
     if intent not in {"rag_quran", "rag_hadith", "rag_all", "motivation"}:
         memory_messages = build_prompt_with_memory(db, convo)
 
         if memory_messages is None:
             memory_messages = []
+        
+        # Fetch user memories for classifier / search agent
+        user_memories_list = [
+            {"id": m.id, "fact": m.fact}
+            for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
+        ]
         
         memory_messages.append({"role": "user", "content": query})
         logging.info(f"Built memory for conversation {convo.id} with {len(memory_messages)} messages")
@@ -194,22 +215,22 @@ async def ask_stream(
         logging.info(f"Using conversation history for RAG with {len(conversation_history)} messages")
         
         memory_messages = conversation_history
-
     current_intent = intent
     current_convo = convo
     current_user_id = user_id
     current_query = query
+    current_user_memories = user_memories_list  # pass to closure
     
     async def event_stream_async():
         full_response = ""
         disconnected = False
         completed = False
         has_sent_any_token = False
+        collectedSources = None  # will be populated by 'sources' SSE event
         
         local_memory_messages = memory_messages  
         
         # Launch memory extraction concurrently
-        # Extract user history from local_memory_messages and filter for user messages
         user_history = []
         if local_memory_messages:
             user_history = [{"id": m.id, "fact": m.fact} for m in db.query(UserMemory).filter(UserMemory.user_id == current_user_id).all()]
@@ -255,13 +276,17 @@ async def ask_stream(
                     yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
                     has_sent_any_token = True
                 else:
-                    sources_data = [{
-                        "source_type": r.source_type,
-                        "score": r.score,
-                        "payload": r.payload,
-                        "display_reference": format_source_display(r.payload)
-                    } for r in filtered]
+                    sources_data = [
+                        {
+                            "source_type": r.source_type,
+                            "score": r.score,
+                            "payload": r.payload,
+                            "display_reference": format_source_display(r.payload)
+                        }
+                        for r in filtered
+                    ]
                     
+                    collectedSources = sources_data  # persist for later save
                     yield f"data: {json.dumps({'type': 'sources', 'sources': sources_data})}\n\n"
                     
                     rag_context = {
@@ -323,7 +348,9 @@ async def ask_stream(
                             yield f"data: {json.dumps(chunk)}\n\n"
 
             elif current_intent == "web_search":
-                for chunk in stream_web_search_answer(current_query, conversation_history):
+                # Pass user memories so the search agent can add them to LLM context
+                mem_facts = [m["fact"] for m in current_user_memories] if current_user_memories else []
+                for chunk in stream_web_search_answer(current_query, conversation_history, mem_facts):
                     if disconnected:
                         break
                     try:
@@ -335,6 +362,7 @@ async def ask_stream(
                             yield f"data: {chunk}\n\n"
                             has_sent_any_token = True
                         elif chunk_type == "sources":
+                            collectedSources = parsed.get("sources", [])
                             yield f"data: {chunk}\n\n"
                         elif chunk_type == "done":
                             yield f"data: {chunk}\n\n"
@@ -431,6 +459,14 @@ async def ask_stream(
                 title_update = current_query if current_convo.title == "New Chat" else None
                 estimated_tokens = len(full_response) // 4
                 
+                # Serialise collected sources for persistence
+                saved_sources_json = None
+                if collectedSources:
+                    try:
+                        saved_sources_json = json.dumps(collectedSources)
+                    except Exception:
+                        pass
+                
                 background_tasks.add_task(
                     save_messages_sync,
                     conversation_id=current_convo.id,
@@ -438,7 +474,8 @@ async def ask_stream(
                     query=current_query,
                     response=full_response,
                     tokens=estimated_tokens,
-                    title_update=title_update
+                    title_update=title_update,
+                    sources_json=saved_sources_json,
                 )
                 logging.info(f"Scheduled background save for conversation {current_convo.id}")
             else:
@@ -517,6 +554,7 @@ def get_conversation(
                 "role": m.role,
                 "content": m.content,
                 "created_at": m.created_at,
+                "sources": json.loads(m.sources_json) if m.sources_json else None,
             }
             for m in messages
         ],

@@ -337,6 +337,7 @@ function renderContent(element, rawContent) {
         p.style.marginLeft = '0';
     });
 
+    // Ensure all external links open in new tab
     element.querySelectorAll('a').forEach(link => {
         if (link.hostname !== window.location.hostname) {
             link.setAttribute('target', '_blank');
@@ -365,22 +366,28 @@ async function streamTokenToElement(element, token) {
     }
 }
 
-function showSearchIndicator(text = "Searching knowledge base...", iconType = "database") {
+function showSearchIndicator(text = "Searching knowledge base...", iconType = "database", searchQuery = "") {
     removeSearchIndicator();
     removeTypingIndicator();
     const indicator = document.createElement('div');
     indicator.className = 'search-indicator';
     indicator.id = 'searchIndicator';
+    indicator.dataset.shownAt = Date.now();
     
     let iconHtml = '<div class="search-spinner"></div>';
     if (iconType === "web") {
-        iconHtml = '<i class="fas fa-globe search-spinner-icon" style="animation: spin 2s linear infinite; margin-right: 8px;"></i>';
+        iconHtml = '<div class="search-spinner-css"></div>';
     }
+    
+    const queryHtml = searchQuery
+        ? `<span class="search-query-pill">${escapeHtml(searchQuery)}</span>`
+        : '';
     
     indicator.innerHTML = `
         <div class="search-indicator-content">
             ${iconHtml}
             <span class="search-text">${text}</span>
+            ${queryHtml}
         </div>
     `;
     Elements.chatMessages.appendChild(indicator);
@@ -416,13 +423,25 @@ function showTypingIndicator() {
     return indicator;
 }
 
+const MIN_SEARCH_DISPLAY_MS = 800;
+
 function removeSearchIndicator() {
     const indicator = document.getElementById('searchIndicator');
     if (indicator) {
         if (indicator.dataset.intervalId) {
             clearInterval(parseInt(indicator.dataset.intervalId));
         }
-        indicator.remove();
+        const shownAt = parseInt(indicator.dataset.shownAt || '0');
+        const elapsed = Date.now() - shownAt;
+        const remaining = MIN_SEARCH_DISPLAY_MS - elapsed;
+        if (remaining > 0) {
+            setTimeout(() => {
+                const el = document.getElementById('searchIndicator');
+                if (el) el.remove();
+            }, remaining);
+        } else {
+            indicator.remove();
+        }
     }
 }
 
@@ -450,65 +469,94 @@ function createSourcesPanel(sources) {
     const panel = document.createElement('div');
     panel.className = 'sources-panel';
     const validSources = sources.filter(s => s && s.payload);
-    panel.innerHTML = `
-        <div class="sources-header" onclick="this.parentElement.classList.toggle('expanded')">
-            <span>Sources <i class="${validSources.some(s => s.source_type === 'web') ? 'fas fa-globe' : 'far fa-compass'}"></i></span>
-            <i class="fas fa-chevron-down sources-chevron"></i>
-        </div>
-        <div class="sources-content">
-            ${validSources.map((src, idx) => {
-        const isHadith = src.source_type === 'hadith';
-        const isWeb = src.source_type === 'web';
+    const isWeb = validSources.some(s => s.source_type === 'web');
+
+    // Build chips row
+    const chips = validSources.map((src, idx) => {
         const payload = src.payload || {};
-        let displayTitle = isHadith ? 'Hadith' : 'Qur\'an';
-        if (src.display_reference) {
-            displayTitle = src.display_reference;
+        const isHadith = src.source_type === 'hadith';
+        const isWebSrc = src.source_type === 'web';
+
+        let label = '';
+        let hostname = payload.hostname || '';
+        if (isWebSrc) {
+            // Use site hostname as label
+            if (!hostname && payload.url) {
+                try { hostname = new URL(payload.url).hostname.replace('www.', ''); } catch { hostname = payload.url; }
+            }
+            label = hostname || payload.title || 'Web Source';
+        } else if (src.display_reference) {
+            label = src.display_reference;
         } else if (isHadith && payload.hadith_number_display) {
-            displayTitle = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
-        } else if (!isHadith && !isWeb && payload.surah_name && payload.ayah) {
-            displayTitle = `${payload.surah_name}:${payload.ayah}`;
-        }
-        
-        let metaHtml = '';
-        if (isWeb) {
-            metaHtml = `<span><a href="${escapeHtml(payload.url || '#')}" target="_blank" style="color:var(--primary-green); text-decoration:none;">${escapeHtml(payload.url || '')}</a></span>`;
-        } else if (isHadith) {
-            metaHtml = `<span>${escapeHtml(payload.collection || 'Unknown')}</span>
-                       ${payload.hadith_number_display ? `<span>${escapeHtml(payload.hadith_number_display)}</span>` : ''}`;
+            label = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
+        } else if (!isHadith && payload.surah_name && payload.ayah) {
+            label = `${payload.surah_name} ${payload.ayah}`;
         } else {
-            metaHtml = `<span>Surah ${escapeHtml(payload.surah_name || 'Unknown')}</span>
-                       <span>Ayah ${payload.ayah || 'Unknown'}</span>`;
+            label = isHadith ? 'Hadith' : "Qur'an";
         }
-        
-        return `
-                    <div class="source-item">
-                        <div class="source-badge">${idx + 1}</div>
-                        <div class="source-details">
-                            <div class="source-title">${escapeHtml(displayTitle)}</div>
-                            <div class="source-meta">
-                                ${metaHtml}
-                            </div>
-                            ${payload.arabic ? `
-                            <details class="source-expandable">
-                                <summary>View Arabic Text</summary>
-                                <div class="rag-arabic" dir="rtl">${escapeHtml(payload.arabic)}</div>
-                            </details>` : ''}
-                            ${payload.english ? `
-                            <details class="source-expandable">
-                                <summary>View English Translation</summary>
-                                <div class="rag-english">${escapeHtml(payload.english)}</div>
-                            </details>` : ''}
-                            ${payload.snippet ? `
-                            <details class="source-expandable">
-                                <summary>View Web Snippet</summary>
-                                <div class="rag-english">${escapeHtml(payload.snippet)}</div>
-                            </details>` : ''}
-                        </div>
-                    </div>
-                `;
-    }).join('')}
+
+        let iconHtml = '';
+        if (isWebSrc) {
+            const faviconUrl = payload.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+            iconHtml = `<img src="${escapeHtml(faviconUrl)}" class="source-favicon" alt="" onerror="this.style.display='none'">`;
+        } else if (isHadith) {
+            iconHtml = '<i class="fas fa-book"></i>';
+        } else {
+            iconHtml = '<i class="fas fa-quran"></i>';
+        }
+
+        // Web sources: render as <a> that opens in new tab
+        if (isWebSrc && payload.url) {
+            return `<a class="source-chip web-chip" data-source-idx="${idx}" href="${escapeHtml(payload.url)}" target="_blank" rel="noopener noreferrer">${iconHtml}<span>${escapeHtml(label)}</span><i class="fas fa-external-link-alt source-chip-ext"></i></a>`;
+        }
+        return `<button class="source-chip" data-source-idx="${idx}">${iconHtml}<span>${escapeHtml(label)}</span></button>`;
+    }).join('');
+
+    panel.innerHTML = `
+        <div class="sources-row">
+            <span class="sources-label"><i class="${isWeb ? 'fas fa-globe' : 'fas fa-book-open'}"></i> Sources</span>
+            <div class="source-chips">${chips}</div>
         </div>
+        <div class="source-detail-area" id="sourceDetailArea-${Date.now()}"></div>
     `;
+
+    // Chip click → show detail card inline (toggle) — only for non-web chips
+    const detailArea = panel.querySelector('.source-detail-area');
+    panel.querySelectorAll('.source-chip[data-source-idx]:not(.web-chip)').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            const idx = parseInt(chip.dataset.sourceIdx);
+            const src = validSources[idx];
+            if (!src) return;
+            const payload = src.payload || {};
+            const isOpen = chip.classList.contains('active');
+
+            panel.querySelectorAll('.source-chip').forEach(c => c.classList.remove('active'));
+
+            if (isOpen) {
+                detailArea.innerHTML = '';
+                detailArea.classList.remove('visible');
+                return;
+            }
+
+            chip.classList.add('active');
+
+            let detailHtml = '';
+            if (payload.arabic) {
+                detailHtml += `<div class="rag-arabic" dir="rtl">${escapeHtml(payload.arabic)}</div>`;
+            }
+            if (payload.english) {
+                detailHtml += `<div class="rag-english">${escapeHtml(payload.english)}</div>`;
+            }
+            if (payload.snippet) {
+                detailHtml += `<div class="rag-english">${escapeHtml(payload.snippet)}</div>`;
+            }
+
+            detailArea.innerHTML = detailHtml || '<em style="font-size:12px;color:var(--dark-gray)">No preview available.</em>';
+            detailArea.classList.add('visible');
+        });
+    });
+
     return panel;
 }
 
@@ -547,6 +595,7 @@ function createStreamingMessage() {
         feedbackDiv: messageDiv.querySelector('.message-feedback')
     };
 }
+
 
 function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
     const { container, textEl } = messageObj;
@@ -752,7 +801,7 @@ function updateEmptyStateVisibility() {
 }
 
 function appendMessage(sender, text, options = {}) {
-    const { messageId = null } = options;
+    const { messageId = null, sources = null } = options;
     const shouldScroll = isNearBottom(Elements.chatMessages);
     const el = document.createElement("div");
     el.className = `message ${sender}`;
@@ -771,6 +820,14 @@ function appendMessage(sender, text, options = {}) {
     }, 10);
 
     contentDiv.appendChild(textDiv);
+
+    // Re-render persisted sources panel if available
+    if (sender === "ai" && sources && sources.length > 0) {
+        const bestSources = filterBestSources(sources);
+        const sourcesPanel = createSourcesPanel(bestSources);
+        contentDiv.appendChild(sourcesPanel);
+    }
+
     if (sender === "ai") {
         const feedbackButtons = createFeedbackButtons(contentDiv);
         contentDiv.appendChild(feedbackButtons);
@@ -929,9 +986,7 @@ async function loadConversations() {
         const data = await res.json();
         if (!Array.isArray(data)) throw new Error("Invalid data format");
         renderConversationTabs(data);
-        if (!State.activeConversationId && data.length > 0) {
-            await switchToConversation(data[0].id);
-        }
+        // Do NOT auto-switch to first conversation — show Salam greeting by default
     } catch (err) {
         showError(err.message || "Failed to load conversations");
     }
@@ -978,6 +1033,11 @@ async function switchToConversation(id) {
     if (State.isLoadingConversation || id === State.activeConversationId) return;
     State.isLoadingConversation = true;
     closeSidebar();
+    // Hide greeting immediately when switching to a conversation
+    const emptyGreeting = document.getElementById("emptyChatGreeting");
+    const quickPrompts = document.getElementById("quickPrompts");
+    if (emptyGreeting) emptyGreeting.style.display = 'none';
+    if (quickPrompts) quickPrompts.style.display = 'none';
     Elements.chatMessages.innerHTML = '<div class="loading-state">Loading...</div>';
     try {
         await loadConversation(id);
@@ -1008,14 +1068,16 @@ async function loadConversation(id) {
         appendMessage(
             msg.role === "user" ? "user" : "ai",
             msg.content,
-            { messageId: msg.id || null }
+            { messageId: msg.id || null, sources: msg.sources || null }
         );
     });
 
+    // Re-render persistent memory notices for this conversation
+    restoreMemoryNotices(id);
+
     updateEmptyStateVisibility();
 
-    // FIX #3: Scroll to BOTTOM (most recent message) after loading conversation
-    // Use multiple frames to ensure all content (including images) is rendered
+    // Scroll to BOTTOM (most recent message) after loading conversation
     const scrollToBottom = () => {
         const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
         const target = messagesArea || Elements.chatMessages;
@@ -1255,11 +1317,11 @@ async function sendMessage(retryData = null) {
 
                 switch (data.type) {
                     case 'search_start':
-                        showSearchIndicator();
+                        showSearchIndicator("Searching knowledge base...", "database", data.query || "");
                         break;
                         
                     case 'web_search_start':
-                        showSearchIndicator("Getting info from the internet...", "web");
+                        showSearchIndicator("Searching the web...", "web", data.query || data.search_query || "");
                         break;
 
                     case 'chat_start':
@@ -1303,7 +1365,7 @@ async function sendMessage(retryData = null) {
                         
                     case 'memory_updated':
                         if (data.action === "add" || data.action === "update") {
-                            showMemoryUpdatedToast(data.fact);
+                            showMemoryUpdatedInline(data.fact);
                         }
                         break;
                 }
@@ -1460,6 +1522,15 @@ function scrollEditIntoView(editContainer) {
     }, 350); // Wait for keyboard animation
 }
 
+// Hoisted so it can be called from memory inline notice
+function openSettings() {
+    Elements.modeRadios?.forEach(radio => {
+        radio.checked = (radio.value === State.responseMode);
+    });
+    if (Elements.settingsModal) Elements.settingsModal.classList.remove('hidden');
+    closeSidebar();
+}
+
 function initEventListeners() {
     Elements.sendButton.addEventListener("click", () => {
         if (State.streamingActive && State.streamController) {
@@ -1595,9 +1666,13 @@ function initEventListeners() {
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
 
             if (keyboardHeight > 50) {
-                Elements.inputArea.style.bottom = keyboardHeight + 'px';
+                // Offset input bar just above keyboard, no more than that
+                // Use viewport offset + keyboard inset to pin bar 4px above keyboard
+                const vpOffsetTop = window.visualViewport.offsetTop || 0;
+                const targetBottom = keyboardHeight - vpOffsetTop + 4;
+                Elements.inputArea.style.bottom = targetBottom + 'px';
             } else {
-                Elements.inputArea.style.bottom = 'calc(4px + env(safe-area-inset-bottom))';
+                Elements.inputArea.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
             }
         };
 
@@ -1607,6 +1682,7 @@ function initEventListeners() {
         };
 
         window.visualViewport.addEventListener('resize', scheduleVpUpdate);
+        window.visualViewport.addEventListener('scroll', scheduleVpUpdate);
     }
 
     Elements.chatMessages.addEventListener('click', async (e) => {
@@ -1731,13 +1807,7 @@ function initEventListeners() {
     });
 
     // Settings Modal Logic
-    const openSettings = () => {
-        Elements.modeRadios?.forEach(radio => {
-            radio.checked = (radio.value === State.responseMode);
-        });
-        if (Elements.settingsModal) Elements.settingsModal.classList.remove('hidden');
-        closeSidebar();
-    };
+    const openSettingsLocal = openSettings;
 
     const closeSettings = () => {
         if (Elements.settingsModal) Elements.settingsModal.classList.add('hidden');
@@ -1757,6 +1827,37 @@ function initEventListeners() {
         showSuccessToast('Settings saved!');
     });
 }
+
+/* ============================================================
+   Cross-tab memory sync via BroadcastChannel
+   BroadcastChannel is same-origin-only by spec — no cross-origin
+   risk. We additionally validate message shape before acting.
+   ============================================================ */
+const memoryChannel = (() => {
+    if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('deenai_memory_sync');
+        bc.onmessage = (event) => {
+            const msg = event.data;
+            // Validate shape — ignore anything malformed
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type !== 'memory_updated') return;
+            if (typeof msg.fact !== 'string' || !msg.fact) return;
+
+            // Only show the notice if we are currently viewing that conversation
+            if (msg.convId && msg.convId === State.activeConversationId) {
+                _renderMemoryNotice(msg.fact, false); // already persisted by sender tab
+            }
+            // Refresh the memories list if the settings modal is open and memories are visible
+            const container = document.getElementById('memoriesListContainer');
+            if (container && !container.classList.contains('hidden')) {
+                document.getElementById('viewMemoriesBtn')?.click();
+            }
+        };
+        return bc;
+    }
+    // Fallback no-op object for browsers without BroadcastChannel
+    return { postMessage: () => {} };
+})();
 
 window.addEventListener("load", async () => {
     await PWA.init();
@@ -1791,7 +1892,68 @@ if (backBtn) {
     });
 }
 
-/* Memory UI Logic */
+/* ============================================================
+   Memory inline notice — persistent + localStorage-backed
+   ============================================================ */
+
+/** Key format: "memory_notices_{conversationId}" → array of fact strings */
+function _memoryStorageKey(convId) {
+    return `deen_memory_notices_${convId}`;
+}
+
+function persistMemoryNotice(fact) {
+    const convId = State.activeConversationId;
+    if (!convId) return;
+    try {
+        const key = _memoryStorageKey(convId);
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!existing.includes(fact)) {
+            existing.push(fact);
+            localStorage.setItem(key, JSON.stringify(existing));
+        }
+    } catch (e) { /* storage full or private browsing */ }
+}
+
+function restoreMemoryNotices(convId) {
+    try {
+        const key = _memoryStorageKey(convId);
+        const facts = JSON.parse(localStorage.getItem(key) || '[]');
+        facts.forEach(fact => _renderMemoryNotice(fact, false /* don't persist again */));
+    } catch (e) { /* ignore */ }
+}
+
+function _renderMemoryNotice(fact, persist = true) {
+    if (persist) persistMemoryNotice(fact);
+    const notice = document.createElement('div');
+    notice.className = 'memory-inline-notice';
+    notice.dataset.fact = fact;
+    notice.innerHTML = `
+        <i class="fas fa-brain"></i>
+        <span><strong>Memory updated:</strong> ${escapeHtml(fact)}</span>
+        <button class="memory-inline-manage" title="Manage memories"><i class="fas fa-cog"></i> Manage</button>
+    `;
+    notice.querySelector('.memory-inline-manage').addEventListener('click', () => {
+        openSettings();
+        setTimeout(() => {
+            // Scroll to the memory section inside the settings modal
+            const memSection = document.querySelector('.memory-manager');
+            if (memSection) memSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const viewBtn = document.getElementById('viewMemoriesBtn');
+            if (viewBtn) viewBtn.click();
+        }, 200);
+    });
+    Elements.chatMessages.appendChild(notice);
+    if (State.autoScroll) {
+        Elements.chatMessages.scrollTo({ top: Elements.chatMessages.scrollHeight, behavior: 'smooth' });
+    }
+}
+
+function showMemoryUpdatedInline(fact) {
+    _renderMemoryNotice(fact, true);
+    // Broadcast to other tabs (secure: same-origin only via BroadcastChannel)
+    memoryChannel.postMessage({ type: 'memory_updated', fact, convId: State.activeConversationId });
+}
+
 function showMemoryUpdatedToast(fact) {
     const existing = document.getElementById('memoryToast');
     if (existing) existing.remove();
