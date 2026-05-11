@@ -1282,7 +1282,14 @@ async function sendMessage(retryData = null) {
             body: JSON.stringify({
                 message: text,
                 conversation_id: State.activeConversationId,
-                mode: State.responseMode
+                mode: State.responseMode,
+                // Send the user's real local time so backend can answer time/date questions accurately
+                client_datetime: new Date().toLocaleString('en-GB', {
+                    weekday: 'long', year: 'numeric', month: 'long',
+                    day: 'numeric', hour: '2-digit', minute: '2-digit',
+                    second: '2-digit', hour12: true
+                }),
+                client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
             }),
             signal: State.streamController.signal
         });

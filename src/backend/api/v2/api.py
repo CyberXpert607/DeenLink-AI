@@ -29,6 +29,8 @@ class AskRequest(BaseModel):
     conversation_id: str
     message: str
     mode: str = "auto"
+    client_datetime: str = ""    # e.g. "Sunday, 11 May 2026, 01:32:00 AM"
+    client_timezone: str = ""    # e.g. "Africa/Lagos" or "WAT (UTC+1)"
 
 class EditMessageRequest(BaseModel):
     message_id: str
@@ -160,10 +162,28 @@ async def ask_stream(
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
+    # ── Client datetime (sent by browser so we always have the user's real local time) ──
+    client_datetime = payload.client_datetime.strip()
+    client_timezone = payload.client_timezone.strip()
+
+    # ── Fast path: time/date questions — no web search needed ───────────────────────────
+    # Detect if this is purely a time/date/day query
+    _q = query.lower()
+    _datetime_keywords = [
+        "what time", "what's the time", "what is the time", "current time",
+        "what day", "what's today", "what is today", "today's date", "today date",
+        "what date", "current date", "what year", "what month",
+        "day is it", "time is it", "date is it", "tell me the time",
+    ]
+    _is_datetime_query = any(kw in _q for kw in _datetime_keywords)
+
     if payload.mode == "chat":
         intent = "chat"
     elif payload.mode == "rag":
         intent = "rag_all"
+    elif _is_datetime_query and client_datetime:
+        # Answer directly from client time — no search needed
+        intent = "datetime_direct"
     else:
         # Default to Auto — check keyword shortcuts first (cheap), then LLM classifier
         if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
@@ -220,6 +240,8 @@ async def ask_stream(
     current_user_id = user_id
     current_query = query
     current_user_memories = user_memories_list  # pass to closure
+    current_client_datetime = client_datetime
+    current_client_timezone = client_timezone
     
     async def event_stream_async():
         full_response = ""
@@ -236,7 +258,7 @@ async def ask_stream(
             user_history = [{"id": m.id, "fact": m.fact} for m in db.query(UserMemory).filter(UserMemory.user_id == current_user_id).all()]
         
         memory_task = None
-        if current_intent in {"chat", "web_search", "ambiguous"}:
+        if current_intent in {"chat", "web_search", "ambiguous", "datetime_direct"}:
             from v2.agent_memory import extract_memory_facts
             memory_task = asyncio.create_task(extract_memory_facts(current_query, user_history))
             
@@ -247,6 +269,8 @@ async def ask_stream(
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
             elif current_intent == "web_search":
                 yield f"data: {json.dumps({'type': 'web_search_start'})}\n\n"
+            elif current_intent == "datetime_direct":
+                yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
             else:
                 yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
         
@@ -369,6 +393,35 @@ async def ask_stream(
                     except:
                         pass
                         
+
+            elif current_intent == "datetime_direct":
+                # Answer instantly using the client's real local time — zero web search
+                location_fact = ""
+                for m in user_history:
+                    fact_lower = m.get("fact", "").lower()
+                    if any(kw in fact_lower for kw in ["live in", "based in", "from", "located in"]):
+                        location_fact = m["fact"]
+                        break
+
+                tz_clause = f" [{current_client_timezone}]" if current_client_timezone else ""
+                loc_clause = f"\nThe user's location: {location_fact}." if location_fact else ""
+
+                datetime_system = (
+                    f"You are DeenLink AI. Answer the user's time/date question directly.\n"
+                    f"The user's exact current local date and time is: {current_client_datetime}{tz_clause}.{loc_clause}\n"
+                    f"Reply in 1-2 sentences. State the time and date clearly. No filler words."
+                )
+                dt_messages = [
+                    {"role": "system", "content": datetime_system},
+                    {"role": "user", "content": current_query},
+                ]
+                for token in stream_chat_response(dt_messages):
+                    if disconnected:
+                        break
+                    full_response += token
+                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+                    has_sent_any_token = True
+
             else:
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
                 dynamic_system_prompt = f"{CHAT_SYSTEM_PROMPT}\n\nCurrent Date: {current_date}"
