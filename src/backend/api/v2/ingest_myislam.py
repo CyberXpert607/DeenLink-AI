@@ -13,7 +13,13 @@ if str(API_DIR) not in sys.path:
 from v2.vectoreStore import client, COLLECTION_NAME, ensure_collection
 from v2.embeddings import embed_text
 
-scraper = cloudscraper.create_scraper()
+scraper = cloudscraper.create_scraper(
+    browser={
+        'browser': 'chrome',
+        'platform': 'windows',
+        'desktop': True
+    }
+)
 
 def get_links(index_url, filter_func):
     print(f"Fetching links from: {index_url}")
@@ -112,7 +118,8 @@ def ingest_urls(urls, category="article"):
             total_processed += len(points)
             points = []
             
-        time.sleep(1) # delay to avoid rate limiting
+        import random
+        time.sleep(random.uniform(1.0, 3.0)) # random delay to be less bot-like
         
     if points:
         client.upsert(collection_name=COLLECTION_NAME, points=points)
