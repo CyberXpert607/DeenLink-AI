@@ -19,6 +19,7 @@ Classify the user's message into ONE of these labels:
 - chat -> general conversation, personal/memory-based questions, no religious sourcing required
 - rag_quran -> explicitly wants Quran verses
 - rag_hadith -> explicitly wants hadith or prophetic traditions
+- rag_all -> asks about Islamic history, prophets, companions, 99 names of Allah, or general scholarly knowledge/fatwas
 - motivation -> wants encouragement, life advice, patience, hope, reassurance USING Islamic sources
 - web_search -> wants latest information, current events, real-time dates, news, or facts that CANNOT be answered from memory or conversation
 - ambiguous -> unclear intent, needs clarification
@@ -32,6 +33,11 @@ Rules for Hadith Detection:
 Rules for Quran Detection:
 - User mentions: Quran, Qur'an, surah, ayah, verse, recitation
 - User asks about specific chapters or verses
+
+Rules for History/Prophets/Expert Knowledge (rag_all):
+- User asks about: Prophet names (Adam, Yusuf, Isa, etc.), Companions/Sahaba (Abu Bakr, Umar, etc.), 99 names of Allah
+- User asks for stories of prophets or history of early Islam
+- User asks for a general fatwa or scholarly ruling
 
 Rules for Motivation:
 - User asks "What does Islam say about X?" where X is a life situation
@@ -57,7 +63,7 @@ Do not include markdown, comments, or extra text.
 
 Schema:
 {
-"intent": "chat | rag_quran | rag_hadith | motivation | web_search | ambiguous",
+"intent": "chat | rag_quran | rag_hadith | rag_all | motivation | web_search | ambiguous",
 "confidence": number,
 "reason": "string",
 "detected_entities": {
@@ -73,6 +79,7 @@ ALLOWED_INTENTS = {
     "chat",
     "rag_quran",
     "rag_hadith",
+    "rag_all",
     "motivation",
     "web_search",
     "ambiguous",

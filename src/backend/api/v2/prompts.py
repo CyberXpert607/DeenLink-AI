@@ -84,6 +84,15 @@ For QURAN:
     </div>
 </div>
 
+For HISTORY / GENERAL KNOWLEDGE:
+<div class="rag-answer">
+    <p class="rag-explanation">[Detailed scholarly explanation based on the sources]</p>
+    <div class="rag-source">
+        <div class="rag-english">[Content from source]</div>
+        <div class="rag-meta">📜 [Source Title / Category]</div>
+    </div>
+</div>
+
 ═══════════════════════════════════════════════════════════════
 EXAMPLE (Hadith)
 ═══════════════════════════════════════════════════════════════
