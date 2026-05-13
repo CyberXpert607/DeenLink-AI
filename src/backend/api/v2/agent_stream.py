@@ -65,6 +65,14 @@ Arabic: {payload.get('arabic', 'Unknown')}
 English: {payload.get('english', 'Unknown')}
 """)
 
+            else:
+                # Generic fallback for seerah, qa, article, prophet, companion, name_of_allah
+                sources_blocks.append(f"""
+Source: {payload.get('source_type', 'General Knowledge').replace('_', ' ').title()}
+Title: {payload.get('title') or payload.get('question') or 'N/A'}
+Content: {payload.get('details') or payload.get('answer') or payload.get('details_en') or 'N/A'}
+""")
+
         sources_text = "\n\n---\n\n".join(sources_blocks)
         
         # Add context if available
