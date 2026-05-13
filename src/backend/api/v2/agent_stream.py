@@ -2,6 +2,7 @@ from groq import Groq
 import logging
 from config import MODEL
 from v2.prompts import RAG_SYSTEM_PROMPT
+from v2.utils import format_source_display
 
 client = Groq(timeout=120.0)
 
@@ -113,7 +114,7 @@ Content: {payload.get('details') or payload.get('answer') or payload.get('detail
                     "source_type": d.source_type,
                     "payload": {
                         **d.payload,
-                        "display_reference": f"{d.payload.get('collection', '')} {d.payload.get('hadith_number_display', '')}"
+                        "display_reference": format_source_display(d.payload)
                     }
                 } 
                 for d in strong_hits

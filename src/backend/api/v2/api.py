@@ -19,6 +19,7 @@ from v2.agent_motivation import stream_motivation_answer
 from v2.vectoreStore import search_similar
 from v2.prompts import CHAT_SYSTEM_PROMPT
 from v2.agent_search import stream_web_search_answer
+from v2.utils import format_source_display
 import datetime
 
 
@@ -36,64 +37,7 @@ class EditMessageRequest(BaseModel):
     message_id: str
     message: str
 
-def format_source_display(payload: dict) -> str:
-    if payload.get("source_type") == "hadith":
-        parts = []
-        
-        collection = payload.get("collection", "")
-        if collection:
-            parts.append(collection)
-        
-        hadith_ref = payload.get("hadith_number_display")
-        if hadith_ref:
-            parts.append(hadith_ref)
-        
-        chapter = payload.get("chapter_name_en") or payload.get("chapter_name_ar")
-        if chapter:
-            parts.append(chapter[:40])
-        
-        grade = payload.get("grade")
-        if grade and grade != "Unknown":
-            parts.append(grade)
-        
-        return " · ".join(parts) if parts else "Hadith"
-    
-    elif payload.get("source_type") == "quran":
-        surah = payload.get("surah_name", "")
-        ayah = payload.get("ayah", "")
-        if surah and ayah:
-            return f"Qur'an {surah}:{ayah}"
-        return "Qur'an"
-    
-    elif payload.get("source_type") == "seerah":
-        title = payload.get("title", "")
-        hijri = payload.get("hijri_year", "")
-        parts = ["Seerah"]
-        if title:
-            parts.append(title[:50])
-        if hijri:
-            parts.append(hijri)
-        return " · ".join(parts)
-
-    elif payload.get("source_type") == "qa":
-        question = payload.get("question", "")
-        if question:
-            return f"Islamic QA · {question[:50]}"
-        return "Islamic QA"
-        
-    elif payload.get("source_type") == "article":
-        title = payload.get("title", "")
-        if title:
-            return f"Article · {title[:50]}"
-        return "Islamic Article"
-
-    elif payload.get("source_type") == "99_names":
-        title = payload.get("title", "")
-        if title:
-            return f"99 Names of Allah · {title[:50]}"
-        return "99 Names of Allah"
-
-    return "Islamic Source"
+# format_source_display moved to utils.py
 
 def save_messages_sync(
     conversation_id: str,
@@ -406,6 +350,19 @@ async def ask_stream(
                             yield f"data: {chunk}\n\n"
                     except:
                         pass
+                        
+
+            elif current_intent == "ambiguous":
+                msg = (
+                    "I want to make sure I give you the best information. Are you looking for:\n"
+                    "1. A **Quran/Hadith** reference?\n"
+                    "2. A scholarly **Fatwa/Ruling**?\n"
+                    "3. An **Islamic Story** or history?\n"
+                    "Please let me know so I can search the right source for you!"
+                )
+                full_response += msg
+                yield f"data: {json.dumps({'type': 'token', 'content': msg})}\n\n"
+                has_sent_any_token = True
                         
 
             elif current_intent == "datetime_direct":

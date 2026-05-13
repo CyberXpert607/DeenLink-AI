@@ -19,9 +19,9 @@ Classify the user's message into ONE of these labels:
 - chat -> general conversation, personal/memory-based questions, no religious sourcing required
 - rag_quran -> explicitly wants Quran verses
 - rag_hadith -> explicitly wants hadith or prophetic traditions
-- rag_all -> asks about Islamic history, prophets, companions, 99 names of Allah, or general scholarly knowledge/fatwas
+- rag_all -> asks about Islamic history, prophets, companions, 99 names of Allah
 - motivation -> wants encouragement, life advice, patience, hope, reassurance USING Islamic sources
-- web_search -> wants latest information, current events, real-time dates, news, or facts that CANNOT be answered from memory or conversation
+- web_search -> asks for a FATWA, RULING, or PERMISSIBILITY (halal/haram), or needs current news/facts
 - ambiguous -> unclear intent, needs clarification
 
 Rules for Hadith Detection:
@@ -46,11 +46,10 @@ Rules for Motivation:
 - User expresses struggle with worship, consistency, habits, or religious duties (e.g., "I struggle with Fajr")
 
 Rules for Web Search:
-- ONLY use web_search if the answer genuinely requires current/live internet data
-- Do NOT use web_search if the answer is already known from the user's memory facts below
-- Do NOT use web_search for follow-up questions about previously shared personal info (e.g. "where do I live?" when location is in memory)
-- Examples that ARE web_search: "who won the Champions League?", "what is today's date?", "latest news on X"
-- Examples that are NOT web_search: "where do I live?" (answer from memory), "what is my name?" (answer from memory)
+- User asks for a FATWA, RULING, or RULING on PERMISSIBILITY (e.g., "is it halal?", "can I eat X?")
+- User asks "What is the ruling on X?" or "What do scholars say about Y?"
+- User needs current/live internet data (dates, news, etc.)
+- Do NOT use web_search if the answer is already known from memory
 
 Rules for Chat:
 - General conversation, greetings, personal questions that can be answered from the user's stored memories

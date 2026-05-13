@@ -43,9 +43,15 @@ def _domain_of(url: str) -> str:
 def _is_trusted(url: str, query: str = "") -> bool:
     dom = _domain_of(url)
     
-    # Conditional trust for myislam.org
+    # Conditional trust for myislam.org and islamqa.info
     if dom == "myislam.org":
         keywords = ["allah", "prophet", "companion", "sahaba", "history", "seerah", "names of", "story of"]
+        if query and any(kw in query.lower() for kw in keywords):
+            return True
+        return False
+    
+    if dom == "islamqa.info":
+        keywords = ["fatwa", "ruling", "permissible", "halal", "haram", "can i", "is it", "ruling on"]
         if query and any(kw in query.lower() for kw in keywords):
             return True
         return False
