@@ -18,6 +18,7 @@ TRUSTED_DOMAINS = {
     "daruliftaa.com",
     "muftionline.co.za",
     "islamicfinder.org",
+    # "myislam.org" is handled conditionally below
     # General fact / news
     "wikipedia.org",
     "timeanddate.com",
@@ -39,8 +40,16 @@ def _domain_of(url: str) -> str:
         return ""
 
 
-def _is_trusted(url: str) -> bool:
+def _is_trusted(url: str, query: str = "") -> bool:
     dom = _domain_of(url)
+    
+    # Conditional trust for myislam.org
+    if dom == "myislam.org":
+        keywords = ["allah", "prophet", "companion", "sahaba", "history", "seerah", "names of", "story of"]
+        if query and any(kw in query.lower() for kw in keywords):
+            return True
+        return False
+
     return any(dom == td or dom.endswith("." + td) for td in TRUSTED_DOMAINS)
 
 # Query rewriter
@@ -98,7 +107,7 @@ def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
                     "url": item.get("link", ""),
                     "body": item.get("snippet", ""),
                 }
-                if _is_trusted(entry["url"]):
+                if _is_trusted(entry["url"], query):
                     trusted.append(entry)
                 else:
                     others.append(entry)
@@ -115,7 +124,7 @@ def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
                     "url": r.get("href", ""),
                     "body": r.get("body", ""),
                 }
-                if _is_trusted(entry["url"]):
+                if _is_trusted(entry["url"], query):
                     trusted.append(entry)
                 else:
                     others.append(entry)
