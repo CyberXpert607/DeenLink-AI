@@ -38,13 +38,6 @@ def format_hadith_reference(payload: dict) -> str:
 
 
 def stream_motivation_answer(query: str, sources: list):
-    if not sources:
-        yield {
-            "type": "final",
-            "answer_html": "<div class='rag-answer'><p>No relevant Islamic sources found.</p></div>",
-            "sources": []
-        }
-        return
 
     strong_hits = sorted(
         sources,

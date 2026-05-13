@@ -29,8 +29,8 @@ class AskRequest(BaseModel):
     conversation_id: str
     message: str
     mode: str = "auto"
-    client_datetime: str = ""    # e.g. "Sunday, 11 May 2026, 01:32:00 AM"
-    client_timezone: str = ""    # e.g. "Africa/Lagos" or "WAT (UTC+1)"
+    client_datetime: str = "" 
+    client_timezone: str = ""
 
 class EditMessageRequest(BaseModel):
     message_id: str
@@ -65,6 +65,34 @@ def format_source_display(payload: dict) -> str:
             return f"Qur'an {surah}:{ayah}"
         return "Qur'an"
     
+    elif payload.get("source_type") == "seerah":
+        title = payload.get("title", "")
+        hijri = payload.get("hijri_year", "")
+        parts = ["Seerah"]
+        if title:
+            parts.append(title[:50])
+        if hijri:
+            parts.append(hijri)
+        return " · ".join(parts)
+
+    elif payload.get("source_type") == "qa":
+        question = payload.get("question", "")
+        if question:
+            return f"Islamic QA · {question[:50]}"
+        return "Islamic QA"
+        
+    elif payload.get("source_type") == "article":
+        title = payload.get("title", "")
+        if title:
+            return f"Article · {title[:50]}"
+        return "Islamic Article"
+
+    elif payload.get("source_type") == "99_names":
+        title = payload.get("title", "")
+        if title:
+            return f"99 Names of Allah · {title[:50]}"
+        return "99 Names of Allah"
+
     return "Islamic Source"
 
 def save_messages_sync(
@@ -162,12 +190,9 @@ async def ask_stream(
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # ── Client datetime (sent by browser so we always have the user's real local time) ──
     client_datetime = payload.client_datetime.strip()
     client_timezone = payload.client_timezone.strip()
 
-    # ── Fast path: time/date questions — no web search needed ───────────────────────────
-    # Detect if this is purely a time/date/day query
     _q = query.lower()
     _datetime_keywords = [
         "what time", "what's the time", "what is the time", "current time",
@@ -182,10 +207,8 @@ async def ask_stream(
     elif payload.mode == "rag":
         intent = "rag_all"
     elif _is_datetime_query and client_datetime:
-        # Answer directly from client time — no search needed
         intent = "datetime_direct"
     else:
-        # Default to Auto — check keyword shortcuts first (cheap), then LLM classifier
         if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
             intent = "rag_quran"
         elif any(kw in query.lower() for kw in ["hadith", "bukhari", "muslim", "tirmidhi"]):
@@ -193,7 +216,6 @@ async def ask_stream(
         elif any(kw in query.lower() for kw in ["motivate", "inspire", "encourage"]):
             intent = "motivation"
         else:
-            # Fetch memories first so classifier can use them
             memories_for_classifier = [
                 {"id": m.id, "fact": m.fact}
                 for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
@@ -202,7 +224,7 @@ async def ask_stream(
             intent = classification.get("intent")
     memory_messages = None
     conversation_history = []
-    user_memories_list = []  # flat list of {id, fact} for passing to classifier/search
+    user_memories_list = [] 
     
     if intent not in {"rag_quran", "rag_hadith", "rag_all", "motivation"}:
         memory_messages = build_prompt_with_memory(db, convo)
@@ -210,7 +232,6 @@ async def ask_stream(
         if memory_messages is None:
             memory_messages = []
         
-        # Fetch user memories for classifier / search agent
         user_memories_list = [
             {"id": m.id, "fact": m.fact}
             for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
@@ -239,7 +260,7 @@ async def ask_stream(
     current_convo = convo
     current_user_id = user_id
     current_query = query
-    current_user_memories = user_memories_list  # pass to closure
+    current_user_memories = user_memories_list
     current_client_datetime = client_datetime
     current_client_timezone = client_timezone
     
@@ -248,11 +269,10 @@ async def ask_stream(
         disconnected = False
         completed = False
         has_sent_any_token = False
-        collectedSources = None  # will be populated by 'sources' SSE event
+        collectedSources = None 
         
         local_memory_messages = memory_messages  
         
-        # Launch memory extraction concurrently
         user_history = []
         if local_memory_messages:
             user_history = [{"id": m.id, "fact": m.fact} for m in db.query(UserMemory).filter(UserMemory.user_id == current_user_id).all()]
@@ -340,39 +360,33 @@ async def ask_stream(
                 results = search_similar(current_query, 5)
                 filtered = [r for r in results if r.score >= 0.3]
 
-                if not filtered:
-                    fallback_msg = "No relevant motivational content found. Here's a general motivational response instead."
-                    full_response += fallback_msg
-                    yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
-                    has_sent_any_token = True
-                else:
-                    sources_data = [{
-                        "source_type": r.source_type,
-                        "score": r.score,
-                        "payload": r.payload,
-                        "display_reference": format_source_display(r.payload)
-                    } for r in filtered]
-                    
+                sources_data = [{
+                    "source_type": r.source_type,
+                    "score": r.score,
+                    "payload": r.payload,
+                    "display_reference": format_source_display(r.payload)
+                } for r in filtered]
+                
+                if sources_data:
                     yield f"data: {json.dumps({'type': 'sources', 'sources': sources_data})}\n\n"
-                    
-                    for chunk in stream_motivation_answer(current_query, filtered):
-                        if disconnected:
-                            break
-                        if not isinstance(chunk, dict):
-                            continue
-                        chunk_type = chunk.get("type")
-                        if chunk_type == "token":
-                            content = chunk.get("content", "")
-                            full_response += content
-                            yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
-                            has_sent_any_token = True
-                        elif chunk_type == "sources":
-                            yield f"data: {json.dumps(chunk)}\n\n"
-                        elif chunk_type == "final":
-                            yield f"data: {json.dumps(chunk)}\n\n"
+                
+                for chunk in stream_motivation_answer(current_query, filtered):
+                    if disconnected:
+                        break
+                    if not isinstance(chunk, dict):
+                        continue
+                    chunk_type = chunk.get("type")
+                    if chunk_type == "token":
+                        content = chunk.get("content", "")
+                        full_response += content
+                        yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
+                        has_sent_any_token = True
+                    elif chunk_type == "sources":
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                    elif chunk_type == "final":
+                        yield f"data: {json.dumps(chunk)}\n\n"
 
             elif current_intent == "web_search":
-                # Pass user memories so the search agent can add them to LLM context
                 mem_facts = [m["fact"] for m in current_user_memories] if current_user_memories else []
                 for chunk in stream_web_search_answer(current_query, conversation_history, mem_facts):
                     if disconnected:
@@ -395,32 +409,21 @@ async def ask_stream(
                         
 
             elif current_intent == "datetime_direct":
-                # Answer instantly using the client's real local time — zero web search
-                location_fact = ""
-                for m in user_history:
-                    fact_lower = m.get("fact", "").lower()
-                    if any(kw in fact_lower for kw in ["live in", "based in", "from", "located in"]):
-                        location_fact = m["fact"]
-                        break
-
-                tz_clause = f" [{current_client_timezone}]" if current_client_timezone else ""
-                loc_clause = f"\nThe user's location: {location_fact}." if location_fact else ""
-
-                datetime_system = (
-                    f"You are DeenLink AI. Answer the user's time/date question directly.\n"
-                    f"The user's exact current local date and time is: {current_client_datetime}{tz_clause}.{loc_clause}\n"
-                    f"Reply in 1-2 sentences. State the time and date clearly. No filler words."
-                )
-                dt_messages = [
-                    {"role": "system", "content": datetime_system},
-                    {"role": "user", "content": current_query},
-                ]
-                for token in stream_chat_response(dt_messages):
-                    if disconnected:
-                        break
-                    full_response += token
-                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-                    has_sent_any_token = True
+                import pytz
+                tz_str = current_client_timezone or "Africa/Lagos"
+                try:
+                    tz = pytz.timezone(tz_str)
+                    now = datetime.datetime.now(tz)
+                    time_str = now.strftime("%I:%M %p")
+                    date_str = now.strftime("%A, %d %B %Y")
+                    answer = f"The current time is **{time_str}** and today is **{date_str}** ({tz_str.replace('_', ' ')})."
+                except Exception:
+                    now = datetime.datetime.utcnow()
+                    answer = f"The current UTC time is {now.strftime('%I:%M %p')} on {now.strftime('%A, %d %B %Y')}."
+                
+                full_response += answer
+                yield f"data: {json.dumps({'type': 'token', 'content': answer})}\n\n"
+                has_sent_any_token = True
 
             else:
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")

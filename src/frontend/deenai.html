@@ -9,83 +9,59 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="DeenLink">
-    
     <title>DeenLink AI</title>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    
-    <!-- Font Awesome 6.5.0 only (remove duplicate) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
     <link rel="stylesheet" href="css/styles.css">
-    
     <style>
         .search-spinner-css {
-            width: 18px;
-            height: 18px;
+            width: 18px; height: 18px;
             border: 2px solid #e0e0e0;
             border-top-color: #1D6F42;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            display: inline-block;
-            flex-shrink: 0;
+            display: inline-block; flex-shrink: 0;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Dark theme */
-        body.dark-theme .search-spinner-css {
-            border-color: #4a6572;
-            border-top-color: #2ecc71;
-        }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        body.dark-theme .search-spinner-css { border-color:#4a6572; border-top-color:#2ecc71; }
 
-        /* Web source chip with favicon */
-        .source-chip.web-chip {
-            text-decoration: none !important;
-            color: inherit;
-        }
-        .source-chip.web-chip:hover {
-            text-decoration: none !important;
-        }
-        .source-favicon {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            object-fit: contain;
-            flex-shrink: 0;
-        }
-        .source-chip-ext {
-            font-size: 9px;
-            opacity: 0.6;
-            margin-left: 2px;
-        }
-
-        /* Memory manage button */
-        .memory-inline-manage {
-            background: none;
-            border: 1px solid currentColor;
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 11px;
-            cursor: pointer;
-            opacity: 0.75;
-            color: inherit;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: opacity 0.2s;
-        }
-        .memory-inline-manage:hover { opacity: 1; }
+		.header-logo-img {
+		    width: 32px;
+		    height: 32px;
+		    border-radius: 8px;
+		    object-fit: contain;
+		    flex-shrink: 0;
+		    display: block;
+		}
+		.message.ai {
+		    align-items: flex-start;
+		    gap: 10px;
+		}
+		.ai-avatar {
+		    width: 30px;
+		    height: 30px;
+		    border-radius: 8px;
+		    object-fit: contain;
+		    flex-shrink: 0;
+		    margin-top: 4px;
+		    background: #E8F5E9;
+		    padding: 2px;
+		    border: 1px solid rgba(29,111,66,0.15);
+		    display: block;
+		}
+		body.dark-theme .ai-avatar {
+		    background: rgba(46,204,113,0.12);
+		    border-color: rgba(46,204,113,0.2);
+		}
+		.message.ai .message-content {
+		    flex: 1;
+		    min-width: 0;
+		}
     </style>
-    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
 </head>
-
 <body>
     <div class="container layout">
         <aside id="sidebar" class="sidebar">
@@ -101,70 +77,56 @@
                 </button>
             </div>
         </aside>
-
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
         <main class="main-chat">
             <header class="header-section">
                 <div class="header-left">
-                    <button class="menu-button" id="menuToggle" aria-label="Toggle menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <button class="back-button" id="backBtn" aria-label="Go back">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    
+                    <button class="menu-button" id="menuToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+                    <button class="back-button" id="backBtn" aria-label="Go back"><i class="fas fa-arrow-left"></i></button>
                     <div class="header-title">
-                        <i class="fas fa-robot"></i>
-                        <span>DeenLink AI</span>
-                    </div>
+					    <img
+					        src="../img/deenlink-ai.jpg"
+					        alt="DeenLink AI"
+					        class="header-logo-img"
+					        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+					    >
+					    <i class="fas fa-robot" style="display:none;"></i>
+					    <span>DeenLink AI</span>
+					</div>
                 </div>
                 <div class="header-right">
-                    <button class="header-action-btn" id="themeToggle" aria-label="Toggle theme">
-                        <i class="fas fa-moon"></i>
-                    </button>
+                    <button class="header-action-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
                 </div>
             </header>
-
             <div class="chat-container">
                 <div class="messages-area">
-                    <div class="empty-chat-greeting" id="emptyChatGreeting">
+                    <div class="empty-chat-greeting" id="emptyChatGreeting" style="display:none;">
                         <h2>Salam, <span id="userNameDisplay">Guest</span>!</h2>
                         <p>How can I help you today?</p>
                     </div>
-                    <div class="quick-prompts" id="quickPrompts">
-                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">🕌 Salah Importance</button>
-                        <button class="quick-prompt-btn" data-prompt="Give me a Quranic verse about patience">📖 Patience Verse</button>
+                    <div class="quick-prompts" id="quickPrompts" style="display:none;">
+                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">🕌 Salah</button>
+                        <button class="quick-prompt-btn" data-prompt="Give me a Quranic verse about patience">📖 Patience</button>
                         <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">🌙 Five Pillars</button>
                         <button class="quick-prompt-btn" data-prompt="What is the significance of Ramadan?">🌙 Ramadan</button>
-                        <button class="quick-prompt-btn" data-prompt="How do I perform Wudu correctly?">💧 Wudu Guide</button>
-                        <button class="quick-prompt-btn" data-prompt="What does Islam say about kindness to parents?">❤️ Parents in Islam</button>
+                        <button class="quick-prompt-btn" data-prompt="How do I perform Wudu correctly?">💧 Wudu</button>
+                        <button class="quick-prompt-btn" data-prompt="What does Islam say about kindness to parents?">❤️ Parents</button>
                         <button class="quick-prompt-btn" data-prompt="What is Zakat and who must pay it?">🤲 Zakat</button>
-                        <button class="quick-prompt-btn" data-prompt="Tell me about the life of Prophet Muhammad ﷺ">☀️ Prophet's Life</button>
+                        <button class="quick-prompt-btn" data-prompt="Tell me about the life of Prophet Muhammad ﷺ">☀️ Prophet ﷺ</button>
                     </div>
                     <div class="chat-messages" id="chatMessages"></div>
                 </div>
-
                 <div class="input-area">
                     <div class="input-container">
                         <textarea class="message-input" id="messageInput" placeholder="Ask your Islamic question..." rows="1" aria-label="Message input"></textarea>
-                        <button class="send-button" id="sendButton" aria-label="Send message">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                        <button class="send-button" id="sendButton" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
                     </div>
-                    <div class="input-disclaimer">
-                        DeenLink AI can make mistakes. Double check information.
-                    </div>
+                    <div class="input-disclaimer">DeenLink AI can make mistakes. Double check information.</div>
                 </div>
-                
-                <button id="scrollToBottomBtn" class="scroll-to-bottom-btn hidden" aria-label="Scroll to bottom">
-                    <i class="fas fa-arrow-down"></i>
-                </button>
+                <button id="scrollToBottomBtn" class="scroll-to-bottom-btn" aria-label="Scroll to bottom"><i class="fas fa-arrow-down"></i></button>
             </div>
-            
             <div id="error-toast" class="error-toast hidden" role="alert"></div>
-            
+
             <!-- Feedback Modal -->
             <div id="feedbackModal" class="feedback-modal hidden">
                 <div class="feedback-modal-overlay"></div>
@@ -174,7 +136,7 @@
                         <button id="closeFeedbackModal" aria-label="Close modal"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="feedback-modal-body">
-                        <p>Please let us know why this response wasn't helpful. Your feedback helps us improve.</p>
+                        <p>Please let us know why this response wasn't helpful.</p>
                         <textarea id="feedbackReasonInput" placeholder="e.g., False fatwa, inaccurate source, unhelpful..." rows="3"></textarea>
                     </div>
                     <div class="feedback-modal-footer">
@@ -184,78 +146,133 @@
                 </div>
             </div>
 
-            <!-- Settings Modal -->
+            <!-- Settings Modal — multi-page -->
             <div id="settingsModal" class="feedback-modal hidden">
                 <div class="feedback-modal-overlay" id="settingsOverlay"></div>
-                <div class="feedback-modal-content">
-                    <div class="feedback-modal-header">
-                        <h3>Settings</h3>
-                        <button id="closeSettingsModal" aria-label="Close settings"><i class="fas fa-times"></i></button>
+                <div class="feedback-modal-content settings-modal-content">
+
+                    <!-- Page: Main Settings -->
+                    <div class="settings-page" id="settingsPageMain">
+                        <div class="feedback-modal-header">
+                            <h3>Settings</h3>
+                            <button id="closeSettingsModal" aria-label="Close settings"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body" style="padding:0;">
+                            <!-- User profile card -->
+                            <div class="settings-profile-card" id="settingsProfileCard">
+                                <div class="settings-profile-avatar"><i class="fas fa-user-circle"></i></div>
+                                <div class="settings-profile-info">
+                                    <div class="settings-profile-name" id="settingsProfileName">Guest</div>
+                                    <div class="settings-profile-sub">DeenLink Member</div>
+                                </div>
+                            </div>
+                            <!-- Nav rows -->
+                            <div class="settings-nav-list">
+                                <button class="settings-nav-row" id="navToPersonalization">
+                                    <span class="settings-nav-icon"><i class="fas fa-sliders-h"></i></span>
+                                    <span class="settings-nav-label">Personalization</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                                <button class="settings-nav-row" id="navToMode">
+                                    <span class="settings-nav-icon"><i class="fas fa-magic"></i></span>
+                                    <span class="settings-nav-label">Response Mode</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="feedback-modal-footer">
+                            <button id="saveSettingsBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save Settings</button>
+                        </div>
                     </div>
-                    <div class="feedback-modal-body">
-                        <div class="settings-group">
-                            <label class="settings-label">Response Mode</label>
-                            <p class="settings-desc">Choose how the AI should respond to your questions.</p>
+
+                    <!-- Page: Personalization -->
+                    <div class="settings-page hidden" id="settingsPagePersonalization">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromPersonalization"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Personalization</h3>
+                            <button id="closeSettingsFromPersonalization" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body" style="padding:0;">
+                            <div class="settings-nav-list">
+                                <button class="settings-nav-row" id="navToMemory">
+                                    <span class="settings-nav-icon"><i class="fas fa-brain"></i></span>
+                                    <span class="settings-nav-label">Memory</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page: Memory -->
+                    <div class="settings-page hidden" id="settingsPageMemory">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromMemory"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Memory</h3>
+                            <button id="closeSettingsFromMemory" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body" style="padding:0;">
+                            <div class="settings-nav-list">
+                                <button class="settings-nav-row" id="navToManageMemory">
+                                    <span class="settings-nav-icon"><i class="fas fa-list"></i></span>
+                                    <span class="settings-nav-label">Manage</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                                <button class="settings-nav-row danger-row" id="clearMemoriesBtn">
+                                    <span class="settings-nav-icon"><i class="fas fa-trash"></i></span>
+                                    <span class="settings-nav-label">Clear All Memories</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-page hidden" id="settingsPageManageMemory">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromManageMemory"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Saved memories</h3>
+                            <button id="closeSettingsFromManageMemory" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body manage-memory-body" style="padding:12px 0 0;">
+                            <p style="padding:0 20px 10px;font-size:13px;color:var(--dark-gray);margin:0;">DeenLink AI remembers things from your chats. Memories are never forgotten.</p>
+                            <div id="memoriesListLoading" class="memories-loading-state">Loading...</div>
+                            <ul id="memoriesList" class="memories-ul-gpt"></ul>
+                            <div id="memoriesEmpty" class="hidden memories-empty-state">No memories saved yet.</div>
+                        </div>
+                    </div>
+
+                    <!-- Page: Response Mode -->
+                    <div class="settings-page hidden" id="settingsPageMode">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromMode"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Response Mode</h3>
+                            <button id="closeSettingsFromMode" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body">
+                            <p class="settings-desc">Choose how the AI responds to your questions.</p>
                             <div class="mode-options">
                                 <label class="mode-option">
                                     <input type="radio" name="responseMode" value="auto" checked>
-                                    <div class="mode-card">
-                                        <div class="mode-icon"><i class="fas fa-magic"></i></div>
-                                        <div class="mode-info">
-                                            <h4>Auto (Recommended)</h4>
-                                            <span>Automatically decides between chat and knowledge base.</span>
-                                        </div>
-                                    </div>
+                                    <div class="mode-card"><div class="mode-icon"><i class="fas fa-magic"></i></div><div class="mode-info"><h4>Auto (Recommended)</h4><span>Decides between chat and knowledge base automatically.</span></div></div>
                                 </label>
                                 <label class="mode-option">
                                     <input type="radio" name="responseMode" value="rag">
-                                    <div class="mode-card">
-                                        <div class="mode-icon"><i class="fas fa-book-quran"></i></div>
-                                        <div class="mode-info">
-                                            <h4>Knowledge Base</h4>
-                                            <span>Strictly searches verified Islamic sources (Quran & Hadith).</span>
-                                        </div>
-                                    </div>
+                                    <div class="mode-card"><div class="mode-icon"><i class="fas fa-book-quran"></i></div><div class="mode-info"><h4>Knowledge Base</h4><span>Searches verified Islamic sources (Quran & Hadith).</span></div></div>
                                 </label>
                                 <label class="mode-option">
                                     <input type="radio" name="responseMode" value="chat">
-                                    <div class="mode-card">
-                                        <div class="mode-icon"><i class="fas fa-comments"></i></div>
-                                        <div class="mode-info">
-                                            <h4>Chat Only</h4>
-                                            <span>Conversational mode without searching sources.</span>
-                                        </div>
-                                    </div>
+                                    <div class="mode-card"><div class="mode-icon"><i class="fas fa-comments"></i></div><div class="mode-info"><h4>Chat Only</h4><span>Conversational mode without searching sources.</span></div></div>
                                 </label>
                             </div>
                         </div>
-                        
-                        <div class="settings-group" style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 24px;">
-                            <label class="settings-label">Personal Memory</label>
-                            <p class="settings-desc">DeenLink AI remembers details about you across conversations to provide better answers.</p>
-                            
-                            <div class="memory-manager">
-                                <div class="memory-actions">
-                                    <button id="viewMemoriesBtn" class="btn btn-secondary"><i class="fas fa-list"></i> View Memories</button>
-                                    <button id="clearMemoriesBtn" class="btn btn-danger"><i class="fas fa-trash"></i> Clear All</button>
-                                </div>
-                                <div id="memoriesListContainer" class="memories-list hidden">
-                                    <div id="memoriesListLoading" class="hidden">Loading memories...</div>
-                                    <ul id="memoriesList" class="memories-ul"></ul>
-                                    <div id="memoriesEmpty" class="hidden" style="color: var(--text-muted); font-size: 0.9rem;">No memories found.</div>
-                                </div>
-                            </div>
+                        <div class="feedback-modal-footer">
+                            <button id="saveSettingsModeBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
                         </div>
                     </div>
-                    <div class="feedback-modal-footer">
-                        <button id="saveSettingsBtn" class="feedback-btn-submit w-full text-center justify-center">Save Settings</button>
-                    </div>
-                </div>
-            </div>
+
+                </div><!-- /feedback-modal-content -->
+            </div><!-- /settingsModal -->
 
         </main>
     </div>
-
     <script src="js/script.js"></script>
 </body>
 </html>

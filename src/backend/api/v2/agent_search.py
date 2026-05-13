@@ -1,35 +1,17 @@
-"""
-agent_search.py  —  Web-search agent for DeenLink AI.
-
-Strategy:
-  1. Rewrite the raw user query into an optimised search query using the LLM.
-  2. Search DuckDuckGo and keep only results whose URL originates from a
-     hand-curated trusted-domain allowlist.
-  3. If fewer than 2 trusted results are found, fall back to the best non-trusted
-     results so the user always gets an answer.
-  4. Feed results + conversation context + user memory into the LLM and stream
-     the response back.
-  5. Yield a final `sources` event so the frontend can render persistent source cards.
-"""
-
 from duckduckgo_search import DDGS
 from groq import Groq
 import logging
 import json
 import datetime
 from urllib.parse import urlparse
-from config import MODEL
+from config import MODEL, GOOGLE_API_KEY, GOOGLE_SEARCH_ENGINE_ID
+import requests
 
 logger = logging.getLogger(__name__)
 client = Groq(timeout=120.0)
 
-# ---------------------------------------------------------------------------
-# Trusted domain allowlist
-# ---------------------------------------------------------------------------
 TRUSTED_DOMAINS = {
-    # Islamic knowledge
     "islamqa.info",
-    "sunnah.com",
     "islamweb.net",
     "seekersguidance.org",
     "quran.com",
@@ -44,14 +26,10 @@ TRUSTED_DOMAINS = {
     "aljazeera.com",
     "reuters.com",
     "apnews.com",
-    # Nigerian context
-    "punchng.com",
-    "vanguardngr.com",
 }
 
 
 def _domain_of(url: str) -> str:
-    """Return the registered domain from a URL, stripping www."""
     try:
         host = urlparse(url).netloc.lower().lstrip("www.")
         # handle subdomains — keep last two parts
@@ -65,10 +43,8 @@ def _is_trusted(url: str) -> bool:
     dom = _domain_of(url)
     return any(dom == td or dom.endswith("." + td) for td in TRUSTED_DOMAINS)
 
-
-# ---------------------------------------------------------------------------
 # Query rewriter
-# ---------------------------------------------------------------------------
+
 def _rewrite_query(user_query: str, context_summary: str = "") -> str:
     """
     Ask the LLM to turn the raw user message into a focused search query.
@@ -95,15 +71,41 @@ def _rewrite_query(user_query: str, context_summary: str = "") -> str:
         return user_query
 
 
-# ---------------------------------------------------------------------------
 # Search helper
-# ---------------------------------------------------------------------------
 def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
     """
     Returns (trusted_results, fallback_results).
     trusted_results — from TRUSTED_DOMAINS
     fallback_results — everything else (used only if trusted is thin)
     """
+    if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
+        try:
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                "key": GOOGLE_API_KEY,
+                "cx": GOOGLE_SEARCH_ENGINE_ID,
+                "q": query,
+                "num": min(max_results, 10),
+            }
+            resp = requests.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            
+            trusted, others = [], []
+            for item in data.get("items", []):
+                entry = {
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),
+                    "body": item.get("snippet", ""),
+                }
+                if _is_trusted(entry["url"]):
+                    trusted.append(entry)
+                else:
+                    others.append(entry)
+            return trusted, others
+        except Exception as exc:
+            logger.error(f"Google Custom Search error: {exc}. Falling back to DuckDuckGo.")
+
     try:
         trusted, others = [], []
         with DDGS() as ddgs:
@@ -123,9 +125,7 @@ def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
         return [], []
 
 
-# ---------------------------------------------------------------------------
 # Context summariser (extract recent user facts from history)
-# ---------------------------------------------------------------------------
 def _context_summary(context_history: list) -> str:
     """Build a short human-readable summary of recent conversation turns."""
     if not context_history:
@@ -137,9 +137,9 @@ def _context_summary(context_history: list) -> str:
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
+
 # Main streaming function
-# ---------------------------------------------------------------------------
+
 def stream_web_search_answer(
     question: str,
     context_history: list = None,

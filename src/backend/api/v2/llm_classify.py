@@ -37,6 +37,7 @@ Rules for Motivation:
 - User asks "What does Islam say about X?" where X is a life situation
 - User expresses distress, sadness, anxiety, or seeks hope
 - User asks for encouragement, patience (sabr), trust in Allah (tawakkul)
+- User expresses struggle with worship, consistency, habits, or religious duties (e.g., "I struggle with Fajr")
 
 Rules for Web Search:
 - ONLY use web_search if the answer genuinely requires current/live internet data

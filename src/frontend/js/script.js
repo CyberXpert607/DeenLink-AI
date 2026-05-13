@@ -1,5 +1,6 @@
 const API_BASE_URL = 'https://api.deenlink.org/api/v2';
 const TOKEN_ENDPOINT = 'https://deenlink.org/api/auth/ai_token.php';
+const AI_AVATAR_SRC = '../img/deenlink-ai.jpg';
 
 const State = {
     activeConversationId: null,
@@ -42,8 +43,6 @@ const Elements = {
     feedbackReasonInput: document.getElementById("feedbackReasonInput"),
     settingsBtn: document.getElementById("settingsBtn"),
     settingsModal: document.getElementById("settingsModal"),
-    closeSettingsModal: document.getElementById("closeSettingsModal"),
-    saveSettingsBtn: document.getElementById("saveSettingsBtn"),
     modeRadios: document.querySelectorAll("input[name='responseMode']"),
     scrollToBottomBtn: document.getElementById("scrollToBottomBtn"),
 };
@@ -69,6 +68,20 @@ marked.setOptions({
     smartypants: true,
     xhtml: false
 });
+
+/* ─── helpers ─────────────────────────────────────────────── */
+
+/**
+ * Build the small logo <img> that sits to the left of every AI bubble.
+ */
+function createAiAvatarEl() {
+    const img = document.createElement('img');
+    img.src = AI_AVATAR_SRC;
+    img.alt = 'DeenLink AI';
+    img.className = 'ai-avatar';
+    img.onerror = function () { this.style.display = 'none'; };
+    return img;
+}
 
 async function getValidToken() {
     const now = Date.now();
@@ -190,9 +203,8 @@ function getUserFriendlyError(rawMessage) {
         return "The server returned an unexpected response. Please try again.";
     }
 
-    // FIX #1b: "message not found" errors from edit on old messages - treat gracefully
     if (msg.includes("message not found") || msg.includes("message_not_found")) {
-        return null; // Return null to signal we should silently retry as new message
+        return null;
     }
 
     if (msg.includes("404") || msg.includes("not found")) {
@@ -299,12 +311,10 @@ function isHTMLContent(str) {
     return trimmed.startsWith('<') && trimmed.includes('</');
 }
 
-// FIX #2: Remove leading whitespace/indent from last paragraphs in markdown output
 function cleanMarkdownOutput(rawContent) {
-    // Remove leading spaces/tabs from lines that would cause indent on last paragraphs
     return rawContent
-        .replace(/^[ \t]+(?=[^\s])/gm, '') // Remove leading whitespace on each line
-        .replace(/\n{3,}/g, '\n\n')          // Collapse multiple blank lines
+        .replace(/^[ \t]+(?=[^\s])/gm, '')
+        .replace(/\n{3,}/g, '\n\n')
         .trim();
 }
 
@@ -319,7 +329,6 @@ function renderContent(element, rawContent) {
         html = cleaned;
     } else {
         try {
-            // FIX #2: Clean content before parsing to prevent indent on last paragraph
             const cleanedForMd = cleanMarkdownOutput(rawContent);
             html = DOMPurify.sanitize(marked.parse(cleanedForMd, { async: false }), PurifyConfig);
         } catch (e) {
@@ -329,7 +338,6 @@ function renderContent(element, rawContent) {
 
     element.innerHTML = html;
 
-    // FIX #2: Remove any text-indent or padding-left that may have been applied to last <p>
     const paragraphs = element.querySelectorAll('p');
     paragraphs.forEach(p => {
         p.style.textIndent = '0';
@@ -337,7 +345,6 @@ function renderContent(element, rawContent) {
         p.style.marginLeft = '0';
     });
 
-    // Ensure all external links open in new tab
     element.querySelectorAll('a').forEach(link => {
         if (link.hostname !== window.location.hostname) {
             link.setAttribute('target', '_blank');
@@ -366,28 +373,22 @@ async function streamTokenToElement(element, token) {
     }
 }
 
-function showSearchIndicator(text = "Searching knowledge base...", iconType = "database", searchQuery = "") {
+function showSearchIndicator(text = "Searching knowledge base...", iconType = "database") {
     removeSearchIndicator();
     removeTypingIndicator();
     const indicator = document.createElement('div');
     indicator.className = 'search-indicator';
     indicator.id = 'searchIndicator';
-    indicator.dataset.shownAt = Date.now();
-    
+
     let iconHtml = '<div class="search-spinner"></div>';
     if (iconType === "web") {
-        iconHtml = '<div class="search-spinner-css"></div>';
+        iconHtml = '<i class="fas fa-globe search-spinner-icon" style="animation: spin 2s linear infinite; margin-right: 8px;"></i>';
     }
-    
-    const queryHtml = searchQuery
-        ? `<span class="search-query-pill">${escapeHtml(searchQuery)}</span>`
-        : '';
-    
+
     indicator.innerHTML = `
         <div class="search-indicator-content">
             ${iconHtml}
             <span class="search-text">${text}</span>
-            ${queryHtml}
         </div>
     `;
     Elements.chatMessages.appendChild(indicator);
@@ -423,25 +424,13 @@ function showTypingIndicator() {
     return indicator;
 }
 
-const MIN_SEARCH_DISPLAY_MS = 800;
-
 function removeSearchIndicator() {
     const indicator = document.getElementById('searchIndicator');
     if (indicator) {
         if (indicator.dataset.intervalId) {
             clearInterval(parseInt(indicator.dataset.intervalId));
         }
-        const shownAt = parseInt(indicator.dataset.shownAt || '0');
-        const elapsed = Date.now() - shownAt;
-        const remaining = MIN_SEARCH_DISPLAY_MS - elapsed;
-        if (remaining > 0) {
-            setTimeout(() => {
-                const el = document.getElementById('searchIndicator');
-                if (el) el.remove();
-            }, remaining);
-        } else {
-            indicator.remove();
-        }
+        indicator.remove();
     }
 }
 
@@ -469,101 +458,121 @@ function createSourcesPanel(sources) {
     const panel = document.createElement('div');
     panel.className = 'sources-panel';
     const validSources = sources.filter(s => s && s.payload);
-    const isWeb = validSources.some(s => s.source_type === 'web');
+    if (!validSources.length) return panel;
 
-    // Build chips row
-    const chips = validSources.map((src, idx) => {
+    const pillIconsHtml = validSources.slice(0, 3).map(src => {
+        const payload = src.payload || {};
+        const isWebSrc = src.source_type === 'web';
+        if (isWebSrc && payload.url) {
+            let hostname = '';
+            try { hostname = new URL(payload.url).hostname; } catch {}
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+            return `<span class="sources-pill-icon"><img src="${escapeHtml(faviconUrl)}" alt="" onerror="this.parentElement.innerHTML='<i class=\\"fas fa-globe\\"></i>'"></span>`;
+        } else if (src.source_type === 'hadith') {
+            return `<span class="sources-pill-icon"><i class="fas fa-book"></i></span>`;
+        } else {
+            return `<span class="sources-pill-icon"><i class="fas fa-quran"></i></span>`;
+        }
+    }).join('');
+
+    const pillBtn = document.createElement('button');
+    pillBtn.className = 'sources-pill-btn';
+    pillBtn.innerHTML = `<span class="sources-pill-icons">${pillIconsHtml}</span><span>Sources</span><i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;opacity:0.6;"></i>`;
+
+    const expandedList = document.createElement('div');
+    expandedList.className = 'sources-expanded-list';
+
+    validSources.forEach((src) => {
         const payload = src.payload || {};
         const isHadith = src.source_type === 'hadith';
         const isWebSrc = src.source_type === 'web';
 
-        let label = '';
-        let hostname = payload.hostname || '';
+        let title = '', meta = '', preview = '';
+        let hostname = '';
+
         if (isWebSrc) {
-            // Use site hostname as label
-            if (!hostname && payload.url) {
-                try { hostname = new URL(payload.url).hostname.replace('www.', ''); } catch { hostname = payload.url; }
-            }
-            label = hostname || payload.title || 'Web Source';
+            try { hostname = new URL(payload.url || '').hostname.replace('www.', ''); } catch {}
+            title = payload.title || hostname || 'Web Source';
+            meta = hostname;
+            preview = payload.snippet || '';
         } else if (src.display_reference) {
-            label = src.display_reference;
-        } else if (isHadith && payload.hadith_number_display) {
-            label = `${payload.collection || 'Hadith'} ${payload.hadith_number_display}`;
-        } else if (!isHadith && payload.surah_name && payload.ayah) {
-            label = `${payload.surah_name} ${payload.ayah}`;
+            title = src.display_reference;
+        } else if (isHadith) {
+            title = `${payload.collection || 'Hadith'} ${payload.hadith_number_display || ''}`.trim();
+            meta = payload.collection || '';
+            preview = payload.english || '';
         } else {
-            label = isHadith ? 'Hadith' : "Qur'an";
+            title = (payload.surah_name && payload.ayah) ? `${payload.surah_name} — Ayah ${payload.ayah}` : "Qur'an";
+            meta = payload.surah_name || '';
+            preview = payload.english || '';
         }
 
         let iconHtml = '';
-        if (isWebSrc) {
-            const faviconUrl = payload.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
-            iconHtml = `<img src="${escapeHtml(faviconUrl)}" class="source-favicon" alt="" onerror="this.style.display='none'">`;
-        } else if (isHadith) {
-            iconHtml = '<i class="fas fa-book"></i>';
-        } else {
-            iconHtml = '<i class="fas fa-quran"></i>';
-        }
-
-        // Web sources: render as <a> that opens in new tab
         if (isWebSrc && payload.url) {
-            return `<a class="source-chip web-chip" data-source-idx="${idx}" href="${escapeHtml(payload.url)}" target="_blank" rel="noopener noreferrer">${iconHtml}<span>${escapeHtml(label)}</span><i class="fas fa-external-link-alt source-chip-ext"></i></a>`;
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+            iconHtml = `<img src="${escapeHtml(faviconUrl)}" alt="" onerror="this.src='';this.parentElement.innerHTML='<i class=\\"fas fa-globe\\"></i>'">`;
+        } else if (isHadith) {
+            iconHtml = `<i class="fas fa-book"></i>`;
+        } else {
+            iconHtml = `<i class="fas fa-quran"></i>`;
         }
-        return `<button class="source-chip" data-source-idx="${idx}">${iconHtml}<span>${escapeHtml(label)}</span></button>`;
-    }).join('');
 
-    panel.innerHTML = `
-        <div class="sources-row">
-            <span class="sources-label"><i class="${isWeb ? 'fas fa-globe' : 'fas fa-book-open'}"></i> Sources</span>
-            <div class="source-chips">${chips}</div>
-        </div>
-        <div class="source-detail-area" id="sourceDetailArea-${Date.now()}"></div>
-    `;
+        const arabicHtml = (payload.arabic && !isWebSrc) ? `<div class="rag-arabic" dir="rtl" style="font-size:13px;margin-top:6px;">${escapeHtml(payload.arabic)}</div>` : '';
 
-    // Chip click → show detail card inline (toggle) — only for non-web chips
-    const detailArea = panel.querySelector('.source-detail-area');
-    panel.querySelectorAll('.source-chip[data-source-idx]:not(.web-chip)').forEach(chip => {
-        chip.addEventListener('click', (e) => {
-            e.preventDefault();
-            const idx = parseInt(chip.dataset.sourceIdx);
-            const src = validSources[idx];
-            if (!src) return;
-            const payload = src.payload || {};
-            const isOpen = chip.classList.contains('active');
-
-            panel.querySelectorAll('.source-chip').forEach(c => c.classList.remove('active'));
-
-            if (isOpen) {
-                detailArea.innerHTML = '';
-                detailArea.classList.remove('visible');
-                return;
-            }
-
-            chip.classList.add('active');
-
-            let detailHtml = '';
-            if (payload.arabic) {
-                detailHtml += `<div class="rag-arabic" dir="rtl">${escapeHtml(payload.arabic)}</div>`;
-            }
-            if (payload.english) {
-                detailHtml += `<div class="rag-english">${escapeHtml(payload.english)}</div>`;
-            }
-            if (payload.snippet) {
-                detailHtml += `<div class="rag-english">${escapeHtml(payload.snippet)}</div>`;
-            }
-
-            detailArea.innerHTML = detailHtml || '<em style="font-size:12px;color:var(--dark-gray)">No preview available.</em>';
-            detailArea.classList.add('visible');
-        });
+        if (isWebSrc && payload.url) {
+            const a = document.createElement('a');
+            a.className = 'source-list-item';
+            a.href = escapeHtml(payload.url);
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.innerHTML = `
+                <div class="source-list-icon">${iconHtml}</div>
+                <div class="source-list-body">
+                    <div class="source-list-title">${escapeHtml(title)}</div>
+                    ${meta ? `<div class="source-list-meta">${escapeHtml(meta)}</div>` : ''}
+                    ${preview ? `<div class="source-list-preview">${escapeHtml(preview.substring(0, 120))}${preview.length > 120 ? '…' : ''}</div>` : ''}
+                </div>`;
+            expandedList.appendChild(a);
+        } else {
+            const div = document.createElement('div');
+            div.className = 'source-list-item';
+            div.innerHTML = `
+                <div class="source-list-icon">${iconHtml}</div>
+                <div class="source-list-body">
+                    <div class="source-list-title">${escapeHtml(title)}</div>
+                    ${meta ? `<div class="source-list-meta">${escapeHtml(meta)}</div>` : ''}
+                    ${arabicHtml}
+                    ${preview ? `<div class="source-list-preview">${escapeHtml(preview.substring(0, 120))}${preview.length > 120 ? '…' : ''}</div>` : ''}
+                </div>`;
+            expandedList.appendChild(div);
+        }
     });
 
+    pillBtn.addEventListener('click', () => {
+        const isOpen = expandedList.classList.contains('visible');
+        expandedList.classList.toggle('visible', !isOpen);
+        const chevron = pillBtn.querySelector('.fa-chevron-down, .fa-chevron-up');
+        if (chevron) {
+            chevron.className = isOpen ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+            chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
+        }
+    });
+
+    panel.appendChild(pillBtn);
+    panel.appendChild(expandedList);
     return panel;
 }
+
+/* ─── MESSAGE CREATION — all AI messages now include the logo avatar ─── */
 
 function createStreamingMessage() {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message ai streaming';
-    messageDiv.innerHTML = `
+
+    // ── DeenLink logo avatar ──
+    messageDiv.appendChild(createAiAvatarEl());
+
+    messageDiv.innerHTML += `
         <div class="message-content">
             <div class="message-text"></div>
             <div class="message-feedback" style="display: none;">
@@ -596,7 +605,6 @@ function createStreamingMessage() {
     };
 }
 
-
 function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
     const { container, textEl } = messageObj;
     let feedbackDiv = messageObj.feedbackDiv || container.querySelector('.message-feedback');
@@ -620,7 +628,6 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
 
     const contentDiv = container.querySelector('.message-content');
 
-    // FIX #4: Filter to best source only before rendering panel
     if (sources && sources.length > 0) {
         const bestSources = filterBestSources(sources);
         const existingPanel = container.querySelector('.sources-panel');
@@ -697,6 +704,11 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
     el.dataset.raw = text || "";
     el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
 
+    // ── DeenLink logo avatar (AI only) ──
+    if (sender === 'ai') {
+        el.appendChild(createAiAvatarEl());
+    }
+
     const contentDiv = document.createElement("div");
     contentDiv.className = "message-content";
 
@@ -740,16 +752,22 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
 function appendLoadingMessage() {
     const el = document.createElement("div");
     el.className = "message ai loading";
-    el.innerHTML = `
-        <div class="message-content">
-           <div class="message-text"></div>
-           <div class="typing-indicator">
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-           </div>
+
+    // ── DeenLink logo avatar ──
+    el.appendChild(createAiAvatarEl());
+
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "message-content";
+    contentDiv.innerHTML = `
+        <div class="message-text"></div>
+        <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
         </div>
     `;
+    el.appendChild(contentDiv);
+
     Elements.chatMessages.appendChild(el);
     requestAnimationFrame(() => {
         Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
@@ -783,14 +801,15 @@ function replaceLoadingWithAIMessage(loadingObj, incomplete = false) {
     }
     return textEl;
 }
+
 function updateEmptyStateVisibility() {
     const emptyGreeting = document.getElementById("emptyChatGreeting");
     const quickPrompts = document.getElementById("quickPrompts");
-    
+
     const hasMessages = Array.from(Elements.chatMessages.children).some(
         child => !child.classList.contains("loading-state") && !child.id.includes("Indicator")
     );
-    
+
     if (hasMessages) {
         if (emptyGreeting) emptyGreeting.style.display = 'none';
         if (quickPrompts) quickPrompts.style.display = 'none';
@@ -801,11 +820,17 @@ function updateEmptyStateVisibility() {
 }
 
 function appendMessage(sender, text, options = {}) {
-    const { messageId = null, sources = null } = options;
+    const { messageId = null } = options;
     const shouldScroll = isNearBottom(Elements.chatMessages);
     const el = document.createElement("div");
     el.className = `message ${sender}`;
     el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+    // ── DeenLink logo avatar (AI only) ──
+    if (sender === 'ai') {
+        el.appendChild(createAiAvatarEl());
+    }
+
     const contentDiv = document.createElement("div");
     contentDiv.className = "message-content";
     const textDiv = document.createElement("div");
@@ -820,14 +845,6 @@ function appendMessage(sender, text, options = {}) {
     }, 10);
 
     contentDiv.appendChild(textDiv);
-
-    // Re-render persisted sources panel if available
-    if (sender === "ai" && sources && sources.length > 0) {
-        const bestSources = filterBestSources(sources);
-        const sourcesPanel = createSourcesPanel(bestSources);
-        contentDiv.appendChild(sourcesPanel);
-    }
-
     if (sender === "ai") {
         const feedbackButtons = createFeedbackButtons(contentDiv);
         contentDiv.appendChild(feedbackButtons);
@@ -986,7 +1003,6 @@ async function loadConversations() {
         const data = await res.json();
         if (!Array.isArray(data)) throw new Error("Invalid data format");
         renderConversationTabs(data);
-        // Do NOT auto-switch to first conversation — show Salam greeting by default
     } catch (err) {
         showError(err.message || "Failed to load conversations");
     }
@@ -1033,11 +1049,6 @@ async function switchToConversation(id) {
     if (State.isLoadingConversation || id === State.activeConversationId) return;
     State.isLoadingConversation = true;
     closeSidebar();
-    // Hide greeting immediately when switching to a conversation
-    const emptyGreeting = document.getElementById("emptyChatGreeting");
-    const quickPrompts = document.getElementById("quickPrompts");
-    if (emptyGreeting) emptyGreeting.style.display = 'none';
-    if (quickPrompts) quickPrompts.style.display = 'none';
     Elements.chatMessages.innerHTML = '<div class="loading-state">Loading...</div>';
     try {
         await loadConversation(id);
@@ -1068,16 +1079,12 @@ async function loadConversation(id) {
         appendMessage(
             msg.role === "user" ? "user" : "ai",
             msg.content,
-            { messageId: msg.id || null, sources: msg.sources || null }
+            { messageId: msg.id || null }
         );
     });
 
-    // Re-render persistent memory notices for this conversation
-    restoreMemoryNotices(id);
-
     updateEmptyStateVisibility();
 
-    // Scroll to BOTTOM (most recent message) after loading conversation
     const scrollToBottom = () => {
         const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
         const target = messagesArea || Elements.chatMessages;
@@ -1111,9 +1118,7 @@ async function editConversationFromMessage(conversationId, messageId, editedText
         try {
             const errorData = await res.json();
             detail = errorData?.detail || detail;
-        } catch (_) {
-            // no-op
-        }
+        } catch (_) {}
         throw new Error(detail);
     }
     return res.json();
@@ -1166,7 +1171,6 @@ function styleRAGSources(el) {
             }
             badge.textContent = `${index + 1}/${totalSources}`;
         }
-
         source.style.cssText = '';
     });
 }
@@ -1182,20 +1186,6 @@ function showRAGLoadingIndicator(el) {
     `;
     el.innerHTML = '';
     el.appendChild(indicator);
-    if (!document.getElementById('rag-animations')) {
-        const style = document.createElement('style');
-        style.id = 'rag-animations';
-        style.textContent = `
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.6; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
 }
 
 async function sendMessage(retryData = null) {
@@ -1233,28 +1223,20 @@ async function sendMessage(retryData = null) {
         Elements.messageInput.style.height = "auto";
     }
 
-    // FIX #1b: Handle edit with "message not found" gracefully - fall back to new message
     if (editingMessageId && State.activeConversationId) {
         try {
             await editConversationFromMessage(State.activeConversationId, editingMessageId, text);
-            await loadConversation(State.activeConversationId);
-            showSuccessToast('Message updated and regenerated');
-            State.editingMessageId = null;
-            resetInputState();
-            return;
         } catch (err) {
-            State.editingMessageId = null;
             const friendlyErr = getUserFriendlyError(err?.message);
-            // If it's a "message not found" error, silently send as new message instead
-            if (friendlyErr === null) {
-                console.warn('Message not found for edit, sending as new message');
-                // Continue below to send as normal new message
-            } else {
+            if (friendlyErr !== null) {
+                State.editingMessageId = null;
                 resetInputState();
                 showError(friendlyErr || "Failed to edit message");
                 return;
             }
+            console.warn('Edit: message not found, sending as new message');
         }
+        State.editingMessageId = null;
     }
 
     appendMessage("user", text);
@@ -1282,14 +1264,7 @@ async function sendMessage(retryData = null) {
             body: JSON.stringify({
                 message: text,
                 conversation_id: State.activeConversationId,
-                mode: State.responseMode,
-                // Send the user's real local time so backend can answer time/date questions accurately
-                client_datetime: new Date().toLocaleString('en-GB', {
-                    weekday: 'long', year: 'numeric', month: 'long',
-                    day: 'numeric', hour: '2-digit', minute: '2-digit',
-                    second: '2-digit', hour12: true
-                }),
-                client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+                mode: State.responseMode
             }),
             signal: State.streamController.signal
         });
@@ -1324,11 +1299,11 @@ async function sendMessage(retryData = null) {
 
                 switch (data.type) {
                     case 'search_start':
-                        showSearchIndicator("Searching knowledge base...", "database", data.query || "");
+                        showSearchIndicator();
                         break;
-                        
+
                     case 'web_search_start':
-                        showSearchIndicator("Searching the web...", "web", data.query || data.search_query || "");
+                        showSearchIndicator("Getting info from the internet...", "web");
                         break;
 
                     case 'chat_start':
@@ -1369,7 +1344,7 @@ async function sendMessage(retryData = null) {
 
                     case 'done':
                         break;
-                        
+
                     case 'memory_updated':
                         if (data.action === "add" || data.action === "update") {
                             showMemoryUpdatedInline(data.fact);
@@ -1497,45 +1472,28 @@ function toggleSidebar() {
 const PWA = {
     init: async () => {
         const isCapacitor = window.Capacitor !== undefined;
-        if (isCapacitor) {
-            return;
-        }
+        if (isCapacitor) return;
         if (!('serviceWorker' in navigator)) return;
         try {
             await navigator.serviceWorker.register('sw.js', { scope: './' });
-        } catch (error) {
-            // Silent fail
-        }
+        } catch (error) {}
     }
 };
 
-// FIX #1: Edit message - scroll edit area into view when keyboard opens
 function scrollEditIntoView(editContainer) {
-    // Small delay to let keyboard open
     setTimeout(() => {
-        // Scroll the edit container into view within the messages area
         editContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Also ensure the messages area scrolls to show the edit field above keyboard
         const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
         if (messagesArea) {
             const containerRect = editContainer.getBoundingClientRect();
             const areaRect = messagesArea.getBoundingClientRect();
-            
+
             if (containerRect.bottom > areaRect.bottom - 50) {
                 messagesArea.scrollTop += (containerRect.bottom - areaRect.bottom + 80);
             }
         }
-    }, 350); // Wait for keyboard animation
-}
-
-// Hoisted so it can be called from memory inline notice
-function openSettings() {
-    Elements.modeRadios?.forEach(radio => {
-        radio.checked = (radio.value === State.responseMode);
-    });
-    if (Elements.settingsModal) Elements.settingsModal.classList.remove('hidden');
-    closeSidebar();
+    }, 350);
 }
 
 function initEventListeners() {
@@ -1573,7 +1531,6 @@ function initEventListeners() {
         }
     });
 
-    // FIX #3: scroll-to-bottom button visibility - use correct scrollable container
     const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
     const scrollContainer = messagesArea || Elements.chatMessages;
 
@@ -1585,12 +1542,13 @@ function initEventListeners() {
 
         if (distanceFromBottom > 250) {
             Elements.scrollToBottomBtn.classList.remove('hidden');
+            Elements.scrollToBottomBtn.classList.add('visible');
         } else {
             Elements.scrollToBottomBtn.classList.add('hidden');
+            Elements.scrollToBottomBtn.classList.remove('visible');
         }
     };
 
-    // Listen on BOTH the messages area AND chatMessages for scroll events
     scrollContainer.addEventListener("scroll", () => {
         if (State.scrollTimeout) clearTimeout(State.scrollTimeout);
 
@@ -1617,7 +1575,6 @@ function initEventListeners() {
         }, 150);
     });
 
-    // Also listen on chatMessages directly in case it's the scroll target
     if (scrollContainer !== Elements.chatMessages) {
         Elements.chatMessages.addEventListener("scroll", () => {
             updateScrollButton();
@@ -1626,14 +1583,8 @@ function initEventListeners() {
 
     if (Elements.scrollToBottomBtn) {
         Elements.scrollToBottomBtn.addEventListener('click', () => {
-            scrollContainer.scrollTo({
-                top: scrollContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-            Elements.chatMessages.scrollTo({
-                top: Elements.chatMessages.scrollHeight,
-                behavior: 'smooth'
-            });
+            scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+            Elements.chatMessages.scrollTo({ top: Elements.chatMessages.scrollHeight, behavior: 'smooth' });
         });
     }
 
@@ -1673,13 +1624,9 @@ function initEventListeners() {
             const keyboardHeight = window.innerHeight - window.visualViewport.height;
 
             if (keyboardHeight > 50) {
-                // Offset input bar just above keyboard, no more than that
-                // Use viewport offset + keyboard inset to pin bar 4px above keyboard
-                const vpOffsetTop = window.visualViewport.offsetTop || 0;
-                const targetBottom = keyboardHeight - vpOffsetTop + 4;
-                Elements.inputArea.style.bottom = targetBottom + 'px';
+                Elements.inputArea.style.bottom = keyboardHeight + 'px';
             } else {
-                Elements.inputArea.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
+                Elements.inputArea.style.bottom = 'calc(4px + env(safe-area-inset-bottom))';
             }
         };
 
@@ -1689,7 +1636,6 @@ function initEventListeners() {
         };
 
         window.visualViewport.addEventListener('resize', scheduleVpUpdate);
-        window.visualViewport.addEventListener('scroll', scheduleVpUpdate);
     }
 
     Elements.chatMessages.addEventListener('click', async (e) => {
@@ -1752,7 +1698,6 @@ function initEventListeners() {
             textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
             textarea.focus();
 
-            // FIX #1: Scroll edit container into view when keyboard opens
             scrollEditIntoView(editContainer);
 
             cancelBtn.addEventListener('click', () => {
@@ -1789,7 +1734,6 @@ function initEventListeners() {
         }
     });
 
-    // Feedback Modal Event Listeners
     const closeFeedback = () => {
         if (Elements.feedbackModal) Elements.feedbackModal.classList.add('hidden');
         State.pendingFeedback = null;
@@ -1802,69 +1746,174 @@ function initEventListeners() {
         if (!State.pendingFeedback) return;
         const { prompt, response, dislikeBtn, likeBtn } = State.pendingFeedback;
         const reason = Elements.feedbackReasonInput?.value.trim() || null;
-
         closeFeedback();
-
         dislikeBtn.classList.add('active');
         dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>Not helpful</span>';
         likeBtn.disabled = true;
-
         await sendFeedback('dislike', prompt, response, reason);
         showSuccessToast('Thanks for your feedback!');
     });
 
-    // Settings Modal Logic
-    const openSettingsLocal = openSettings;
+    const settingsModal = Elements.settingsModal;
 
-    const closeSettings = () => {
-        if (Elements.settingsModal) Elements.settingsModal.classList.add('hidden');
-    };
+    function showSettingsPage(pageId) {
+        settingsModal?.querySelectorAll('.settings-page').forEach(p => p.classList.add('hidden'));
+        document.getElementById(pageId)?.classList.remove('hidden');
+    }
 
-    Elements.settingsBtn?.addEventListener('click', openSettings);
-    Elements.closeSettingsModal?.addEventListener('click', closeSettings);
+    function closeSettings() {
+        settingsModal?.classList.add('hidden');
+        showSettingsPage('settingsPageMain');
+    }
 
-    Elements.saveSettingsBtn?.addEventListener('click', () => {
+    Elements.settingsBtn?.addEventListener('click', () => {
+        Elements.modeRadios?.forEach(r => { r.checked = (r.value === State.responseMode); });
+        const nameEl = document.getElementById('settingsProfileName');
+        if (nameEl) nameEl.textContent = document.getElementById('userNameDisplay')?.textContent || 'Guest';
+        settingsModal?.classList.remove('hidden');
+        showSettingsPage('settingsPageMain');
+        closeSidebar();
+    });
+
+    ['closeSettingsModal','closeSettingsFromPersonalization','closeSettingsFromMemory','closeSettingsFromManageMemory','closeSettingsFromMode'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', closeSettings);
+    });
+
+    document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
         let selectedMode = 'auto';
-        Elements.modeRadios?.forEach(radio => {
-            if (radio.checked) selectedMode = radio.value;
-        });
+        Elements.modeRadios?.forEach(r => { if (r.checked) selectedMode = r.value; });
         State.responseMode = selectedMode;
         localStorage.setItem('responseMode', selectedMode);
         closeSettings();
         showSuccessToast('Settings saved!');
     });
+
+    document.getElementById('saveSettingsModeBtn')?.addEventListener('click', () => {
+        let selectedMode = 'auto';
+        Elements.modeRadios?.forEach(r => { if (r.checked) selectedMode = r.value; });
+        State.responseMode = selectedMode;
+        localStorage.setItem('responseMode', selectedMode);
+        showSuccessToast('Response mode saved!');
+        showSettingsPage('settingsPageMain');
+    });
+
+    document.getElementById('navToPersonalization')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
+    document.getElementById('navToMode')?.addEventListener('click', () => showSettingsPage('settingsPageMode'));
+    document.getElementById('navToMemory')?.addEventListener('click', () => showSettingsPage('settingsPageMemory'));
+    document.getElementById('navToManageMemory')?.addEventListener('click', () => {
+        showSettingsPage('settingsPageManageMemory');
+        loadMemoriesIntoPage();
+    });
+
+    document.getElementById('backFromPersonalization')?.addEventListener('click', () => showSettingsPage('settingsPageMain'));
+    document.getElementById('backFromMemory')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
+    document.getElementById('backFromManageMemory')?.addEventListener('click', () => showSettingsPage('settingsPageMemory'));
+    document.getElementById('backFromMode')?.addEventListener('click', () => showSettingsPage('settingsPageMain'));
+
+    document.getElementById('settingsOverlay')?.addEventListener('click', closeSettings);
+
+    document.getElementById('clearMemoriesBtn')?.addEventListener('click', async () => {
+        if (!confirm("Clear all your memories? This cannot be undone.")) return;
+        try {
+            const token = await getValidToken();
+            const res = await fetch(`${API_BASE_URL}/user/memories`, { method: 'DELETE', headers: { "Authorization": `Bearer ${token}` } });
+            if (res.ok) {
+                Object.keys(localStorage).filter(k => k.startsWith('deen_memory_notices_')).forEach(k => localStorage.removeItem(k));
+                showSuccessToast("All memories cleared.");
+                showSettingsPage('settingsPageMemory');
+            }
+        } catch { showError("Failed to clear memories"); }
+    });
 }
 
-/* ============================================================
-   Cross-tab memory sync via BroadcastChannel
-   BroadcastChannel is same-origin-only by spec — no cross-origin
-   risk. We additionally validate message shape before acting.
-   ============================================================ */
-const memoryChannel = (() => {
-    if (typeof BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel('deenai_memory_sync');
-        bc.onmessage = (event) => {
-            const msg = event.data;
-            // Validate shape — ignore anything malformed
-            if (!msg || typeof msg !== 'object') return;
-            if (msg.type !== 'memory_updated') return;
-            if (typeof msg.fact !== 'string' || !msg.fact) return;
+async function loadMemoriesIntoPage() {
+    const loading = document.getElementById('memoriesListLoading');
+    const ul = document.getElementById('memoriesList');
+    const empty = document.getElementById('memoriesEmpty');
+    if (!ul) return;
 
-            // Only show the notice if we are currently viewing that conversation
-            if (msg.convId && msg.convId === State.activeConversationId) {
-                _renderMemoryNotice(msg.fact, false); // already persisted by sender tab
-            }
-            // Refresh the memories list if the settings modal is open and memories are visible
-            const container = document.getElementById('memoriesListContainer');
-            if (container && !container.classList.contains('hidden')) {
-                document.getElementById('viewMemoriesBtn')?.click();
-            }
-        };
-        return bc;
+    ul.innerHTML = '';
+    if (empty) empty.classList.add('hidden');
+    if (loading) { loading.style.display = 'block'; }
+
+    try {
+        const token = await getValidToken();
+        const res = await fetch(`${API_BASE_URL}/user/memories`, { headers: { "Authorization": `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Failed to fetch memories");
+        const memories = await res.json();
+
+        if (loading) loading.style.display = 'none';
+
+        if (!memories.length) {
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+
+        memories.forEach(m => {
+            const li = document.createElement('li');
+            li.className = 'memory-item-gpt';
+            li.dataset.memoryId = m.id;
+
+            const convId = m.conversation_id || m.conv_id || null;
+            const chatLinkHtml = convId
+                ? `Saved from a <a class="memory-chat-link" data-conv-id="${convId}" href="#">chat</a>`
+                : `Saved by DeenLink AI`;
+
+            li.innerHTML = `
+                <div class="memory-item-gpt-body">
+                    <div class="memory-item-gpt-fact">${escapeHtml(m.fact)}</div>
+                    <div class="memory-item-gpt-meta">${chatLinkHtml}</div>
+                </div>
+                <button class="memory-item-menu-btn" title="Options">⋯</button>
+            `;
+
+            li.querySelector('.memory-chat-link')?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const cid = e.currentTarget.dataset.convId;
+                if (!cid) return;
+                document.getElementById('settingsModal')?.classList.add('hidden');
+                await switchToConversation(cid);
+            });
+
+            const menuBtn = li.querySelector('.memory-item-menu-btn');
+            menuBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.memory-item-popover').forEach(p => p.remove());
+
+                const popover = document.createElement('div');
+                popover.className = 'memory-item-popover';
+                popover.innerHTML = `
+                    <button class="memory-popover-item danger"><i class="fas fa-trash"></i> Delete</button>
+                `;
+                popover.querySelector('.memory-popover-item')?.addEventListener('click', async () => {
+                    popover.remove();
+                    try {
+                        const token = await getValidToken();
+                        const del = await fetch(`${API_BASE_URL}/user/memories/${m.id}`, { method: 'DELETE', headers: { "Authorization": `Bearer ${token}` } });
+                        if (del.ok) {
+                            li.remove();
+                            if (!document.querySelectorAll('.memory-item-gpt').length) {
+                                if (empty) empty.classList.remove('hidden');
+                            }
+                        }
+                    } catch { showError("Failed to delete memory"); }
+                });
+                li.style.position = 'relative';
+                li.appendChild(popover);
+
+                const outsideClick = (ev) => {
+                    if (!popover.contains(ev.target)) { popover.remove(); document.removeEventListener('click', outsideClick); }
+                };
+                setTimeout(() => document.addEventListener('click', outsideClick), 0);
+            });
+
+            ul.appendChild(li);
+        });
+    } catch {
+        if (loading) loading.style.display = 'none';
+        if (empty) { empty.classList.remove('hidden'); empty.textContent = "Failed to load memories."; }
     }
-    // Fallback no-op object for browsers without BroadcastChannel
-    return { postMessage: () => {} };
-})();
+}
 
 window.addEventListener("load", async () => {
     await PWA.init();
@@ -1899,14 +1948,8 @@ if (backBtn) {
     });
 }
 
-/* ============================================================
-   Memory inline notice — persistent + localStorage-backed
-   ============================================================ */
-
-/** Key format: "memory_notices_{conversationId}" → array of fact strings */
-function _memoryStorageKey(convId) {
-    return `deen_memory_notices_${convId}`;
-}
+/* ── Memory inline notice ─────────────────────────────────── */
+function _memoryStorageKey(convId) { return `deen_memory_notices_${convId}`; }
 
 function persistMemoryNotice(fact) {
     const convId = State.activeConversationId;
@@ -1914,19 +1957,16 @@ function persistMemoryNotice(fact) {
     try {
         const key = _memoryStorageKey(convId);
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        if (!existing.includes(fact)) {
-            existing.push(fact);
-            localStorage.setItem(key, JSON.stringify(existing));
-        }
-    } catch (e) { /* storage full or private browsing */ }
+        if (!existing.includes(fact)) { existing.push(fact); localStorage.setItem(key, JSON.stringify(existing)); }
+    } catch {}
 }
 
 function restoreMemoryNotices(convId) {
     try {
         const key = _memoryStorageKey(convId);
         const facts = JSON.parse(localStorage.getItem(key) || '[]');
-        facts.forEach(fact => _renderMemoryNotice(fact, false /* don't persist again */));
-    } catch (e) { /* ignore */ }
+        facts.forEach(fact => _renderMemoryNotice(fact, false));
+    } catch {}
 }
 
 function _renderMemoryNotice(fact, persist = true) {
@@ -1937,136 +1977,17 @@ function _renderMemoryNotice(fact, persist = true) {
     notice.innerHTML = `
         <i class="fas fa-brain"></i>
         <span><strong>Memory updated:</strong> ${escapeHtml(fact)}</span>
-        <button class="memory-inline-manage" title="Manage memories"><i class="fas fa-cog"></i> Manage</button>
+        <button class="memory-inline-manage"><i class="fas fa-cog"></i> Manage</button>
     `;
-    notice.querySelector('.memory-inline-manage').addEventListener('click', () => {
-        openSettings();
-        setTimeout(() => {
-            // Scroll to the memory section inside the settings modal
-            const memSection = document.querySelector('.memory-manager');
-            if (memSection) memSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            const viewBtn = document.getElementById('viewMemoriesBtn');
-            if (viewBtn) viewBtn.click();
-        }, 200);
+    notice.querySelector('.memory-inline-manage')?.addEventListener('click', () => {
+        Elements.settingsModal?.classList.remove('hidden');
+        document.querySelectorAll('.settings-page').forEach(p => p.classList.add('hidden'));
+        document.getElementById('settingsPageManageMemory')?.classList.remove('hidden');
+        loadMemoriesIntoPage();
     });
     Elements.chatMessages.appendChild(notice);
-    if (State.autoScroll) {
-        Elements.chatMessages.scrollTo({ top: Elements.chatMessages.scrollHeight, behavior: 'smooth' });
-    }
+    if (State.autoScroll) Elements.chatMessages.scrollTo({ top: Elements.chatMessages.scrollHeight, behavior: 'smooth' });
 }
 
-function showMemoryUpdatedInline(fact) {
-    _renderMemoryNotice(fact, true);
-    // Broadcast to other tabs (secure: same-origin only via BroadcastChannel)
-    memoryChannel.postMessage({ type: 'memory_updated', fact, convId: State.activeConversationId });
-}
-
-function showMemoryUpdatedToast(fact) {
-    const existing = document.getElementById('memoryToast');
-    if (existing) existing.remove();
-    
-    const toast = document.createElement('div');
-    toast.id = 'memoryToast';
-    toast.className = 'memory-updated-toast';
-    toast.innerHTML = `
-        <i class="fas fa-brain" style="color: var(--primary-green);"></i>
-        <div style="display:flex; flex-direction:column;">
-            <strong style="margin-bottom:2px;">Memory updated</strong>
-            <span style="opacity:0.8;">${escapeHtml(fact)}</span>
-            <a href="#" id="manageMemoriesLink" style="color: var(--primary-green); text-decoration: none; margin-top: 4px; font-weight: 500;">Manage memories <i class="fas fa-chevron-right" style="font-size:10px;"></i></a>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    document.getElementById('manageMemoriesLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        toast.classList.add('hide');
-        setTimeout(() => toast.remove(), 300);
-        openSettings();
-        document.getElementById('viewMemoriesBtn').click();
-    });
-    
-    setTimeout(() => {
-        if(document.body.contains(toast)) {
-            toast.classList.add('hide');
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, 5000);
-}
-
-document.getElementById('viewMemoriesBtn')?.addEventListener('click', async () => {
-    const container = document.getElementById('memoriesListContainer');
-    const loading = document.getElementById('memoriesListLoading');
-    const ul = document.getElementById('memoriesList');
-    const empty = document.getElementById('memoriesEmpty');
-    
-    container.classList.remove('hidden');
-    loading.classList.remove('hidden');
-    ul.innerHTML = '';
-    empty.classList.add('hidden');
-    
-    try {
-        const token = await getValidToken();
-        const res = await fetch(`${API_BASE_URL}/user/memories`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Failed to fetch memories");
-        const memories = await res.json();
-        
-        loading.classList.add('hidden');
-        if (memories.length === 0) {
-            empty.classList.remove('hidden');
-        } else {
-            memories.forEach(m => {
-                const li = document.createElement('li');
-                li.className = 'memory-item';
-                li.innerHTML = `
-                    <div class="memory-fact">${escapeHtml(m.fact)}</div>
-                    <button class="memory-delete" data-id="${m.id}" title="Delete Memory"><i class="fas fa-trash"></i></button>
-                `;
-                ul.appendChild(li);
-            });
-            
-            ul.querySelectorAll('.memory-delete').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    try {
-                        const delRes = await fetch(`${API_BASE_URL}/user/memories/${id}`, {
-                            method: 'DELETE',
-                            headers: { "Authorization": `Bearer ${token}` }
-                        });
-                        if (delRes.ok) {
-                            e.currentTarget.closest('.memory-item').remove();
-                            if (ul.children.length === 0) empty.classList.remove('hidden');
-                        }
-                    } catch (err) {
-                        console.error("Error deleting memory", err);
-                    }
-                });
-            });
-        }
-    } catch (err) {
-        loading.classList.add('hidden');
-        empty.classList.remove('hidden');
-        empty.textContent = "Failed to load memories.";
-    }
-});
-
-document.getElementById('clearMemoriesBtn')?.addEventListener('click', async () => {
-    if (!confirm("Are you sure you want to clear all your memories? This cannot be undone.")) return;
-    try {
-        const token = await getValidToken();
-        const res = await fetch(`${API_BASE_URL}/user/memories`, {
-            method: 'DELETE',
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-            document.getElementById('memoriesList').innerHTML = '';
-            document.getElementById('memoriesEmpty').classList.remove('hidden');
-            showSuccessToast("All memories cleared.");
-        }
-    } catch (err) {
-        showError("Failed to clear memories");
-    }
-});
+function showMemoryUpdatedInline(fact) { _renderMemoryNotice(fact, true); }
+function showMemoryUpdatedToast(fact) { showMemoryUpdatedInline(fact); }
