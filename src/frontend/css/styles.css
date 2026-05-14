@@ -1280,50 +1280,19 @@ body.dark-theme .error-toast {
 }
 
 /* ============================================
-   SOURCES PANEL - COLLAPSIBLE LIST
+   SOURCES PANEL - legacy rules cleared; new pill style below
    ============================================ */
 .sources-panel {
-    margin-top: 12px;
-    border-top: 1px solid var(--medium-gray);
-    overflow: hidden;
+    margin-top: 10px;
+    border: none;
+    background: none;
+    overflow: visible;
 }
 
-.sources-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 0;
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--dark-gray);
-    transition: all 0.2s;
-    user-select: none;
-}
-
-.sources-header:hover {
-    color: var(--primary-green);
-}
-
-.sources-chevron {
-    margin-left: auto;
-    transition: transform 0.3s ease;
-    font-size: 10px;
-}
-
-.sources-panel.expanded .sources-chevron {
-    transform: rotate(180deg);
-}
-
-.sources-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-}
-
-.sources-panel.expanded .sources-content {
-    max-height: 500px;
-    transition: max-height 0.4s ease-in;
-}
+/* old collapsible classes kept as no-ops so nothing breaks */
+.sources-header { display: none; }
+.sources-chevron { display: none; }
+.sources-content { display: none; }
 
 .source-item {
     display: flex;
@@ -2679,8 +2648,161 @@ body.dark-theme .memory-popover-item:hover { background:rgba(255,255,255,0.06); 
 .memory-popover-item.danger { color:#e74c3c; }
 .memory-popover-item.danger i { color:#e74c3c; }
 
-/* scroll-to-bottom visible class */
-.scroll-to-bottom-btn { opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity 0.2s ease,transform 0.2s ease; }
-.scroll-to-bottom-btn.visible { opacity:1;pointer-events:auto;transform:translateY(0); }
+/* scroll-to-bottom button */
+.scroll-to-bottom-btn {
+    position: fixed;
+    right: 24px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    width: 42px;
+    height: 42px;
+    background: var(--white);
+    color: var(--primary-green);
+    border: 1px solid var(--medium-gray);
+    border-radius: 50%;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
 
-@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.scroll-to-bottom-btn.visible {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.scroll-to-bottom-btn.hidden {
+    display: none !important;
+}
+
+body.dark-theme .scroll-to-bottom-btn {
+    background: var(--white);
+    color: var(--primary-green);
+}
+
+.scroll-to-bottom-btn:hover {
+    background: var(--light-green);
+    transform: translateY(-2px);
+}
+
+
+/* ============================================================
+   NEW PERSONALIZATION SETTINGS MODULES
+   ============================================================ */
+
+/* Appearance options row */
+.appearance-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.appearance-opt-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 8px;
+    border: 1px solid var(--medium-gray);
+    border-radius: 10px;
+    background: var(--light-gray);
+    color: var(--text-dark);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.appearance-opt-btn:hover, .appearance-opt-btn.active {
+    background: var(--light-green);
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+body.dark-theme .appearance-opt-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+body.dark-theme .appearance-opt-btn:hover { background: rgba(46,204,113,0.12); border-color: #2ecc71; color: #2ecc71; }
+
+/* Font size row */
+.font-size-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.font-size-label-sm { font-size: 12px; color: var(--dark-gray); }
+.font-size-label-lg { font-size: 18px; color: var(--dark-gray); font-weight: 600; }
+
+/* Language select */
+.settings-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--medium-gray);
+    border-radius: 10px;
+    background: var(--light-gray);
+    color: var(--text-dark);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    margin-top: 6px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23757575' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+body.dark-theme .settings-select {
+    background-color: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    color: var(--text-dark);
+}
+.settings-select:focus { border-color: var(--primary-green); }
+
+/* Toggle switch rows for notifications */
+.settings-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--medium-gray);
+}
+.settings-toggle-row:last-child { border-bottom: none; }
+body.dark-theme .settings-toggle-row { border-bottom-color: rgba(255,255,255,0.08); }
+
+.toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--medium-gray);
+    border-radius: 26px;
+    transition: 0.3s;
+}
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--primary-green); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+/* Source list preview — allow wrapping for Arabic */
+.source-list-preview {
+    white-space: normal !important;
+    word-break: break-word;
+}
+
+/* CSS var for adjustable font size */
+.message-text { font-size: var(--chat-font-size, 14px); }

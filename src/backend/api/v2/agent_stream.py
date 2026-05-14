@@ -85,10 +85,23 @@ Content: {payload.get('details') or payload.get('answer') or payload.get('detail
 
         full_prompt = f"Question: {question}{context_prompt}\n\nSources:\n{sources_text}"
 
+        # Determine target language for RAG response
+        lang_pref = context.get("response_language", "en") if context else "en"
+        lang_map = {
+            "ar": "Arabic",
+            "ur": "Urdu",
+            "fr": "French",
+            "ms": "Malay",
+            "tr": "Turkish",
+            "id": "Indonesian"
+        }
+        target_lang = lang_map.get(lang_pref, "English")
+        dynamic_rag_prompt = f"{RAG_SYSTEM_PROMPT}\n\nPlease respond in {target_lang}."
+
         stream = client.chat.completions.create(
             model=MODEL,
             messages=[
-                {"role": "system", "content": RAG_SYSTEM_PROMPT},
+                {"role": "system", "content": dynamic_rag_prompt},
                 {"role": "user", "content": full_prompt}
             ],
             temperature=0.0,

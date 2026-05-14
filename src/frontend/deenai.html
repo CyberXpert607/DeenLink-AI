@@ -117,9 +117,49 @@
                     <div class="chat-messages" id="chatMessages"></div>
                 </div>
                 <div class="input-area">
+                    <!-- Module selection popup (sibling, rendered just above bar) -->
+                    <div id="modulesPopup" class="modules-popup hidden" role="menu">
+                        <div class="modules-popup-title">Choose a mode</div>
+                        <button class="module-btn" data-module="books">
+                            <span class="module-btn-icon">📚</span>
+                            <div><div class="module-btn-label">Book Inquiries</div><div class="module-btn-sub">Find Hadith, Surah or Ayah</div></div>
+                        </button>
+                        <button class="module-btn" data-module="motivation">
+                            <span class="module-btn-icon">💡</span>
+                            <div><div class="module-btn-label">Motivation</div><div class="module-btn-sub">Islamic encouragement &amp; reminders</div></div>
+                        </button>
+                        <button class="module-btn" data-module="fatwa">
+                            <span class="module-btn-icon">⚖️</span>
+                            <div><div class="module-btn-label">Fatwa &amp; Rulings</div><div class="module-btn-sub">Islamic jurisprudence questions</div></div>
+                        </button>
+                        <button class="module-btn" data-module="general">
+                            <span class="module-btn-icon">💬</span>
+                            <div><div class="module-btn-label">General Q&amp;A</div><div class="module-btn-sub">Ask anything Islamic</div></div>
+                        </button>
+                        <button class="module-btn" data-module="chat">
+                            <span class="module-btn-icon">🗨️</span>
+                            <div><div class="module-btn-label">Chat (Casual)</div><div class="module-btn-sub">Casual conversation</div></div>
+                        </button>
+                    </div>
+
                     <div class="input-container">
-                        <textarea class="message-input" id="messageInput" placeholder="Ask your Islamic question..." rows="1" aria-label="Message input"></textarea>
-                        <button class="send-button" id="sendButton" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+                        <!-- Plus / module selector -->
+                        <button class="input-action-btn" id="modulesBtn" aria-label="Choose mode">
+                            <i class="fas fa-plus"></i>
+                        </button>
+
+                        <textarea class="message-input" id="messageInput"
+                            placeholder="Ask your Islamic question..."
+                            rows="1" aria-label="Message input"></textarea>
+
+                        <!-- Mic / speech-to-text -->
+                        <button class="input-action-btn" id="micBtn" aria-label="Voice input" title="Speak your question">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+
+                        <button class="send-button" id="sendButton" aria-label="Send message">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </div>
                     <div class="input-disclaimer">DeenLink AI can make mistakes. Double check information.</div>
                 </div>
@@ -160,10 +200,10 @@
                         <div class="feedback-modal-body" style="padding:0;">
                             <!-- User profile card -->
                             <div class="settings-profile-card" id="settingsProfileCard">
-                                <div class="settings-profile-avatar"><i class="fas fa-user-circle"></i></div>
+                                <div class="settings-profile-avatar" id="settingsProfileAvatar"><i class="fas fa-user-circle"></i></div>
                                 <div class="settings-profile-info">
                                     <div class="settings-profile-name" id="settingsProfileName">Guest</div>
-                                    <div class="settings-profile-sub">DeenLink Member</div>
+                                    <div class="settings-profile-sub" id="settingsProfileSub">DeenLink Member</div>
                                 </div>
                             </div>
                             <!-- Nav rows -->
@@ -199,7 +239,121 @@
                                     <span class="settings-nav-label">Memory</span>
                                     <i class="fas fa-chevron-right settings-nav-chevron"></i>
                                 </button>
+                                <button class="settings-nav-row" id="navToAppearance">
+                                    <span class="settings-nav-icon"><i class="fas fa-palette"></i></span>
+                                    <span class="settings-nav-label">Appearance</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                                <button class="settings-nav-row" id="navToLanguage">
+                                    <span class="settings-nav-icon"><i class="fas fa-language"></i></span>
+                                    <span class="settings-nav-label">Language & Region</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
+                                <button class="settings-nav-row" id="navToNotifications">
+                                    <span class="settings-nav-icon"><i class="fas fa-bell"></i></span>
+                                    <span class="settings-nav-label">Notifications</span>
+                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
+                                </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Page: Appearance -->
+                    <div class="settings-page hidden" id="settingsPageAppearance">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromAppearance"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Appearance</h3>
+                            <button id="closeSettingsFromAppearance" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body">
+                            <div class="settings-group">
+                                <label class="settings-label">Theme</label>
+                                <div class="appearance-options">
+                                    <button class="appearance-opt-btn" id="themeLight"><i class="fas fa-sun"></i> Light</button>
+                                    <button class="appearance-opt-btn" id="themeDark"><i class="fas fa-moon"></i> Dark</button>
+                                    <button class="appearance-opt-btn" id="themeSystem"><i class="fas fa-circle-half-stroke"></i> System</button>
+                                </div>
+                            </div>
+                            <div class="settings-group" style="margin-top:20px;">
+                                <label class="settings-label">Font Size</label>
+                                <div class="font-size-row">
+                                    <span class="font-size-label-sm">A</span>
+                                    <input type="range" id="fontSizeSlider" min="13" max="18" step="1" value="15" style="flex:1;accent-color:var(--primary-green);">
+                                    <span class="font-size-label-lg">A</span>
+                                </div>
+                                <p class="settings-desc" style="margin-top:6px;">Preview: <span id="fontSizePreview">15px</span></p>
+                            </div>
+                        </div>
+                        <div class="feedback-modal-footer">
+                            <button id="saveAppearanceBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
+                        </div>
+                    </div>
+
+                    <!-- Page: Language -->
+                    <div class="settings-page hidden" id="settingsPageLanguage">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromLanguage"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Language & Region</h3>
+                            <button id="closeSettingsFromLanguage" aria-label="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body">
+                            <div class="settings-group">
+                                <label class="settings-label">Response Language</label>
+                                <p class="settings-desc">The language DeenLink AI uses in responses.</p>
+                                <select id="responseLangSelect" class="settings-select">
+                                    <option value="en">English</option>
+                                    <option value="ar">العربية (Arabic)</option>
+                                    <option value="ur">اردو (Urdu)</option>
+                                    <option value="fr">Français (French)</option>
+                                    <option value="ms">Bahasa Melayu</option>
+                                    <option value="tr">Türkçe (Turkish)</option>
+                                    <option value="id">Bahasa Indonesia</option>
+                                </select>
+                            </div>
+                            <div class="settings-group" style="margin-top:20px;">
+                                <label class="settings-label">Quran Translation</label>
+                                <p class="settings-desc">Preferred English translation for Quranic verses.</p>
+                                <select id="quranTranslationSelect" class="settings-select">
+                                    <option value="sahih">Sahih International</option>
+                                    <option value="pickthall">Pickthall</option>
+                                    <option value="yusuf">Yusuf Ali</option>
+                                    <option value="hilali">Hilali & Khan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="feedback-modal-footer">
+                            <button id="saveLanguageBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
+                        </div>
+                    </div>
+
+                    <!-- Page: Notifications -->
+                    <div class="settings-page hidden" id="settingsPageNotifications">
+                        <div class="feedback-modal-header">
+                            <button class="settings-back-btn" id="backFromNotifications"><i class="fas fa-chevron-left"></i></button>
+                            <h3>Notifications</h3>
+                            <button id="closeSettingsFromNotifications"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="feedback-modal-body">
+                            <div class="settings-toggle-row">
+                                <div>
+                                    <div class="settings-label">Response Complete</div>
+                                    <p class="settings-desc" style="margin-bottom:0!important;">
+                                        Get a notification when DeenLink AI finishes generating a response while the app is in the background.
+                                    </p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="toggleAINotif">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p id="notifPermissionNote" class="settings-desc"
+                               style="display:none;margin-top:12px;padding:10px;background:rgba(212,175,55,0.1);border-radius:8px;border:1px solid rgba(212,175,55,0.3);">
+                                <i class="fas fa-exclamation-triangle" style="color:#D4AF37;"></i>
+                                Browser notification permission is required. Please allow notifications when prompted.
+                            </p>
+                        </div>
+                        <div class="feedback-modal-footer">
+                            <button id="saveNotificationsBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
                         </div>
                     </div>
 

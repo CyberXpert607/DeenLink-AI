@@ -32,6 +32,7 @@ class AskRequest(BaseModel):
     mode: str = "auto"
     client_datetime: str = "" 
     client_timezone: str = ""
+    response_language: str = "en"
 
 class EditMessageRequest(BaseModel):
     message_id: str
@@ -207,6 +208,7 @@ async def ask_stream(
     current_user_memories = user_memories_list
     current_client_datetime = client_datetime
     current_client_timezone = client_timezone
+    current_response_language = payload.response_language
     
     async def event_stream_async():
         full_response = ""
@@ -279,7 +281,8 @@ async def ask_stream(
                     
                     rag_context = {
                         "conversation_history": conversation_history[-3:] if conversation_history else [],
-                        "intent": current_intent
+                        "intent": current_intent,
+                        "response_language": current_response_language
                     }
                     
                     for chunk in stream_rag_answer(current_query, filtered, rag_context):
@@ -384,7 +387,16 @@ async def ask_stream(
 
             else:
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-                dynamic_system_prompt = f"{CHAT_SYSTEM_PROMPT}\n\nCurrent Date: {current_date}"
+                lang_map = {
+                    "ar": "Arabic",
+                    "ur": "Urdu",
+                    "fr": "French",
+                    "ms": "Malay",
+                    "tr": "Turkish",
+                    "id": "Indonesian"
+                }
+                target_lang = lang_map.get(current_response_language, "English")
+                dynamic_system_prompt = f"{CHAT_SYSTEM_PROMPT}\n\nCurrent Date: {current_date}\n\nPlease respond in {target_lang}."
                 
                 if not local_memory_messages or len(local_memory_messages) == 0:
                     local_memory_messages = [
@@ -397,7 +409,7 @@ async def ask_stream(
                     if local_memory_messages[0]["role"] == "system":
                         local_memory_messages[0]["content"] = dynamic_system_prompt
                 
-                logging.info(f"Streaming chat with {len(local_memory_messages)} messages")
+                logging.info(f"Streaming chat in {target_lang} with {len(local_memory_messages)} messages")
                 token_count = 0
                 
                 for token in stream_chat_response(local_memory_messages):
@@ -507,7 +519,10 @@ async def ask_stream(
 def get_user_profile(user=Depends(verify_jwt)):
     return {
         "user_id": user["user_id"],
-        "username": user.get("username", "Guest")
+        "username": user.get("username", "Guest"),
+        "full_name": user.get("full_name"),
+        "email": user.get("email"),
+        "profile_picture": user.get("profile_pic")
     }
 
 @router.get("/conversations")

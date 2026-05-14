@@ -21,6 +21,9 @@ const State = {
     editingMessageId: null,
     pendingFeedback: null,
     responseMode: 'auto',
+    responseLang: 'en',
+    userProfile: null,
+    queryModule: null,
 };
 
 const Elements = {
@@ -45,6 +48,9 @@ const Elements = {
     settingsModal: document.getElementById("settingsModal"),
     modeRadios: document.querySelectorAll("input[name='responseMode']"),
     scrollToBottomBtn: document.getElementById("scrollToBottomBtn"),
+    micBtn: document.getElementById("micBtn"),
+    modulesBtn: document.getElementById("modulesBtn"),
+    modulesPopup: document.getElementById("modulesPopup")
 };
 
 const PurifyConfig = {
@@ -145,10 +151,33 @@ async function fetchUserProfile() {
         });
         if (res.ok) {
             const data = await res.json();
+
+            // Full display name — prefer full_name, fallback to username
+            const displayName = data.full_name || data.name || data.username || 'Guest';
+
+            // Greeting in chat
             const userNameDisplay = document.getElementById("userNameDisplay");
-            if (userNameDisplay && data.username) {
-                userNameDisplay.textContent = data.username;
+            if (userNameDisplay) userNameDisplay.textContent = displayName;
+
+            // Settings profile card — name
+            const settingsName = document.getElementById('settingsProfileName');
+            if (settingsName) settingsName.textContent = displayName;
+
+            // Settings profile subtitle — email or role
+            const settingsSub = document.getElementById('settingsProfileSub');
+            if (settingsSub && data.email) settingsSub.textContent = data.email;
+
+            // Settings profile card — avatar image
+            const avatarEl = document.getElementById('settingsProfileAvatar');
+            const avatarUrl = data.avatar_url || data.profile_picture || data.photo || null;
+            if (avatarEl && avatarUrl) {
+                avatarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}"
+                    style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
+                    onerror="this.parentElement.innerHTML='<i class=\\"fas fa-user-circle\\"></i>'" >`;
             }
+
+            // Cache for quick settings open
+            State.userProfile = data;
         }
     } catch (e) {
         console.warn("Could not fetch user profile", e);
@@ -450,8 +479,29 @@ function escapeHtml(str) {
 }
 
 function filterBestSources(sources) {
+    // Keep ALL valid sources — never discard any
     if (!sources || sources.length === 0) return sources;
-    return [sources[0]];
+    return sources.filter(s => s && s.payload);
+}
+
+/* ── Source persistence helpers ──────────────────────────────
+   Sources are saved to localStorage keyed by messageId so they
+   survive page refresh (issue #8).
+   ────────────────────────────────────────────────────────── */
+function _sourcesKey(messageId) { return `deen_sources_${messageId}`; }
+
+function persistSources(messageId, sources) {
+    if (!messageId || !sources || !sources.length) return;
+    try {
+        localStorage.setItem(_sourcesKey(messageId), JSON.stringify(sources));
+    } catch {}
+}
+
+function restoreSources(messageId) {
+    try {
+        const raw = localStorage.getItem(_sourcesKey(messageId));
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
 }
 
 function createSourcesPanel(sources) {
@@ -460,102 +510,139 @@ function createSourcesPanel(sources) {
     const validSources = sources.filter(s => s && s.payload);
     if (!validSources.length) return panel;
 
-    const pillIconsHtml = validSources.slice(0, 3).map(src => {
-        const payload = src.payload || {};
-        const isWebSrc = src.source_type === 'web';
-        if (isWebSrc && payload.url) {
-            let hostname = '';
-            try { hostname = new URL(payload.url).hostname; } catch {}
-            const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
-            return `<span class="sources-pill-icon"><img src="${escapeHtml(faviconUrl)}" alt="" onerror="this.parentElement.innerHTML='<i class=\\"fas fa-globe\\"></i>'"></span>`;
-        } else if (src.source_type === 'hadith') {
-            return `<span class="sources-pill-icon"><i class="fas fa-book"></i></span>`;
-        } else {
-            return `<span class="sources-pill-icon"><i class="fas fa-quran"></i></span>`;
-        }
-    }).join('');
-
+    // ─── Pill button ──────────────────────────────────────────────────
     const pillBtn = document.createElement('button');
     pillBtn.className = 'sources-pill-btn';
-    pillBtn.innerHTML = `<span class="sources-pill-icons">${pillIconsHtml}</span><span>Sources</span><i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;opacity:0.6;"></i>`;
 
+    const pillIcons = document.createElement('span');
+    pillIcons.className = 'sources-pill-icons';
+    validSources.slice(0, 3).forEach(src => {
+        const wrap = document.createElement('span');
+        wrap.className = 'sources-pill-icon';
+        if (src.source_type === 'web' && src.payload?.url) {
+            let h = '';
+            try { h = new URL(src.payload.url).hostname; } catch {}
+            const img = document.createElement('img');
+            img.src = `https://www.google.com/s2/favicons?domain=${h}&sz=32`;
+            img.alt = '';
+            img.onerror = function () {
+                const i = document.createElement('i');
+                i.className = 'fas fa-globe';
+                this.parentElement.replaceChildren(i);
+            };
+            wrap.appendChild(img);
+        } else {
+            const i = document.createElement('i');
+            i.className = src.source_type === 'hadith' ? 'fas fa-book' : 'fas fa-quran';
+            wrap.appendChild(i);
+        }
+        pillIcons.appendChild(wrap);
+    });
+
+    const pillLabel = document.createElement('span');
+    pillLabel.textContent = `${validSources.length} source${validSources.length > 1 ? 's' : ''}`;
+
+    const chevron = document.createElement('i');
+    chevron.className = 'fas fa-chevron-down';
+    chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
+
+    pillBtn.appendChild(pillIcons);
+    pillBtn.appendChild(pillLabel);
+    pillBtn.appendChild(chevron);
+
+    // ─── Expanded list ────────────────────────────────────────────────
     const expandedList = document.createElement('div');
     expandedList.className = 'sources-expanded-list';
 
-    validSources.forEach((src) => {
+    validSources.forEach(src => {
         const payload = src.payload || {};
         const isHadith = src.source_type === 'hadith';
-        const isWebSrc = src.source_type === 'web';
+        const isWeb = src.source_type === 'web';
 
-        let title = '', meta = '', preview = '';
-        let hostname = '';
+        let title = '', meta = '', preview = '', hostname = '';
 
-        if (isWebSrc) {
+        if (isWeb) {
             try { hostname = new URL(payload.url || '').hostname.replace('www.', ''); } catch {}
-            title = payload.title || hostname || 'Web Source';
-            meta = hostname;
+            title   = payload.title || hostname || 'Web Source';
+            meta    = hostname;
             preview = payload.snippet || '';
         } else if (src.display_reference) {
-            title = src.display_reference;
+            title   = src.display_reference;
+            preview = payload.english || '';
         } else if (isHadith) {
-            title = `${payload.collection || 'Hadith'} ${payload.hadith_number_display || ''}`.trim();
-            meta = payload.collection || '';
+            title   = `${payload.collection || 'Hadith'} ${payload.hadith_number_display || ''}`.trim();
+            meta    = payload.collection || '';
             preview = payload.english || '';
         } else {
-            title = (payload.surah_name && payload.ayah) ? `${payload.surah_name} — Ayah ${payload.ayah}` : "Qur'an";
-            meta = payload.surah_name || '';
+            title   = (payload.surah_name && payload.ayah) ? `${payload.surah_name} — Ayah ${payload.ayah}` : "Qur'an";
+            meta    = payload.surah_name || '';
             preview = payload.english || '';
         }
 
-        let iconHtml = '';
-        if (isWebSrc && payload.url) {
-            const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
-            iconHtml = `<img src="${escapeHtml(faviconUrl)}" alt="" onerror="this.src='';this.parentElement.innerHTML='<i class=\\"fas fa-globe\\"></i>'">`;
-        } else if (isHadith) {
-            iconHtml = `<i class="fas fa-book"></i>`;
+        const item = (isWeb && payload.url) ? document.createElement('a') : document.createElement('div');
+        item.className = 'source-list-item';
+        if (isWeb && payload.url) { item.href = payload.url; item.target = '_blank'; item.rel = 'noopener noreferrer'; }
+
+        // icon box
+        const iconBox = document.createElement('div');
+        iconBox.className = 'source-list-icon';
+        if (isWeb) {
+            const img = document.createElement('img');
+            img.src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+            img.alt = '';
+            img.onerror = function () {
+                const i = document.createElement('i'); i.className = 'fas fa-globe';
+                this.parentElement.replaceChildren(i);
+            };
+            iconBox.appendChild(img);
         } else {
-            iconHtml = `<i class="fas fa-quran"></i>`;
+            const i = document.createElement('i');
+            i.className = isHadith ? 'fas fa-book' : 'fas fa-quran';
+            iconBox.appendChild(i);
         }
 
-        const arabicHtml = (payload.arabic && !isWebSrc) ? `<div class="rag-arabic" dir="rtl" style="font-size:13px;margin-top:6px;">${escapeHtml(payload.arabic)}</div>` : '';
+        // body text
+        const body = document.createElement('div');
+        body.className = 'source-list-body';
 
-        if (isWebSrc && payload.url) {
-            const a = document.createElement('a');
-            a.className = 'source-list-item';
-            a.href = escapeHtml(payload.url);
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.innerHTML = `
-                <div class="source-list-icon">${iconHtml}</div>
-                <div class="source-list-body">
-                    <div class="source-list-title">${escapeHtml(title)}</div>
-                    ${meta ? `<div class="source-list-meta">${escapeHtml(meta)}</div>` : ''}
-                    ${preview ? `<div class="source-list-preview">${escapeHtml(preview.substring(0, 120))}${preview.length > 120 ? '…' : ''}</div>` : ''}
-                </div>`;
-            expandedList.appendChild(a);
-        } else {
-            const div = document.createElement('div');
-            div.className = 'source-list-item';
-            div.innerHTML = `
-                <div class="source-list-icon">${iconHtml}</div>
-                <div class="source-list-body">
-                    <div class="source-list-title">${escapeHtml(title)}</div>
-                    ${meta ? `<div class="source-list-meta">${escapeHtml(meta)}</div>` : ''}
-                    ${arabicHtml}
-                    ${preview ? `<div class="source-list-preview">${escapeHtml(preview.substring(0, 120))}${preview.length > 120 ? '…' : ''}</div>` : ''}
-                </div>`;
-            expandedList.appendChild(div);
+        const titleEl = document.createElement('div');
+        titleEl.className = 'source-list-title';
+        titleEl.textContent = title;
+        body.appendChild(titleEl);
+
+        if (meta) {
+            const metaEl = document.createElement('div');
+            metaEl.className = 'source-list-meta';
+            metaEl.textContent = meta;
+            body.appendChild(metaEl);
         }
+
+        // Arabic — full, no truncation
+        if (payload.arabic && !isWeb) {
+            const ar = document.createElement('div');
+            ar.className = 'rag-arabic';
+            ar.dir = 'rtl';
+            ar.style.cssText = 'font-size:13px;margin-top:6px;white-space:normal;word-break:break-word;line-height:1.9;';
+            ar.textContent = payload.arabic;   // textContent = no escaping issues
+            body.appendChild(ar);
+        }
+
+        if (preview) {
+            const prev = document.createElement('div');
+            prev.className = 'source-list-preview';
+            prev.textContent = preview;        // textContent = no escaping issues
+            body.appendChild(prev);
+        }
+
+        item.appendChild(iconBox);
+        item.appendChild(body);
+        expandedList.appendChild(item);
     });
 
     pillBtn.addEventListener('click', () => {
-        const isOpen = expandedList.classList.contains('visible');
-        expandedList.classList.toggle('visible', !isOpen);
-        const chevron = pillBtn.querySelector('.fa-chevron-down, .fa-chevron-up');
-        if (chevron) {
-            chevron.className = isOpen ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-            chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
-        }
+        const open = expandedList.classList.toggle('visible');
+        chevron.className = open ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
     });
 
     panel.appendChild(pillBtn);
@@ -568,6 +655,8 @@ function createSourcesPanel(sources) {
 function createStreamingMessage() {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message ai streaming';
+    // Pre-assign an id so sources can be keyed to this message immediately
+    messageDiv.dataset.messageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
 
     // ── DeenLink logo avatar ──
     messageDiv.appendChild(createAiAvatarEl());
@@ -629,11 +718,14 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
     const contentDiv = container.querySelector('.message-content');
 
     if (sources && sources.length > 0) {
-        const bestSources = filterBestSources(sources);
+        const validSources = filterBestSources(sources);
         const existingPanel = container.querySelector('.sources-panel');
         if (existingPanel) existingPanel.remove();
-        const sourcesPanel = createSourcesPanel(bestSources);
+        const sourcesPanel = createSourcesPanel(validSources);
         contentDiv.appendChild(sourcesPanel);
+        // Persist so they survive a page refresh (issue #8)
+        const msgId = container.dataset.messageId || container.dataset.aiMessageId;
+        if (msgId) persistSources(msgId, validSources);
     }
 
     if (feedbackDiv) {
@@ -644,6 +736,9 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
         feedbackDiv.style.display = 'flex';
         contentDiv.appendChild(feedbackDiv);
     }
+
+    // Notify user if page is in background (issue #5)
+    _notifyAIDone(textEl?.innerText || '');
 
     setTimeout(() => {
         const scrollable = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
@@ -820,16 +915,14 @@ function updateEmptyStateVisibility() {
 }
 
 function appendMessage(sender, text, options = {}) {
-    const { messageId = null } = options;
+    const { messageId = null, sources = null } = options;
     const shouldScroll = isNearBottom(Elements.chatMessages);
     const el = document.createElement("div");
     el.className = `message ${sender}`;
-    el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const mid = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
+    el.dataset.messageId = mid;
 
-    // ── DeenLink logo avatar (AI only) ──
-    if (sender === 'ai') {
-        el.appendChild(createAiAvatarEl());
-    }
+    if (sender === 'ai') el.appendChild(createAiAvatarEl());
 
     const contentDiv = document.createElement("div");
     contentDiv.className = "message-content";
@@ -837,28 +930,31 @@ function appendMessage(sender, text, options = {}) {
     textDiv.className = "message-text";
     textDiv.dataset.raw = text;
 
-    renderContent(textDiv, text);
-    textDiv.classList.add('message-text');
-    void textDiv.offsetHeight;
-    setTimeout(() => {
-        styleRAGSources(textDiv);
-    }, 10);
+    if (sender === 'user') {
+        textDiv.textContent = text;
+    } else {
+        renderContent(textDiv, text);
+        void textDiv.offsetHeight;
+        setTimeout(() => { styleRAGSources(textDiv); }, 10);
+    }
 
     contentDiv.appendChild(textDiv);
-    if (sender === "ai") {
-        const feedbackButtons = createFeedbackButtons(contentDiv);
-        contentDiv.appendChild(feedbackButtons);
+
+    if (sender === 'ai') {
+        const savedSources = sources || restoreSources(mid);
+        if (savedSources && savedSources.length > 0) {
+            contentDiv.appendChild(createSourcesPanel(savedSources));
+        }
+        contentDiv.appendChild(createFeedbackButtons(contentDiv));
     }
     el.appendChild(contentDiv);
-    if (sender === "user") {
-        createUserMessageActions(el, text, el.dataset.messageId);
-    }
+    if (sender === 'user') createUserMessageActions(el, text, mid);
+
     Elements.chatMessages.appendChild(el);
-    if (shouldScroll) {
-        Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
-    }
+    if (shouldScroll) Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
     updateEmptyStateVisibility();
 }
+
 
 function createFeedbackButtons(messageContent) {
     const feedbackDiv = document.createElement('div');
@@ -1079,7 +1175,7 @@ async function loadConversation(id) {
         appendMessage(
             msg.role === "user" ? "user" : "ai",
             msg.content,
-            { messageId: msg.id || null }
+            { messageId: msg.id || null, sources: msg.sources || null }
         );
     });
 
@@ -1262,9 +1358,19 @@ async function sendMessage(retryData = null) {
                 "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
-                message: text,
+                message: State.queryModule && MODULE_CONFIG[State.queryModule]?.prefix
+                    ? MODULE_CONFIG[State.queryModule].prefix + text
+                    : text,
                 conversation_id: State.activeConversationId,
-                mode: State.responseMode
+                mode: State.queryModule === 'chat' ? 'chat'
+                    : State.queryModule === 'books' ? 'rag'
+                    : State.responseMode,
+                response_language: State.responseLang || localStorage.getItem('deenLang') || 'en',
+                client_datetime: new Date().toLocaleString('en-GB', {
+                    weekday:'long', year:'numeric', month:'long',
+                    day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: true
+                }),
+                client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
             }),
             signal: State.streamController.signal
         });
@@ -1481,19 +1587,23 @@ const PWA = {
 };
 
 function scrollEditIntoView(editContainer) {
+    // Use a short delay so the keyboard finishes animating first.
+    // We scroll the *messages area* div — NOT document.scrollIntoView —
+    // because scrollIntoView triggers a page-level scroll that confuses the
+    // visualViewport handler and is the root cause of the "bar jumps to
+    // middle of screen" bug.
     setTimeout(() => {
-        editContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const messagesArea = Elements.chatMessages.closest('.messages-area')
+            || Elements.chatMessages.parentElement;
+        if (!messagesArea) return;
 
-        const messagesArea = Elements.chatMessages.closest('.messages-area') || Elements.chatMessages.parentElement;
-        if (messagesArea) {
-            const containerRect = editContainer.getBoundingClientRect();
-            const areaRect = messagesArea.getBoundingClientRect();
+        const containerRect = editContainer.getBoundingClientRect();
+        const areaRect = messagesArea.getBoundingClientRect();
 
-            if (containerRect.bottom > areaRect.bottom - 50) {
-                messagesArea.scrollTop += (containerRect.bottom - areaRect.bottom + 80);
-            }
+        if (containerRect.bottom > areaRect.bottom - 60) {
+            messagesArea.scrollTop += (containerRect.bottom - areaRect.bottom + 80);
         }
-    }, 350);
+    }, 400);
 }
 
 function initEventListeners() {
@@ -1502,6 +1612,29 @@ function initEventListeners() {
             stopGeneration();
         } else {
             sendMessage();
+        }
+    });
+
+    // ── Input action buttons ──────────────────────────────────────
+    Elements.micBtn?.addEventListener('click', initSpeechToText);
+
+    Elements.modulesBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        Elements.modulesPopup?.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            _applyModule(btn.dataset.module);
+            Elements.modulesPopup?.classList.add('hidden');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (Elements.modulesPopup && !Elements.modulesPopup.classList.contains('hidden')) {
+            if (!Elements.modulesPopup.contains(e.target) && e.target !== Elements.modulesBtn) {
+                Elements.modulesPopup.classList.add('hidden');
+            }
         }
     });
 
@@ -1608,6 +1741,7 @@ function initEventListeners() {
             const newConv = await createNewConversation();
             State.activeConversationId = newConv.id;
             Elements.chatMessages.innerHTML = "";
+            _clearModule(); // reset module on new chat
             updateEmptyStateVisibility();
             closeSidebar();
             await loadConversations();
@@ -1621,12 +1755,20 @@ function initEventListeners() {
 
         const updateInputPosition = () => {
             if (!Elements.inputArea) return;
-            const keyboardHeight = window.innerHeight - window.visualViewport.height;
+            const vv = window.visualViewport;
+            // offsetTop accounts for any visual-viewport scroll (e.g. browser chrome shrink)
+            const keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
 
             if (keyboardHeight > 50) {
-                Elements.inputArea.style.bottom = keyboardHeight + 'px';
+                // Pin input bar just above the keyboard.
+                // Clamp to 45% of the visible viewport so it NEVER drifts to the
+                // centre of the screen (the old bug was bare keyboardHeight which
+                // can exceed half the screen on small devices).
+                const maxBottom = Math.floor(vv.height * 0.45);
+                const targetBottom = Math.min(keyboardHeight + 4, maxBottom);
+                Elements.inputArea.style.bottom = targetBottom + 'px';
             } else {
-                Elements.inputArea.style.bottom = 'calc(4px + env(safe-area-inset-bottom))';
+                Elements.inputArea.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
             }
         };
 
@@ -1636,6 +1778,7 @@ function initEventListeners() {
         };
 
         window.visualViewport.addEventListener('resize', scheduleVpUpdate);
+        window.visualViewport.addEventListener('scroll', scheduleVpUpdate);
     }
 
     Elements.chatMessages.addEventListener('click', async (e) => {
@@ -1768,8 +1911,30 @@ function initEventListeners() {
 
     Elements.settingsBtn?.addEventListener('click', () => {
         Elements.modeRadios?.forEach(r => { r.checked = (r.value === State.responseMode); });
+
+        // Populate profile card with latest cached data
+        const profile = State.userProfile || {};
+        const displayName = profile.full_name || profile.name || profile.username
+            || document.getElementById('userNameDisplay')?.textContent || 'Guest';
+
         const nameEl = document.getElementById('settingsProfileName');
-        if (nameEl) nameEl.textContent = document.getElementById('userNameDisplay')?.textContent || 'Guest';
+        if (nameEl) nameEl.textContent = displayName;
+
+        const subEl = document.getElementById('settingsProfileSub');
+        if (subEl && profile.email) subEl.textContent = profile.email;
+
+        const avatarEl = document.getElementById('settingsProfileAvatar');
+        const avatarUrl = profile.avatar_url || profile.profile_picture || profile.photo || null;
+        if (avatarEl && avatarUrl) {
+            avatarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}"
+                style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
+                onerror="this.parentElement.innerHTML='<i class=\\"fas fa-user-circle\\"></i>'">`;
+        }
+
+        // Notification toggle state
+        const toggle = document.getElementById('toggleAINotif');
+        if (toggle) toggle.checked = (localStorage.getItem('deen_notif_ai_done') === 'true');
+
         settingsModal?.classList.remove('hidden');
         showSettingsPage('settingsPageMain');
         closeSidebar();
@@ -1804,11 +1969,99 @@ function initEventListeners() {
         showSettingsPage('settingsPageManageMemory');
         loadMemoriesIntoPage();
     });
+    document.getElementById('navToAppearance')?.addEventListener('click', () => {
+        // Sync slider to current font size
+        const sz = parseInt(localStorage.getItem('deenFontSize') || '15');
+        const slider = document.getElementById('fontSizeSlider');
+        const preview = document.getElementById('fontSizePreview');
+        if (slider) { slider.value = sz; }
+        if (preview) preview.textContent = sz + 'px';
+        showSettingsPage('settingsPageAppearance');
+    });
+    document.getElementById('navToLanguage')?.addEventListener('click', () => {
+        const lang = localStorage.getItem('deenLang') || 'en';
+        const tr = localStorage.getItem('deenQuranTr') || 'sahih';
+        const langSel = document.getElementById('responseLangSelect');
+        const trSel = document.getElementById('quranTranslationSelect');
+        if (langSel) langSel.value = lang;
+        if (trSel) trSel.value = tr;
+        showSettingsPage('settingsPageLanguage');
+    });
+    document.getElementById('navToNotifications')?.addEventListener('click', () => showSettingsPage('settingsPageNotifications'));
+
+    // Font size live preview
+    document.getElementById('fontSizeSlider')?.addEventListener('input', (e) => {
+        const sz = e.target.value;
+        const preview = document.getElementById('fontSizePreview');
+        if (preview) preview.textContent = sz + 'px';
+    });
+
+    // Save appearance
+    document.getElementById('saveAppearanceBtn')?.addEventListener('click', () => {
+        const sz = document.getElementById('fontSizeSlider')?.value || '15';
+        document.documentElement.style.setProperty('--chat-font-size', sz + 'px');
+        localStorage.setItem('deenFontSize', sz);
+        showSuccessToast('Appearance saved!');
+        showSettingsPage('settingsPagePersonalization');
+    });
+
+    // Theme buttons inside appearance page
+    document.getElementById('themeLight')?.addEventListener('click', () => {
+        document.body.classList.remove('dark-theme');
+        localStorage.setItem('theme', 'light');
+    });
+    document.getElementById('themeDark')?.addEventListener('click', () => {
+        document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+    });
+    document.getElementById('themeSystem')?.addEventListener('click', () => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark-theme', prefersDark);
+        localStorage.setItem('theme', 'system');
+    });
+
+    // Save language
+    document.getElementById('saveLanguageBtn')?.addEventListener('click', () => {
+        const lang = document.getElementById('responseLangSelect')?.value || 'en';
+        const tr = document.getElementById('quranTranslationSelect')?.value || 'sahih';
+        localStorage.setItem('deenLang', lang);
+        localStorage.setItem('deenQuranTr', tr);
+        State.responseLang = lang;
+        showSuccessToast('Language preferences saved!');
+        showSettingsPage('settingsPagePersonalization');
+    });
+
+    // Save notifications
+    document.getElementById('saveNotificationsBtn')?.addEventListener('click', () => {
+        const aiNotif = document.getElementById('toggleAINotif')?.checked || false;
+        localStorage.setItem('deen_notif_ai_done', aiNotif);
+
+        if (aiNotif && Notification.permission !== 'granted') {
+            Notification.requestPermission().then(permission => {
+                if (permission !== 'granted') {
+                    const note = document.getElementById('notifPermissionNote');
+                    if (note) note.style.display = 'block';
+                }
+            });
+        }
+        showSuccessToast('Notification preferences saved!');
+        showSettingsPage('settingsPagePersonalization');
+    });
 
     document.getElementById('backFromPersonalization')?.addEventListener('click', () => showSettingsPage('settingsPageMain'));
     document.getElementById('backFromMemory')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
     document.getElementById('backFromManageMemory')?.addEventListener('click', () => showSettingsPage('settingsPageMemory'));
     document.getElementById('backFromMode')?.addEventListener('click', () => showSettingsPage('settingsPageMain'));
+    document.getElementById('backFromAppearance')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
+    document.getElementById('backFromLanguage')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
+    document.getElementById('backFromNotifications')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
+
+    // Close buttons on all pages (add new ones)
+    ['closeSettingsModal','closeSettingsFromPersonalization','closeSettingsFromMemory',
+     'closeSettingsFromManageMemory','closeSettingsFromMode','closeSettingsFromAppearance',
+     'closeSettingsFromLanguage','closeSettingsFromNotifications'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', closeSettings);
+    });
 
     document.getElementById('settingsOverlay')?.addEventListener('click', closeSettings);
 
@@ -1915,6 +2168,85 @@ async function loadMemoriesIntoPage() {
     }
 }
 
+/* ─── Modules & Speech (issue #4) ─────────────────────────── */
+
+const MODULE_CONFIG = {
+    books:      { label: 'Books',      icon: '📚', placeholder: 'Search Hadith, Surah or Ayah...', prefix: 'search_sources: ' },
+    motivation: { label: 'Motivation', icon: '💡', placeholder: 'Need some Islamic encouragement?', prefix: 'topic_motivation: ' },
+    fatwa:      { label: 'Fatwa',      icon: '⚖️', placeholder: 'Ask an Islamic jurisprudence question...', prefix: 'topic_fatwa: ' },
+    general:    { label: 'General',    icon: '💬', placeholder: 'Ask anything Islamic...', prefix: '' },
+    chat:       { label: 'Chat',       icon: '🗨️', placeholder: 'Casual conversation...', prefix: '' }
+};
+
+function _applyModule(moduleId) {
+    const config = MODULE_CONFIG[moduleId];
+    if (!config) return;
+    State.queryModule = moduleId;
+    if (Elements.messageInput) Elements.messageInput.placeholder = config.placeholder;
+
+    // Show a small chip in input area to show active mode
+    _clearModuleChip();
+    const chip = document.createElement('div');
+    chip.id = 'activeModuleChip';
+    chip.className = 'active-module-chip';
+    chip.innerHTML = `<span>${config.icon} ${config.label}</span><i class="fas fa-times"></i>`;
+    chip.querySelector('i').onclick = (e) => { e.stopPropagation(); _clearModule(); };
+    Elements.inputArea?.appendChild(chip);
+    Elements.messageInput?.focus();
+}
+
+function _clearModule() {
+    State.queryModule = null;
+    if (Elements.messageInput) Elements.messageInput.placeholder = 'Ask your Islamic question...';
+    _clearModuleChip();
+}
+
+function _clearModuleChip() {
+    document.getElementById('activeModuleChip')?.remove();
+}
+
+function initSpeechToText() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        showError("Speech recognition not supported in this browser.");
+        return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    const micBtn = Elements.micBtn;
+    micBtn.classList.add('listening');
+    recognition.start();
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (Elements.messageInput) {
+            Elements.messageInput.value = transcript;
+            Elements.messageInput.dispatchEvent(new Event('input'));
+        }
+    };
+    recognition.onend = () => micBtn.classList.remove('listening');
+    recognition.onerror = () => micBtn.classList.remove('listening');
+}
+
+/**
+ * Shows a browser notification if app is in background (issue #5)
+ */
+function _notifyAIDone(bodyText) {
+    if (document.visibilityState === 'visible') return;
+    if (localStorage.getItem('deen_notif_ai_done') !== 'true') return;
+    if (Notification.permission !== 'granted') return;
+
+    try {
+        const clean = bodyText.replace(/[#*`]/g, '').substring(0, 120) + '...';
+        new Notification("DeenLink AI", {
+            body: clean,
+            icon: '/icons/icon-192x192.png'
+        });
+    } catch (e) { console.warn("Notif failed", e); }
+}
+
 window.addEventListener("load", async () => {
     await PWA.init();
     initSidebar();
@@ -1923,12 +2255,22 @@ window.addEventListener("load", async () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
         document.body.classList.add("dark-theme");
+    } else if (savedTheme === "system") {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add("dark-theme");
+        }
     }
 
     const savedMode = localStorage.getItem("responseMode");
-    if (savedMode) {
-        State.responseMode = savedMode;
-    }
+    if (savedMode) State.responseMode = savedMode;
+
+    // Apply saved font size
+    const savedFontSize = localStorage.getItem('deenFontSize');
+    if (savedFontSize) document.documentElement.style.setProperty('--chat-font-size', savedFontSize + 'px');
+
+    // Apply saved language pref to State
+    const savedLang = localStorage.getItem('deenLang');
+    if (savedLang) State.responseLang = savedLang;
 
     fetchUserProfile();
     await loadConversations();

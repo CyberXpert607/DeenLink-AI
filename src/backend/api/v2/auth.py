@@ -34,5 +34,8 @@ def verify_jwt(
     return {
         "user_id": str(user_id),
         "username": payload.get("username"),
+        "full_name": payload.get("full_name") or payload.get("name"),
+        "email": payload.get("email"),
+        "profile_pic": payload.get("profile_image") or payload.get("profile_pic") or payload.get("avatar_url") or payload.get("photo"),
         "user_type": payload.get("user_type"),
     }
