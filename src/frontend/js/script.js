@@ -169,11 +169,16 @@ async function fetchUserProfile() {
 
             // Settings profile card — avatar image
             const avatarEl = document.getElementById('settingsProfileAvatar');
-            const avatarUrl = data.avatar_url || data.profile_picture || data.photo || null;
+            const avatarUrl = data.profile_image || data.avatar_url || data.profile_picture || data.photo || null;
             if (avatarEl && avatarUrl) {
-                avatarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}"
+                // Prefix with deenlink.org if it's a relative path/filename
+                const fullAvatarUrl = avatarUrl.startsWith('http') 
+                    ? avatarUrl 
+                    : `https://deenlink.org/${avatarUrl.startsWith('/') ? '' : 'uploads/'}${avatarUrl}`;
+                
+                avatarEl.innerHTML = `<img src="${escapeHtml(fullAvatarUrl)}" alt="${escapeHtml(displayName)}"
                     style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
-                    onerror="this.parentElement.innerHTML='<i class=\\"fas fa-user-circle\\"></i>'" >`;
+                    onerror="this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>'" >`;
             }
 
             // Cache for quick settings open
@@ -1615,10 +1620,8 @@ function initEventListeners() {
         }
     });
 
-    // ── Input action buttons ──────────────────────────────────────
-    Elements.micBtn?.addEventListener('click', initSpeechToText);
-
     Elements.modulesBtn?.addEventListener('click', (e) => {
+        if (e.target.closest('.module-pill-close')) return;
         e.stopPropagation();
         Elements.modulesPopup?.classList.toggle('hidden');
     });
@@ -1626,15 +1629,13 @@ function initEventListeners() {
     document.querySelectorAll('.module-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             _applyModule(btn.dataset.module);
-            Elements.modulesPopup?.classList.add('hidden');
         });
     });
 
     document.addEventListener('click', (e) => {
-        if (Elements.modulesPopup && !Elements.modulesPopup.classList.contains('hidden')) {
-            if (!Elements.modulesPopup.contains(e.target) && e.target !== Elements.modulesBtn) {
-                Elements.modulesPopup.classList.add('hidden');
-            }
+        if (!Elements.modulesPopup || Elements.modulesPopup.classList.contains('hidden')) return;
+        if (!Elements.modulesPopup.contains(e.target) && e.target !== Elements.modulesBtn && !Elements.modulesBtn?.contains(e.target)) {
+            Elements.modulesPopup.classList.add('hidden');
         }
     });
 
@@ -2168,7 +2169,7 @@ async function loadMemoriesIntoPage() {
     }
 }
 
-/* ─── Modules & Speech (issue #4) ─────────────────────────── */
+/* --- Modules & Speech (issue #4) --------------------------- */
 
 const MODULE_CONFIG = {
     books:      { label: 'Books',      icon: '📚', placeholder: 'Search Hadith, Surah or Ayah...', prefix: 'search_sources: ' },
@@ -2182,22 +2183,51 @@ function _applyModule(moduleId) {
     const config = MODULE_CONFIG[moduleId];
     if (!config) return;
     State.queryModule = moduleId;
-    if (Elements.messageInput) Elements.messageInput.placeholder = config.placeholder;
 
-    // Show a small chip in input area to show active mode
-    _clearModuleChip();
-    const chip = document.createElement('div');
-    chip.id = 'activeModuleChip';
-    chip.className = 'active-module-chip';
-    chip.innerHTML = `<span>${config.icon} ${config.label}</span><i class="fas fa-times"></i>`;
-    chip.querySelector('i').onclick = (e) => { e.stopPropagation(); _clearModule(); };
-    Elements.inputArea?.appendChild(chip);
+    if (Elements.messageInput) {
+        Elements.messageInput.placeholder = config.placeholder;
+    }
+
+    if (Elements.modulesBtn) {
+        Elements.modulesBtn.innerHTML = '';
+        Elements.modulesBtn.className = 'input-action-btn module-active-pill';
+
+        const emojiEl = document.createElement('span');
+        emojiEl.className = 'module-pill-emoji';
+        emojiEl.textContent = config.icon;
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'module-pill-label';
+        labelEl.textContent = config.label;
+
+        const closeEl = document.createElement('i');
+        closeEl.className = 'fas fa-times module-pill-close';
+        closeEl.title = 'Clear mode';
+        closeEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            _clearModule();
+        });
+
+        Elements.modulesBtn.appendChild(emojiEl);
+        Elements.modulesBtn.appendChild(labelEl);
+        Elements.modulesBtn.appendChild(closeEl);
+    }
+
+    Elements.modulesPopup?.classList.add('hidden');
     Elements.messageInput?.focus();
 }
 
 function _clearModule() {
     State.queryModule = null;
-    if (Elements.messageInput) Elements.messageInput.placeholder = 'Ask your Islamic question...';
+    if (Elements.messageInput) {
+        Elements.messageInput.placeholder = 'Ask your Islamic question...';
+    }
+
+    // Restore + button
+    if (Elements.modulesBtn) {
+        Elements.modulesBtn.innerHTML = '<i class="fas fa-plus"></i>';
+        Elements.modulesBtn.className = 'input-action-btn';
+    }
     _clearModuleChip();
 }
 
@@ -2207,32 +2237,61 @@ function _clearModuleChip() {
 
 function initSpeechToText() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        showError("Speech recognition not supported in this browser.");
+    if (!SpeechRecognition || !Elements.micBtn) {
+        if (Elements.micBtn) {
+            Elements.micBtn.style.opacity = '0.35';
+            Elements.micBtn.title = 'Voice input not supported in this browser';
+            Elements.micBtn.disabled = true;
+        }
         return;
     }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
 
-    const micBtn = Elements.micBtn;
-    micBtn.classList.add('listening');
-    recognition.start();
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    let isListening = false;
+
+    Elements.micBtn.addEventListener('click', () => {
+        if (isListening) {
+            recognition.stop();
+            return;
+        }
+        recognition.lang = localStorage.getItem('deenLang') === 'ar' ? 'ar-SA' : 'en-US';
+        try { recognition.start(); } catch (e) { console.warn('Speech start error:', e); }
+    });
+
+    recognition.onstart = () => {
+        isListening = true;
+        Elements.micBtn.classList.add('listening');
+        Elements.micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+    };
 
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = Array.from(event.results)
+            .map(r => r[0].transcript)
+            .join('');
         if (Elements.messageInput) {
             Elements.messageInput.value = transcript;
             Elements.messageInput.dispatchEvent(new Event('input'));
         }
     };
-    recognition.onend = () => micBtn.classList.remove('listening');
-    recognition.onerror = () => micBtn.classList.remove('listening');
+
+    recognition.onend = () => {
+        isListening = false;
+        Elements.micBtn.classList.remove('listening');
+        Elements.micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+
+    recognition.onerror = (event) => {
+        isListening = false;
+        Elements.micBtn.classList.remove('listening');
+        Elements.micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        if (event.error === 'not-allowed') {
+            showError('Microphone access denied. Please allow it in browser settings.');
+        }
+    };
 }
 
-/**
- * Shows a browser notification if app is in background (issue #5)
- */
 function _notifyAIDone(bodyText) {
     if (document.visibilityState === 'visible') return;
     if (localStorage.getItem('deen_notif_ai_done') !== 'true') return;
@@ -2275,6 +2334,9 @@ window.addEventListener("load", async () => {
     fetchUserProfile();
     await loadConversations();
     updateEmptyStateVisibility();
+    
+    initSpeechToText();
+
     Elements.messageInput?.focus();
 });
 
@@ -2290,7 +2352,6 @@ if (backBtn) {
     });
 }
 
-/* ── Memory inline notice ─────────────────────────────────── */
 function _memoryStorageKey(convId) { return `deen_memory_notices_${convId}`; }
 
 function persistMemoryNotice(fact) {

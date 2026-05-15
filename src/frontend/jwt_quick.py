@@ -36,7 +36,7 @@ payload= {
     "user_type": "admin",
     "iss": "deenlink",
     "aud": "deenlink-ai",
-    "exp": datetime.utcnow() + timedelta(hours=2)
+    "exp": datetime.utcnow() + timedelta(minutes=15)
 }
 token = jwt.encode(payload, privaete_key, algorithm="RS256")
 print(token)

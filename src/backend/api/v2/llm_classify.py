@@ -152,11 +152,22 @@ def extract_hadith_entities_local(text: str) -> dict:
 async def classify_query_llm(text: str, user_memories: list = None) -> dict:
     """
     Classify query intent with LLM and local entity extraction.
-
-    user_memories: list of dicts [{"id": "...", "fact": "..."}] — when provided,
-    injected into the classifier prompt so the LLM avoids routing to web_search
-    for questions answerable from memory.
+    Prioritizes explicit [TAGS] if present in the text.
     """
+    text_lower = text.lower()
+    
+    # ─── Explicit Mode Overrides ──────────────────────────
+    if "[fatwa]" in text_lower or "[jur]" in text_lower:
+        return {"intent": "web_search", "confidence": 1.0, "reason": "Explicit fatwa mode selected"}
+    if "[books]" in text_lower:
+        return {"intent": "rag_all", "confidence": 1.0, "reason": "Explicit books mode selected"}
+    if "[expert]" in text_lower:
+        return {"intent": "rag_all", "confidence": 1.0, "reason": "Explicit expert mode selected"}
+    if "[motivate]" in text_lower:
+        return {"intent": "motivation", "confidence": 1.0, "reason": "Explicit motivation mode selected"}
+    if "[chat]" in text_lower:
+        return {"intent": "chat", "confidence": 1.0, "reason": "Explicit chat mode selected"}
+
     local_entities = extract_hadith_entities_local(text)
 
     # Build the memory block to inject into the prompt
