@@ -1315,10 +1315,12 @@ async function sendMessage(retryData = null) {
     Elements.messageInput.disabled = true;
 
     let text = "";
+    let isCallbackResend = false;
     if (typeof retryData === 'string') {
         text = retryData;
     } else {
         text = retryData?.message ?? Elements.messageInput.value.trim();
+        isCallbackResend = retryData?.isCallbackResend || false;
     }
     if (!text) {
         resetInputState();
@@ -1360,7 +1362,9 @@ async function sendMessage(retryData = null) {
         State.editingMessageId = null;
     }
 
-    appendMessage("user", text);
+    if (!isCallbackResend) {
+        appendMessage("user", text);
+    }
     const streamingMsg = appendLoadingMessage();
     streamingMsg.container.dataset.prompt = text;
     streamingMsg.container.style.display = 'none';
@@ -1432,6 +1436,12 @@ async function sendMessage(retryData = null) {
                     case 'intent_selection':
                         removeSearchIndicator();
                         removeTypingIndicator();
+
+                        // Remove stuck typing indicator dots inside the bubble container
+                        const bubbleTypingIndicator = streamingMsg.container.querySelector('.typing-indicator');
+                        if (bubbleTypingIndicator) {
+                            bubbleTypingIndicator.remove();
+                        }
                         
                         const selectionContainer = document.createElement('div');
                         selectionContainer.className = 'intent-selection-container';
@@ -1481,7 +1491,10 @@ async function sendMessage(retryData = null) {
                             card.addEventListener('click', () => {
                                 _applyModule(opt.id);
                                 streamingMsg.container.remove();
-                                sendMessage(streamingMsg.container.dataset.prompt);
+                                sendMessage({
+                                    message: streamingMsg.container.dataset.prompt,
+                                    isCallbackResend: true
+                                });
                             });
 
                             cardsGrid.appendChild(card);

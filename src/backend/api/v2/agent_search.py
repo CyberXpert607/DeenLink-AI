@@ -127,8 +127,25 @@ def perform_web_search(query: str, max_results: int = 8, is_fatwa: bool = False)
                 others.append(entry)
         return trusted, others
     except Exception as exc:
-        logger.error(f"Google Custom Search error: {exc}")
-        return [], []
+        logger.error(f"Google Custom Search error: {exc}. Falling back to DuckDuckGo search.")
+        try:
+            from duckduckgo_search import DDGS
+            trusted, others = [], []
+            with DDGS() as ddgs:
+                for r in ddgs.text(query, max_results=max_results):
+                    entry = {
+                        "title": r.get("title", ""),
+                        "url": r.get("href", ""),
+                        "body": r.get("body", ""),
+                    }
+                    if _is_trusted(entry["url"], query):
+                        trusted.append(entry)
+                    else:
+                        others.append(entry)
+            return trusted, others
+        except Exception as ddg_exc:
+            logger.error(f"DuckDuckGo fallback search error: {ddg_exc}")
+            return [], []
 
 
 # Context summariser (extract recent user facts from history)
