@@ -54,11 +54,11 @@
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <h2 class="text-2xl font-bold">Admin Authentication</h2>
-                <p class="text-sm text-textMuted mt-2">Enter your JWT token to access the dashboard</p>
+                <p class="text-sm text-textMuted mt-2">Enter your admin password to access the dashboard</p>
             </div>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-textMuted mb-2">Admin Token</label>
-                <input type="password" id="tokenInput" class="w-full px-4 py-3 bg-darkBg border border-borderGray rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-white placeholder-gray-600" placeholder="eyJhbGci...">
+                <label class="block text-sm font-medium text-textMuted mb-2">Admin Password</label>
+                <input type="password" id="tokenInput" class="w-full px-4 py-3 bg-darkBg border border-borderGray rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-white placeholder-gray-600" placeholder="••••••••">
             </div>
             <div id="loginError" class="hidden text-red-400 text-sm mb-4 text-center">Invalid token or unauthorized</div>
             <button onclick="handleLogin()" class="w-full bg-primary hover:bg-primaryDark text-darkBg font-bold py-3 rounded-lg transition-colors flex items-center justify-center">
@@ -324,21 +324,36 @@
             elMainDashboard.classList.remove('hidden');
         }
 
-        function handleLogin() {
-            const token = elTokenInput.value.trim();
-            if (!token) {
+        async function handleLogin() {
+            const password = elTokenInput.value.trim();
+            if (!password) {
+                elLoginError.textContent = "Please enter a password";
                 elLoginError.classList.remove('hidden');
                 return;
             }
-            adminToken = token;
-            localStorage.setItem('adminToken', token);
-            elLoginError.classList.add('hidden');
-            showDashboard();
-            fetchData();
+            try {
+                const resp = await fetch('/api/v2/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+                if (!resp.ok) {
+                    throw new Error("Invalid password");
+                }
+                const data = await resp.json();
+                adminToken = data.token;
+                localStorage.setItem('adminToken', adminToken);
+                elLoginError.classList.add('hidden');
+                showDashboard();
+                fetchData();
+            } catch (err) {
+                elLoginError.textContent = "Invalid admin password or connection error";
+                elLoginError.classList.remove('hidden');
+            }
         }
 
         function useTestToken() {
-            elTokenInput.value = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJ1c2VyX3R5cGUiOiJhZG1pbiIsImlzcyI6ImRlZW5saW5rIiwiYXVkIjoiZGVlbmxpbmstYWkiLCJleHAiOjE3NzcwODI5OTB9.gRhZooYVHZknhuCDFHuj8sAwEFGWsKek5IEd9UKPWaXvawcOxkpvQvUKf7pD135SrtD4kRgmgbgAxyFkiLxap-bdehx1G9WIIeFvFEdgzJJu0_UeaqqMt0gNVGo3wQRXoac8Cge3gduIdj66rQyywU7r7TwzXwUVXA1YShgC6pau96gE5bzM8JMWskBmdw-Redcn7P2C_NNaRtzBQ8LIDAnzvUk4lQMdTlBYjsPULf9O4ZzhuCbG-7rtCtJXCh-s-pGV_o3BtI3umrQT9PWasBr26m2GWoeduuYpq8ldkX9-inOHmVeS_pfulsumkJXklNzdZAdTJba87kZsw7uCuA";
+            elTokenInput.value = "admin123";
             handleLogin();
         }
 

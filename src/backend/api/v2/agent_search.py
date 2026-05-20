@@ -1,4 +1,3 @@
-from duckduckgo_search import DDGS
 from groq import Groq
 import logging
 import json
@@ -51,6 +50,8 @@ def _is_trusted(url: str, query: str = "") -> bool:
         return False
     
     if dom == "islamqa.info":
+        if "site:islamqa.info" in query.lower():
+            return True
         keywords = ["fatwa", "ruling", "permissible", "halal", "haram", "can i", "is it", "ruling on"]
         if query and any(kw in query.lower() for kw in keywords):
             return True
@@ -87,56 +88,46 @@ def _rewrite_query(user_query: str, context_summary: str = "") -> str:
 
 
 # Search helper
-def perform_web_search(query: str, max_results: int = 8) -> tuple[list, list]:
+def perform_web_search(query: str, max_results: int = 8, is_fatwa: bool = False) -> tuple[list, list]:
     """
     Returns (trusted_results, fallback_results).
     trusted_results — from TRUSTED_DOMAINS
     fallback_results — everything else (used only if trusted is thin)
     """
-    if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
-        try:
-            url = "https://www.googleapis.com/customsearch/v1"
-            params = {
-                "key": GOOGLE_API_KEY,
-                "cx": GOOGLE_SEARCH_ENGINE_ID,
-                "q": query,
-                "num": min(max_results, 10),
-            }
-            resp = requests.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-            
-            trusted, others = [], []
-            for item in data.get("items", []):
-                entry = {
-                    "title": item.get("title", ""),
-                    "url": item.get("link", ""),
-                    "body": item.get("snippet", ""),
-                }
-                if _is_trusted(entry["url"], query):
-                    trusted.append(entry)
-                else:
-                    others.append(entry)
-            return trusted, others
-        except Exception as exc:
-            logger.error(f"Google Custom Search error: {exc}. Falling back to DuckDuckGo.")
+    if is_fatwa:
+        if "site:islamqa.info" not in query.lower():
+            query = f"site:islamqa.info {query}"
+
+    if not GOOGLE_API_KEY or not GOOGLE_SEARCH_ENGINE_ID:
+        logger.error("Google Custom Search API key or Search Engine ID is not configured.")
+        return [], []
 
     try:
+        url = "https://www.googleapis.com/customsearch/v1"
+        params = {
+            "key": GOOGLE_API_KEY,
+            "cx": GOOGLE_SEARCH_ENGINE_ID,
+            "q": query,
+            "num": min(max_results, 10),
+        }
+        resp = requests.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        
         trusted, others = [], []
-        with DDGS() as ddgs:
-            for r in ddgs.text(query, max_results=max_results):
-                entry = {
-                    "title": r.get("title", ""),
-                    "url": r.get("href", ""),
-                    "body": r.get("body", ""),
-                }
-                if _is_trusted(entry["url"], query):
-                    trusted.append(entry)
-                else:
-                    others.append(entry)
+        for item in data.get("items", []):
+            entry = {
+                "title": item.get("title", ""),
+                "url": item.get("link", ""),
+                "body": item.get("snippet", ""),
+            }
+            if _is_trusted(entry["url"], query):
+                trusted.append(entry)
+            else:
+                others.append(entry)
         return trusted, others
     except Exception as exc:
-        logger.error(f"DuckDuckGo search error: {exc}")
+        logger.error(f"Google Custom Search error: {exc}")
         return [], []
 
 
@@ -159,6 +150,7 @@ def stream_web_search_answer(
     question: str,
     context_history: list = None,
     user_memories: list = None,
+    is_fatwa: bool = False,
 ):
     """
     Generator that yields JSON-encoded SSE data strings.
@@ -176,7 +168,7 @@ def stream_web_search_answer(
     logger.info(f"Web search | original='{question}' | rewritten='{search_query}'")
 
     # Perform search
-    trusted, fallback = perform_web_search(search_query)
+    trusted, fallback = perform_web_search(search_query, is_fatwa=is_fatwa)
 
     # Prefer trusted; pad with fallback only if we have fewer than 2 trusted hits
     results = trusted[:3]
@@ -253,7 +245,7 @@ def stream_web_search_answer(
                     "url": r["url"],
                     "snippet": r["body"][:300],
                     "hostname": hostname,
-                    "is_trusted": _is_trusted(r["url"]),
+                    "is_trusted": _is_trusted(r["url"], search_query),
                     "favicon_url": f"https://www.google.com/s2/favicons?domain={hostname}&sz=32",
                     "display_reference": r["title"],
                 },

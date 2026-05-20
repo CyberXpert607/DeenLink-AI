@@ -58,3 +58,41 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+// Show notification when requested by the page
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+        const title = event.data.title || "DeenLink AI";
+        const options = {
+            body: event.data.body || "",
+            icon: event.data.icon || "./icons/icon-192.png",
+            badge: event.data.badge || "./icons/icon-72.png",
+            vibrate: [100, 50, 100],
+            data: {
+                url: self.registration.scope
+            }
+        };
+        event.waitUntil(
+            self.registration.showNotification(title, options)
+        );
+    }
+});
+
+// Handle notification click to focus/open client window
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const urlToOpen = event.notification.data.url;
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                if (client.url === urlToOpen && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
+});

@@ -149,41 +149,56 @@ async function fetchUserProfile() {
         const res = await fetchWithRetry(`${API_BASE_URL}/user/me`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
-        if (res.ok) {
-            const data = await res.json();
+        if (!res.ok) return;
 
-            // Full display name — prefer full_name, fallback to username
-            const displayName = data.full_name || data.name || data.username || 'Guest';
+        const data = await res.json();
+        //console.log('[Profile]', data);
 
-            // Greeting in chat
-            const userNameDisplay = document.getElementById("userNameDisplay");
-            if (userNameDisplay) userNameDisplay.textContent = displayName;
+        const displayName = data.full_name || data.name || data.username || 'Guest';
 
-            // Settings profile card — name
-            const settingsName = document.getElementById('settingsProfileName');
-            if (settingsName) settingsName.textContent = displayName;
+        const userNameDisplay = document.getElementById("userNameDisplay");
+        if (userNameDisplay) userNameDisplay.textContent = displayName;
 
-            // Settings profile subtitle — email or role
-            const settingsSub = document.getElementById('settingsProfileSub');
-            if (settingsSub && data.email) settingsSub.textContent = data.email;
+        const settingsName = document.getElementById('settingsProfileName');
+        if (settingsName) settingsName.textContent = displayName;
 
-            // Settings profile card — avatar image
-            const avatarEl = document.getElementById('settingsProfileAvatar');
-            const avatarUrl = data.profile_image || data.avatar_url || data.profile_picture || data.photo || null;
-            if (avatarEl && avatarUrl) {
-                // Prefix with deenlink.org if it's a relative path/filename
-                const fullAvatarUrl = avatarUrl.startsWith('http') 
-                    ? avatarUrl 
-                    : `https://deenlink.org/${avatarUrl.startsWith('/') ? '' : 'uploads/'}${avatarUrl}`;
-                
-                avatarEl.innerHTML = `<img src="${escapeHtml(fullAvatarUrl)}" alt="${escapeHtml(displayName)}"
-                    style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
-                    onerror="this.parentElement.innerHTML='<i class=\'fas fa-user-circle\'></i>'" >`;
+        const settingsSub = document.getElementById('settingsProfileSub');
+        if (settingsSub) settingsSub.textContent = data.email || 'DeenLink Member';
+
+        const rawAvatar = data.profile_image
+            || data.avatar_url
+            || data.profile_picture
+            || data.photo
+            || null;
+
+        const avatarEl = document.getElementById('settingsProfileAvatar');
+        if (avatarEl && rawAvatar) {
+            let fullAvatarUrl;
+            if (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://')) {
+                fullAvatarUrl = rawAvatar;
+            } else {
+                const filename = rawAvatar.split('/').pop();
+                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
             }
 
-            // Cache for quick settings open
-            State.userProfile = data;
+            console.log('[Profile] avatar URL:', fullAvatarUrl);
+
+            const img = document.createElement('img');
+            img.src = fullAvatarUrl;
+            img.alt = displayName;
+            img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;';
+            img.onerror = function () {
+                avatarEl.innerHTML = '';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-user-circle';
+                avatarEl.appendChild(icon);
+            };
+            avatarEl.innerHTML = '';
+            avatarEl.appendChild(img);
         }
+
+        State.userProfile = data;
+
     } catch (e) {
         console.warn("Could not fetch user profile", e);
     }
@@ -1299,7 +1314,12 @@ async function sendMessage(retryData = null) {
     updateSendButtonIcon('stop');
     Elements.messageInput.disabled = true;
 
-    const text = retryData?.message ?? Elements.messageInput.value.trim();
+    let text = "";
+    if (typeof retryData === 'string') {
+        text = retryData;
+    } else {
+        text = retryData?.message ?? Elements.messageInput.value.trim();
+    }
     if (!text) {
         resetInputState();
         return;
@@ -1409,6 +1429,73 @@ async function sendMessage(retryData = null) {
                 }
 
                 switch (data.type) {
+                    case 'intent_selection':
+                        removeSearchIndicator();
+                        removeTypingIndicator();
+                        
+                        const selectionContainer = document.createElement('div');
+                        selectionContainer.className = 'intent-selection-container';
+                        selectionContainer.style.cssText = 'display:flex;flex-direction:column;gap:12px;margin:12px 0;width:100%;';
+
+                        const promptText = document.createElement('p');
+                        promptText.textContent = 'Please choose a category to receive the response from:';
+                        promptText.style.cssText = 'margin:0;font-weight:600;font-size:14px;color:var(--text-dark);';
+                        selectionContainer.appendChild(promptText);
+
+                        const cardsGrid = document.createElement('div');
+                        cardsGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;width:100%;';
+
+                        data.options.forEach(opt => {
+                            const card = document.createElement('button');
+                            card.type = 'button';
+                            card.style.cssText = `
+                                display:flex;
+                                flex-direction:column;
+                                align-items:center;
+                                justify-content:center;
+                                gap:8px;
+                                padding:16px;
+                                background:var(--ai-bg);
+                                border:1px solid rgba(29,111,66,0.15);
+                                border-radius:12px;
+                                cursor:pointer;
+                                transition:all 0.2s ease;
+                                text-align:center;
+                            `;
+                            card.innerHTML = `
+                                <span style="font-size:24px;">${opt.icon}</span>
+                                <span style="font-size:13px;font-weight:600;color:var(--text-dark);">${opt.label}</span>
+                            `;
+                            
+                            card.addEventListener('mouseenter', () => {
+                                card.style.transform = 'translateY(-2px)';
+                                card.style.boxShadow = '0 4px 12px rgba(29, 111, 66, 0.1)';
+                                card.style.borderColor = 'rgba(29,111,66,0.4)';
+                            });
+                            card.addEventListener('mouseleave', () => {
+                                card.style.transform = 'none';
+                                card.style.boxShadow = 'none';
+                                card.style.borderColor = 'rgba(29,111,66,0.15)';
+                            });
+
+                            card.addEventListener('click', () => {
+                                _applyModule(opt.id);
+                                streamingMsg.container.remove();
+                                sendMessage(streamingMsg.container.dataset.prompt);
+                            });
+
+                            cardsGrid.appendChild(card);
+                        });
+
+                        selectionContainer.appendChild(cardsGrid);
+                        
+                        streamingMsg.container.style.display = 'flex';
+                        aiMessageEl.innerHTML = '';
+                        aiMessageEl.appendChild(selectionContainer);
+                        
+                        completed = true;
+                        return;
+
                     case 'search_start':
                         showSearchIndicator();
                         break;
@@ -1913,7 +2000,7 @@ function initEventListeners() {
     Elements.settingsBtn?.addEventListener('click', () => {
         Elements.modeRadios?.forEach(r => { r.checked = (r.value === State.responseMode); });
 
-        // Populate profile card with latest cached data
+        // Populate profile card from cache
         const profile = State.userProfile || {};
         const displayName = profile.full_name || profile.name || profile.username
             || document.getElementById('userNameDisplay')?.textContent || 'Guest';
@@ -1922,14 +2009,33 @@ function initEventListeners() {
         if (nameEl) nameEl.textContent = displayName;
 
         const subEl = document.getElementById('settingsProfileSub');
-        if (subEl && profile.email) subEl.textContent = profile.email;
+        if (subEl) subEl.textContent = profile.email || 'DeenLink Member';
 
+        // Re-render avatar using DOM (not innerHTML) to avoid escaping bugs
         const avatarEl = document.getElementById('settingsProfileAvatar');
-        const avatarUrl = profile.avatar_url || profile.profile_picture || profile.photo || null;
-        if (avatarEl && avatarUrl) {
-            avatarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}"
-                style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
-                onerror="this.parentElement.innerHTML='<i class=\\"fas fa-user-circle\\"></i>'">`;
+        const rawAvatar = profile.profile_image || profile.avatar_url
+            || profile.profile_picture || profile.photo || null;
+
+        if (avatarEl && rawAvatar) {
+            let fullAvatarUrl;
+            if (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://')) {
+                fullAvatarUrl = rawAvatar;
+            } else {
+                const filename = rawAvatar.split('/').pop();
+                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
+            }
+            const img = document.createElement('img');
+            img.src = fullAvatarUrl;
+            img.alt = displayName;
+            img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;';
+            img.onerror = function () {
+                avatarEl.innerHTML = '';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-user-circle';
+                avatarEl.appendChild(icon);
+            };
+            avatarEl.innerHTML = '';
+            avatarEl.appendChild(img);
         }
 
         // Notification toggle state
@@ -1940,7 +2046,6 @@ function initEventListeners() {
         showSettingsPage('settingsPageMain');
         closeSidebar();
     });
-
     ['closeSettingsModal','closeSettingsFromPersonalization','closeSettingsFromMemory','closeSettingsFromManageMemory','closeSettingsFromMode'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', closeSettings);
     });
@@ -2003,7 +2108,7 @@ function initEventListeners() {
         document.documentElement.style.setProperty('--chat-font-size', sz + 'px');
         localStorage.setItem('deenFontSize', sz);
         showSuccessToast('Appearance saved!');
-        showSettingsPage('settingsPagePersonalization');
+        closeSettings();
     });
 
     // Theme buttons inside appearance page
@@ -2029,7 +2134,7 @@ function initEventListeners() {
         localStorage.setItem('deenQuranTr', tr);
         State.responseLang = lang;
         showSuccessToast('Language preferences saved!');
-        showSettingsPage('settingsPagePersonalization');
+        closeSettings();
     });
 
     // Save notifications
@@ -2046,7 +2151,7 @@ function initEventListeners() {
             });
         }
         showSuccessToast('Notification preferences saved!');
-        showSettingsPage('settingsPagePersonalization');
+        closeSettings();
     });
 
     document.getElementById('backFromPersonalization')?.addEventListener('click', () => showSettingsPage('settingsPageMain'));
@@ -2183,37 +2288,30 @@ function _applyModule(moduleId) {
     const config = MODULE_CONFIG[moduleId];
     if (!config) return;
     State.queryModule = moduleId;
+    if (Elements.messageInput) Elements.messageInput.placeholder = config.placeholder;
 
-    if (Elements.messageInput) {
-        Elements.messageInput.placeholder = config.placeholder;
-    }
+    // Remove any existing chip
+    _clearModuleChip();
 
-    if (Elements.modulesBtn) {
-        Elements.modulesBtn.innerHTML = '';
-        Elements.modulesBtn.className = 'input-action-btn module-active-pill';
+    // Insert chip INSIDE the input-container, before the textarea
+    const inputContainer = document.querySelector('.input-container');
+    if (!inputContainer) return;
 
-        const emojiEl = document.createElement('span');
-        emojiEl.className = 'module-pill-emoji';
-        emojiEl.textContent = config.icon;
+    const chip = document.createElement('div');
+    chip.id = 'activeModuleChip';
+    chip.className = 'active-module-chip';
+    chip.innerHTML = `<span>${config.icon} ${config.label}</span>`;
 
-        const labelEl = document.createElement('span');
-        labelEl.className = 'module-pill-label';
-        labelEl.textContent = config.label;
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Clear mode');
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0;display:flex;align-items:center;opacity:0.8;';
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); _clearModule(); });
+    chip.appendChild(closeBtn);
 
-        const closeEl = document.createElement('i');
-        closeEl.className = 'fas fa-times module-pill-close';
-        closeEl.title = 'Clear mode';
-        closeEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            _clearModule();
-        });
-
-        Elements.modulesBtn.appendChild(emojiEl);
-        Elements.modulesBtn.appendChild(labelEl);
-        Elements.modulesBtn.appendChild(closeEl);
-    }
-
-    Elements.modulesPopup?.classList.add('hidden');
+    // Put chip as first child of input-container (left side, before plus btn)
+    inputContainer.insertBefore(chip, inputContainer.firstChild);
     Elements.messageInput?.focus();
 }
 
@@ -2299,10 +2397,20 @@ function _notifyAIDone(bodyText) {
 
     try {
         const clean = bodyText.replace(/[#*`]/g, '').substring(0, 120) + '...';
-        new Notification("DeenLink AI", {
-            body: clean,
-            icon: '/icons/icon-192x192.png'
-        });
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: 'DeenLink AI',
+                body: clean,
+                icon: './icons/icon-192.png',
+                badge: './icons/icon-72.png'
+            });
+        } else {
+            new Notification("DeenLink AI", {
+                body: clean,
+                icon: './icons/icon-192.png'
+            });
+        }
     } catch (e) { console.warn("Notif failed", e); }
 }
 

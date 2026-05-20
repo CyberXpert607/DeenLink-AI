@@ -9,7 +9,7 @@ import json
 import uuid
 
 from v2.db.database import get_db, SessionLocal
-from v2.auth import verify_jwt
+from v2.auth import verify_jwt, verify_admin_jwt
 from v2.db.models import Conversation, Message, Feedback, UserMemory
 from v2.db.memory import build_prompt_with_memory
 from v2.llm_classify import classify_query_llm
@@ -69,7 +69,7 @@ def save_messages_sync(
             tokens=0
         )
         db.add(user_msg)
-        
+         
         assistant_msg = Message(
             id=str(uuid.uuid4()),
             conversation_id=conversation_id,
@@ -111,6 +111,28 @@ def check_rate_limit(user_id: str):
         
     RATE_LIMIT_STORE[user_id].append(now)
 
+class AdminLoginRequest(BaseModel):
+    password: str
+
+@router.post("/admin/login")
+def admin_login(payload: AdminLoginRequest):
+    from config import ADMIN_PASSWORD, ADMIN_JWT_SECRET
+    import jwt
+    import datetime
+    
+    if payload.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid admin password")
+        
+    expiration = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    token_payload = {
+        "user_type": "admin",
+        "exp": expiration,
+        "iat": datetime.datetime.utcnow()
+    }
+    
+    token = jwt.encode(token_payload, ADMIN_JWT_SECRET, algorithm="HS256")
+    return {"token": token}
+
 @router.post("/ask/stream")
 async def ask_stream(
     payload: AskRequest,
@@ -122,6 +144,14 @@ async def ask_stream(
     check_rate_limit(user_id)
     
     query = payload.message.strip()
+
+    # Clean prompt prefixes so they do not pollute embeddings, database storage, or searches
+    cleaned_query = query
+    detected_prefix = None
+    for prefix in ["search_sources:", "topic_fatwa:", "topic_motivation:", "topic_general:"]:
+        if cleaned_query.lower().startswith(prefix):
+            detected_prefix = prefix
+            cleaned_query = cleaned_query[len(prefix):].strip()
 
     convo = (
         db.query(Conversation)
@@ -138,7 +168,7 @@ async def ask_stream(
     client_datetime = payload.client_datetime.strip()
     client_timezone = payload.client_timezone.strip()
 
-    _q = query.lower()
+    _q = cleaned_query.lower()
     _datetime_keywords = [
         "what time", "what's the time", "what is the time", "current time",
         "what day", "what's today", "what is today", "today's date", "today date",
@@ -153,20 +183,20 @@ async def ask_stream(
         intent = "rag_all"
     elif _is_datetime_query and client_datetime:
         intent = "datetime_direct"
-    else:
-        if any(kw in query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
+    elif detected_prefix is None:
+        intent = "ambiguous"
+    elif detected_prefix == "search_sources:":
+        intent = "rag_all"
+        if any(kw in cleaned_query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
             intent = "rag_quran"
-        elif any(kw in query.lower() for kw in ["hadith", "bukhari", "muslim", "tirmidhi"]):
+        elif any(kw in cleaned_query.lower() for kw in ["hadith", "bukhari", "muslim", "tirmidhi"]):
             intent = "rag_hadith"
-        elif any(kw in query.lower() for kw in ["motivate", "inspire", "encourage"]):
-            intent = "motivation"
-        else:
-            memories_for_classifier = [
-                {"id": m.id, "fact": m.fact}
-                for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
-            ]
-            classification = await classify_query_llm(query, memories_for_classifier)
-            intent = classification.get("intent")
+    elif detected_prefix == "topic_fatwa:":
+        intent = "web_search"
+    elif detected_prefix == "topic_motivation:":
+        intent = "motivation"
+    elif detected_prefix == "topic_general:":
+        intent = "rag_all"
     memory_messages = None
     conversation_history = []
     user_memories_list = [] 
@@ -182,7 +212,7 @@ async def ask_stream(
             for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
         ]
         
-        memory_messages.append({"role": "user", "content": query})
+        memory_messages.append({"role": "user", "content": cleaned_query})
         logging.info(f"Built memory for conversation {convo.id} with {len(memory_messages)} messages")
     else:
         recent_msgs = (
@@ -197,14 +227,14 @@ async def ask_stream(
             for m in reversed(recent_msgs)
         ]
         
-        conversation_history.append({"role": "user", "content": query})
+        conversation_history.append({"role": "user", "content": cleaned_query})
         logging.info(f"Using conversation history for RAG with {len(conversation_history)} messages")
         
         memory_messages = conversation_history
     current_intent = intent
     current_convo = convo
     current_user_id = user_id
-    current_query = query
+    current_query = cleaned_query
     current_user_memories = user_memories_list
     current_client_datetime = client_datetime
     current_client_timezone = client_timezone
@@ -229,6 +259,18 @@ async def ask_stream(
             memory_task = asyncio.create_task(extract_memory_facts(current_query, user_history))
             
         try:
+            if current_intent == "ambiguous":
+                options = [
+                    {"id": "books", "label": "Books", "icon": "📚"},
+                    {"id": "fatwa", "label": "Fatwa & Rulings", "icon": "⚖️"},
+                    {"id": "motivation", "label": "Motivation", "icon": "💡"},
+                    {"id": "general", "label": "General Q&A", "icon": "💬"},
+                    {"id": "chat", "label": "Casual Chat", "icon": "🗨️"}
+                ]
+                yield f"data: {json.dumps({'type': 'intent_selection', 'options': options})}\n\n"
+                completed = True
+                return
+
             if current_intent in {"rag_quran", "rag_hadith", "rag_all"}:
                 yield f"data: {json.dumps({'type': 'search_start'})}\n\n"
             elif current_intent == "motivation":
@@ -249,22 +291,36 @@ async def ask_stream(
                 elif current_intent == "rag_hadith":
                     source_filter = "hadith"
                 
-                results = search_similar(current_query, 10, source_type=source_filter)
-                filtered = [r for r in results if r.score >= 0.30]
+                results = search_similar(current_query, 10, min_score=0.25, source_type=source_filter)
+                filtered = [r for r in results if r.score >= 0.25]
                 
                 if not filtered and source_filter:
-                    results = search_similar(current_query, 10)
-                    filtered = [r for r in results if r.score >= 0.30]
+                    results = search_similar(current_query, 10, min_score=0.25)
+                    filtered = [r for r in results if r.score >= 0.25]
                     if current_intent == "rag_quran":
                         filtered = [r for r in filtered if r.source_type == "quran"]
                     elif current_intent == "rag_hadith":
                         filtered = [r for r in filtered if r.source_type == "hadith"]
 
                 if not filtered:
-                    fallback_msg = "No relevant information found in the knowledge base. Please try rephrasing your question."
-                    full_response += fallback_msg
-                    yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
-                    has_sent_any_token = True
+                    if detected_prefix == "search_sources:":
+                        fallback_msg = "No relevant information found in the Books database. Please try rephrasing your question or search general chat."
+                        full_response += fallback_msg
+                        yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
+                        has_sent_any_token = True
+                    else:
+                        # Fallback to general LLM response!
+                        yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
+                        system_note = {"role": "system", "content": "No relevant local database records were found. Please answer the user's question using your general Islamic knowledge."}
+                        msg_list = local_memory_messages.copy()
+                        msg_list.insert(-1, system_note)
+                        
+                        for token in stream_chat_response(msg_list):
+                            if disconnected:
+                                break
+                            full_response += token
+                            yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+                            has_sent_any_token = True
                 else:
                     sources_data = [
                         {
@@ -335,7 +391,8 @@ async def ask_stream(
 
             elif current_intent == "web_search":
                 mem_facts = [m["fact"] for m in current_user_memories] if current_user_memories else []
-                for chunk in stream_web_search_answer(current_query, conversation_history, mem_facts):
+                is_fatwa = (detected_prefix == "topic_fatwa:" or current_intent == "web_search")
+                for chunk in stream_web_search_answer(current_query, conversation_history, mem_facts, is_fatwa=is_fatwa):
                     if disconnected:
                         break
                     try:
@@ -720,9 +777,7 @@ def get_dashboard_ui():
         raise HTTPException(status_code=404, detail="Dashboard UI not found")
 
 @router.get("/admin/dashboard/data")
-def get_dashboard_metrics(user=Depends(verify_jwt), db: Session = Depends(get_db)):
-    if user.get("user_type") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
+def get_dashboard_metrics(user=Depends(verify_admin_jwt), db: Session = Depends(get_db)):
     
     from v2.db.models import Feedback
     from sqlalchemy import func, text, distinct, or_
@@ -891,9 +946,7 @@ class FeedbackUpdateRequest(BaseModel):
     resolved: bool = None
 
 @router.patch("/admin/feedback/{feedback_id}")
-def update_feedback(feedback_id: str, payload: FeedbackUpdateRequest, user=Depends(verify_jwt), db: Session = Depends(get_db)):
-    if user.get("user_type") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
+def update_feedback(feedback_id: str, payload: FeedbackUpdateRequest, user=Depends(verify_admin_jwt), db: Session = Depends(get_db)):
         
     from v2.db.models import Feedback
     fb = db.query(Feedback).filter(Feedback.id == feedback_id).first()
