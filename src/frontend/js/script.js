@@ -78,10 +78,16 @@ marked.setOptions({
 /* ─── helpers ─────────────────────────────────────────────── */
 
 function createAiAvatarEl() {
-    const img = document.createElement('img');
-    img.src = AI_AVATAR_SRC;
-    img.alt = 'DeenLink AI';
-    img.className = 'ai-avatar';
+    // Avatar removed per design request; return an empty transparent element
+    const placeholder = document.createElement('span');
+    placeholder.className = 'ai-avatar';
+    placeholder.style.display = 'none';
+    return placeholder;
+}
+
+
+
+
     img.onerror = function () { this.style.display = 'none'; };
     return img;
 }
@@ -1329,8 +1335,13 @@ async function sendMessage(retryData = null) {
         State.editingMessageId = null;
     }
 
+    // Avoid duplicate user message when this is a callback resend (e.g., after intent/modal selection)
     if (!isCallbackResend) {
-        appendMessage("user", text);
+        // Ensure we don't add the same user message twice
+        const lastMsg = Elements.chatMessages.lastElementChild;
+        if (!lastMsg?.dataset?.sender || lastMsg.dataset.sender !== 'user' || lastMsg.textContent.trim() !== text.trim()) {
+            appendMessage('user', text);
+        }
     }
     const streamingMsg = appendLoadingMessage();
     streamingMsg.container.dataset.prompt = text;

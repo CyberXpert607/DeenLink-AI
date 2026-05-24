@@ -27,7 +27,7 @@
     /* Liquid Glass System */
     --glass-bg:           rgba(255, 255, 255, 0.72);
     --glass-bg-strong:    rgba(255, 255, 255, 0.88);
-    --glass-bg-subtle:    rgba(255, 255, 255, 0.48);
+    --bg-image: url('https://deenlink.org/img/deenlink-ai.png');
     --glass-border:       rgba(255, 255, 255, 0.65);
     --glass-border-outer: rgba(0, 0, 0, 0.07);
     --glass-shadow:       0 8px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -78,6 +78,28 @@ body.dark-theme {
 html, body { height: 100%; }
 
 body {
+    background: var(--bg-image, var(--light-gray));
+    color: var(--text-dark);
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Overlay for readability */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    z-index: 0;
+}
     background: var(--light-gray);
     color: var(--text-dark);
     max-width: 100%;
@@ -1283,6 +1305,44 @@ body.dark-theme .active-module-chip { background: rgba(46,204,113,0.14); border-
    SCROLL TO BOTTOM — Glass circle
    ============================================================ */
 .scroll-to-bottom-btn {
+    position: absolute;
+    bottom: 80px; /* placed just above the input area */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--blur-sm);
+    -webkit-backdrop-filter: var(--blur-sm);
+    border: 1px solid var(--glass-border);
+    color: var(--primary-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    font-size: 20px;
+}
+
+.scroll-to-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -10px);
+}
+
+.scroll-to-bottom-btn.hidden { display: none !important; }
+
+.scroll-to-bottom-btn:hover {
+    background: rgba(var(--primary-green-rgb), 0.12);
+    border-color: var(--glass-green-border);
+    box-shadow: 0 6px 18px rgba(var(--primary-green-rgb), 0.20), var(--glass-highlight);
+    transform: translate(-50%, -12px);
+}
     position: fixed;
     bottom: calc(82px + env(safe-area-inset-bottom));
     right: 20px;
