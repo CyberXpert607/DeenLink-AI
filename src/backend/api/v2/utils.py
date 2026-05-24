@@ -29,8 +29,8 @@ def format_source_display(payload: dict) -> str:
 
     elif source_type == "qa":
         question = payload.get("question", "")
-        if question: return f"Islamic QA · {question[:50]}"
-        return "Islamic QA"
+        if question: return f"islamqa.info · {question[:50]}"
+        return "islamqa.info"
         
     elif source_type == "article":
         title = payload.get("title", "")

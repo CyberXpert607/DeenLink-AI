@@ -77,9 +77,6 @@ marked.setOptions({
 
 /* ─── helpers ─────────────────────────────────────────────── */
 
-/**
- * Build the small logo <img> that sits to the left of every AI bubble.
- */
 function createAiAvatarEl() {
     const img = document.createElement('img');
     img.src = AI_AVATAR_SRC;
@@ -152,7 +149,6 @@ async function fetchUserProfile() {
         if (!res.ok) return;
 
         const data = await res.json();
-        //console.log('[Profile]', data);
 
         const displayName = data.full_name || data.name || data.username || 'Guest';
 
@@ -180,8 +176,6 @@ async function fetchUserProfile() {
                 const filename = rawAvatar.split('/').pop();
                 fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
             }
-
-            console.log('[Profile] avatar URL:', fullAvatarUrl);
 
             const img = document.createElement('img');
             img.src = fullAvatarUrl;
@@ -217,20 +211,6 @@ function showSuccessToast(message) {
     const toast = document.createElement('div');
     toast.className = 'success-toast';
     toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 70px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--primary-green);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        font-size: 14px;
-        z-index: 10000;
-        animation: slideDown 0.3s ease;
-    `;
     document.body.appendChild(toast);
     setTimeout(() => {
         toast.remove();
@@ -498,16 +478,17 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-function filterBestSources(sources) {
-    // Keep ALL valid sources — never discard any
+function filterBestSources(sources, rawContent) {
     if (!sources || sources.length === 0) return sources;
-    return sources.filter(s => s && s.payload);
+    // If rawContent contains inline citations like [1] keep all sources
+    if (rawContent && /\[\d+\]/.test(rawContent)) {
+        return sources.filter(s => s && s.payload);
+    }
+    // Otherwise, return the most relevant source (first with payload)
+    const first = sources.find(s => s && s.payload);
+    return first ? [first] : [];
 }
 
-/* ── Source persistence helpers ──────────────────────────────
-   Sources are saved to localStorage keyed by messageId so they
-   survive page refresh (issue #8).
-   ────────────────────────────────────────────────────────── */
 function _sourcesKey(messageId) { return `deen_sources_${messageId}`; }
 
 function persistSources(messageId, sources) {
@@ -530,7 +511,6 @@ function createSourcesPanel(sources) {
     const validSources = sources.filter(s => s && s.payload);
     if (!validSources.length) return panel;
 
-    // ─── Pill button ──────────────────────────────────────────────────
     const pillBtn = document.createElement('button');
     pillBtn.className = 'sources-pill-btn';
 
@@ -570,7 +550,6 @@ function createSourcesPanel(sources) {
     pillBtn.appendChild(pillLabel);
     pillBtn.appendChild(chevron);
 
-    // ─── Expanded list ────────────────────────────────────────────────
     const expandedList = document.createElement('div');
     expandedList.className = 'sources-expanded-list';
 
@@ -603,7 +582,6 @@ function createSourcesPanel(sources) {
         item.className = 'source-list-item';
         if (isWeb && payload.url) { item.href = payload.url; item.target = '_blank'; item.rel = 'noopener noreferrer'; }
 
-        // icon box
         const iconBox = document.createElement('div');
         iconBox.className = 'source-list-icon';
         if (isWeb) {
@@ -621,7 +599,6 @@ function createSourcesPanel(sources) {
             iconBox.appendChild(i);
         }
 
-        // body text
         const body = document.createElement('div');
         body.className = 'source-list-body';
 
@@ -637,20 +614,19 @@ function createSourcesPanel(sources) {
             body.appendChild(metaEl);
         }
 
-        // Arabic — full, no truncation
         if (payload.arabic && !isWeb) {
             const ar = document.createElement('div');
             ar.className = 'rag-arabic';
             ar.dir = 'rtl';
             ar.style.cssText = 'font-size:13px;margin-top:6px;white-space:normal;word-break:break-word;line-height:1.9;';
-            ar.textContent = payload.arabic;   // textContent = no escaping issues
+            ar.textContent = payload.arabic;
             body.appendChild(ar);
         }
 
         if (preview) {
             const prev = document.createElement('div');
             prev.className = 'source-list-preview';
-            prev.textContent = preview;        // textContent = no escaping issues
+            prev.textContent = preview;
             body.appendChild(prev);
         }
 
@@ -670,15 +646,11 @@ function createSourcesPanel(sources) {
     return panel;
 }
 
-/* ─── MESSAGE CREATION — all AI messages now include the logo avatar ─── */
-
 function createStreamingMessage() {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message ai streaming';
-    // Pre-assign an id so sources can be keyed to this message immediately
     messageDiv.dataset.messageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
 
-    // ── DeenLink logo avatar ──
     messageDiv.appendChild(createAiAvatarEl());
 
     messageDiv.innerHTML += `
@@ -743,7 +715,6 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
         if (existingPanel) existingPanel.remove();
         const sourcesPanel = createSourcesPanel(validSources);
         contentDiv.appendChild(sourcesPanel);
-        // Persist so they survive a page refresh (issue #8)
         const msgId = container.dataset.messageId || container.dataset.aiMessageId;
         if (msgId) persistSources(msgId, validSources);
     }
@@ -757,7 +728,6 @@ function finalizeStreamingMessage(messageObj, rawContent, sources = null) {
         contentDiv.appendChild(feedbackDiv);
     }
 
-    // Notify user if page is in background (issue #5)
     _notifyAIDone(textEl?.innerText || '');
 
     setTimeout(() => {
@@ -819,7 +789,6 @@ function createMessageElement(sender, text = "", incomplete = false, prompt = nu
     el.dataset.raw = text || "";
     el.dataset.messageId = messageId || Date.now().toString(36) + Math.random().toString(36).substr(2);
 
-    // ── DeenLink logo avatar (AI only) ──
     if (sender === 'ai') {
         el.appendChild(createAiAvatarEl());
     }
@@ -868,7 +837,6 @@ function appendLoadingMessage() {
     const el = document.createElement("div");
     el.className = "message ai loading";
 
-    // ── DeenLink logo avatar ──
     el.appendChild(createAiAvatarEl());
 
     const contentDiv = document.createElement("div");
@@ -974,7 +942,6 @@ function appendMessage(sender, text, options = {}) {
     if (shouldScroll) Elements.chatMessages.scrollTop = Elements.chatMessages.scrollHeight;
     updateEmptyStateVisibility();
 }
-
 
 function createFeedbackButtons(messageContent) {
     const feedbackDiv = document.createElement('div');
@@ -1437,12 +1404,11 @@ async function sendMessage(retryData = null) {
                         removeSearchIndicator();
                         removeTypingIndicator();
 
-                        // Remove stuck typing indicator dots inside the bubble container
                         const bubbleTypingIndicator = streamingMsg.container.querySelector('.typing-indicator');
                         if (bubbleTypingIndicator) {
                             bubbleTypingIndicator.remove();
                         }
-                        
+
                         const selectionContainer = document.createElement('div');
                         selectionContainer.className = 'intent-selection-container';
                         selectionContainer.style.cssText = 'display:flex;flex-direction:column;gap:12px;margin:12px 0;width:100%;';
@@ -1465,34 +1431,38 @@ async function sendMessage(retryData = null) {
                                 justify-content:center;
                                 gap:8px;
                                 padding:16px;
-                                background:var(--ai-bg);
-                                border:1px solid rgba(29,111,66,0.15);
-                                border-radius:12px;
+                                background:var(--glass-bg);
+                                backdrop-filter:blur(10px);
+                                -webkit-backdrop-filter:blur(10px);
+                                border:1px solid var(--glass-border);
+                                border-radius:14px;
                                 cursor:pointer;
                                 transition:all 0.2s ease;
                                 text-align:center;
+                                box-shadow:var(--glass-shadow);
                             `;
                             card.innerHTML = `
                                 <span style="font-size:24px;">${opt.icon}</span>
                                 <span style="font-size:13px;font-weight:600;color:var(--text-dark);">${opt.label}</span>
                             `;
-                            
+
                             card.addEventListener('mouseenter', () => {
                                 card.style.transform = 'translateY(-2px)';
-                                card.style.boxShadow = '0 4px 12px rgba(29, 111, 66, 0.1)';
-                                card.style.borderColor = 'rgba(29,111,66,0.4)';
+                                card.style.boxShadow = '0 8px 24px rgba(var(--primary-green-rgb), 0.15)';
+                                card.style.borderColor = 'var(--glass-green-border)';
                             });
                             card.addEventListener('mouseleave', () => {
                                 card.style.transform = 'none';
-                                card.style.boxShadow = 'none';
-                                card.style.borderColor = 'rgba(29,111,66,0.15)';
+                                card.style.boxShadow = 'var(--glass-shadow)';
+                                card.style.borderColor = 'var(--glass-border)';
                             });
 
                             card.addEventListener('click', () => {
+                                const promptTextVal = streamingMsg.container.dataset.prompt;
                                 _applyModule(opt.id);
                                 streamingMsg.container.remove();
                                 sendMessage({
-                                    message: streamingMsg.container.dataset.prompt,
+                                    message: promptTextVal,
                                     isCallbackResend: true
                                 });
                             });
@@ -1501,11 +1471,11 @@ async function sendMessage(retryData = null) {
                         });
 
                         selectionContainer.appendChild(cardsGrid);
-                        
+
                         streamingMsg.container.style.display = 'flex';
                         aiMessageEl.innerHTML = '';
                         aiMessageEl.appendChild(selectionContainer);
-                        
+
                         completed = true;
                         return;
 
@@ -1666,19 +1636,9 @@ function initSidebar() {
     }, { passive: true });
 }
 
-function openSidebar() {
-    Elements.sidebar.classList.add("open");
-    Elements.overlay.classList.add("show");
-}
-
-function closeSidebar() {
-    Elements.sidebar.classList.remove("open");
-    Elements.overlay.classList.remove("show");
-}
-
-function toggleSidebar() {
-    Elements.sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
-}
+function openSidebar()  { Elements.sidebar.classList.add("open");    Elements.overlay.classList.add("show"); }
+function closeSidebar() { Elements.sidebar.classList.remove("open"); Elements.overlay.classList.remove("show"); }
+function toggleSidebar() { Elements.sidebar.classList.contains("open") ? closeSidebar() : openSidebar(); }
 
 const PWA = {
     init: async () => {
@@ -1692,11 +1652,6 @@ const PWA = {
 };
 
 function scrollEditIntoView(editContainer) {
-    // Use a short delay so the keyboard finishes animating first.
-    // We scroll the *messages area* div — NOT document.scrollIntoView —
-    // because scrollIntoView triggers a page-level scroll that confuses the
-    // visualViewport handler and is the root cause of the "bar jumps to
-    // middle of screen" bug.
     setTimeout(() => {
         const messagesArea = Elements.chatMessages.closest('.messages-area')
             || Elements.chatMessages.parentElement;
@@ -1842,7 +1797,7 @@ function initEventListeners() {
             const newConv = await createNewConversation();
             State.activeConversationId = newConv.id;
             Elements.chatMessages.innerHTML = "";
-            _clearModule(); // reset module on new chat
+            _clearModule();
             updateEmptyStateVisibility();
             closeSidebar();
             await loadConversations();
@@ -1857,14 +1812,9 @@ function initEventListeners() {
         const updateInputPosition = () => {
             if (!Elements.inputArea) return;
             const vv = window.visualViewport;
-            // offsetTop accounts for any visual-viewport scroll (e.g. browser chrome shrink)
             const keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
 
             if (keyboardHeight > 50) {
-                // Pin input bar just above the keyboard.
-                // Clamp to 45% of the visible viewport so it NEVER drifts to the
-                // centre of the screen (the old bug was bare keyboardHeight which
-                // can exceed half the screen on small devices).
                 const maxBottom = Math.floor(vv.height * 0.45);
                 const targetBottom = Math.min(keyboardHeight + 4, maxBottom);
                 Elements.inputArea.style.bottom = targetBottom + 'px';
@@ -2013,7 +1963,6 @@ function initEventListeners() {
     Elements.settingsBtn?.addEventListener('click', () => {
         Elements.modeRadios?.forEach(r => { r.checked = (r.value === State.responseMode); });
 
-        // Populate profile card from cache
         const profile = State.userProfile || {};
         const displayName = profile.full_name || profile.name || profile.username
             || document.getElementById('userNameDisplay')?.textContent || 'Guest';
@@ -2024,7 +1973,6 @@ function initEventListeners() {
         const subEl = document.getElementById('settingsProfileSub');
         if (subEl) subEl.textContent = profile.email || 'DeenLink Member';
 
-        // Re-render avatar using DOM (not innerHTML) to avoid escaping bugs
         const avatarEl = document.getElementById('settingsProfileAvatar');
         const rawAvatar = profile.profile_image || profile.avatar_url
             || profile.profile_picture || profile.photo || null;
@@ -2051,7 +1999,6 @@ function initEventListeners() {
             avatarEl.appendChild(img);
         }
 
-        // Notification toggle state
         const toggle = document.getElementById('toggleAINotif');
         if (toggle) toggle.checked = (localStorage.getItem('deen_notif_ai_done') === 'true');
 
@@ -2059,6 +2006,7 @@ function initEventListeners() {
         showSettingsPage('settingsPageMain');
         closeSidebar();
     });
+
     ['closeSettingsModal','closeSettingsFromPersonalization','closeSettingsFromMemory','closeSettingsFromManageMemory','closeSettingsFromMode'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', closeSettings);
     });
@@ -2089,7 +2037,6 @@ function initEventListeners() {
         loadMemoriesIntoPage();
     });
     document.getElementById('navToAppearance')?.addEventListener('click', () => {
-        // Sync slider to current font size
         const sz = parseInt(localStorage.getItem('deenFontSize') || '15');
         const slider = document.getElementById('fontSizeSlider');
         const preview = document.getElementById('fontSizePreview');
@@ -2108,14 +2055,12 @@ function initEventListeners() {
     });
     document.getElementById('navToNotifications')?.addEventListener('click', () => showSettingsPage('settingsPageNotifications'));
 
-    // Font size live preview
     document.getElementById('fontSizeSlider')?.addEventListener('input', (e) => {
         const sz = e.target.value;
         const preview = document.getElementById('fontSizePreview');
         if (preview) preview.textContent = sz + 'px';
     });
 
-    // Save appearance
     document.getElementById('saveAppearanceBtn')?.addEventListener('click', () => {
         const sz = document.getElementById('fontSizeSlider')?.value || '15';
         document.documentElement.style.setProperty('--chat-font-size', sz + 'px');
@@ -2124,7 +2069,6 @@ function initEventListeners() {
         closeSettings();
     });
 
-    // Theme buttons inside appearance page
     document.getElementById('themeLight')?.addEventListener('click', () => {
         document.body.classList.remove('dark-theme');
         localStorage.setItem('theme', 'light');
@@ -2139,7 +2083,6 @@ function initEventListeners() {
         localStorage.setItem('theme', 'system');
     });
 
-    // Save language
     document.getElementById('saveLanguageBtn')?.addEventListener('click', () => {
         const lang = document.getElementById('responseLangSelect')?.value || 'en';
         const tr = document.getElementById('quranTranslationSelect')?.value || 'sahih';
@@ -2150,7 +2093,6 @@ function initEventListeners() {
         closeSettings();
     });
 
-    // Save notifications
     document.getElementById('saveNotificationsBtn')?.addEventListener('click', () => {
         const aiNotif = document.getElementById('toggleAINotif')?.checked || false;
         localStorage.setItem('deen_notif_ai_done', aiNotif);
@@ -2175,7 +2117,6 @@ function initEventListeners() {
     document.getElementById('backFromLanguage')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
     document.getElementById('backFromNotifications')?.addEventListener('click', () => showSettingsPage('settingsPagePersonalization'));
 
-    // Close buttons on all pages (add new ones)
     ['closeSettingsModal','closeSettingsFromPersonalization','closeSettingsFromMemory',
      'closeSettingsFromManageMemory','closeSettingsFromMode','closeSettingsFromAppearance',
      'closeSettingsFromLanguage','closeSettingsFromNotifications'].forEach(id => {
@@ -2287,14 +2228,17 @@ async function loadMemoriesIntoPage() {
     }
 }
 
-/* --- Modules & Speech (issue #4) --------------------------- */
-
+/* ============================================================
+   MODULES & SPEECH
+   ── Only change from original: icon values use FA HTML strings
+      instead of emoji, so the active chip renders a proper icon.
+   ============================================================ */
 const MODULE_CONFIG = {
-    books:      { label: 'Books',      icon: '📚', placeholder: 'Search Hadith, Surah or Ayah...', prefix: 'search_sources: ' },
-    motivation: { label: 'Motivation', icon: '💡', placeholder: 'Need some Islamic encouragement?', prefix: 'topic_motivation: ' },
-    fatwa:      { label: 'Fatwa',      icon: '⚖️', placeholder: 'Ask an Islamic jurisprudence question...', prefix: 'topic_fatwa: ' },
-    general:    { label: 'General',    icon: '💬', placeholder: 'Ask anything Islamic...', prefix: '' },
-    chat:       { label: 'Chat',       icon: '🗨️', placeholder: 'Casual conversation...', prefix: '' }
+    books:      { label: 'Books',      icon: '<i class="fas fa-book-open"></i>',      placeholder: 'Search Hadith, Surah or Ayah...', prefix: 'search_sources: ' },
+    motivation: { label: 'Motivation', icon: '<i class="fas fa-lightbulb"></i>',      placeholder: 'Need some Islamic encouragement?', prefix: 'topic_motivation: ' },
+    fatwa:      { label: 'Fatwa',      icon: '<i class="fas fa-scale-balanced"></i>', placeholder: 'Ask an Islamic jurisprudence question...', prefix: 'topic_fatwa: ' },
+    general:    { label: 'General',    icon: '<i class="fas fa-comments"></i>',       placeholder: 'Ask anything Islamic...', prefix: '' },
+    chat:       { label: 'Chat',       icon: '<i class="fas fa-message"></i>',        placeholder: 'Casual conversation...', prefix: '' }
 };
 
 function _applyModule(moduleId) {
@@ -2303,28 +2247,33 @@ function _applyModule(moduleId) {
     State.queryModule = moduleId;
     if (Elements.messageInput) Elements.messageInput.placeholder = config.placeholder;
 
-    // Remove any existing chip
     _clearModuleChip();
 
-    // Insert chip INSIDE the input-container, before the textarea
     const inputContainer = document.querySelector('.input-container');
     if (!inputContainer) return;
 
     const chip = document.createElement('div');
     chip.id = 'activeModuleChip';
     chip.className = 'active-module-chip';
-    chip.innerHTML = `<span>${config.icon} ${config.label}</span>`;
+
+    // icon rendered as HTML; label as safe text node
+    const iconSpan = document.createElement('span');
+    iconSpan.innerHTML = config.icon;   // safe — only our own FA strings
+    chip.appendChild(iconSpan);
+
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = config.label;
+    chip.appendChild(labelSpan);
 
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Clear mode');
-    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-    closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0;display:flex;align-items:center;opacity:0.8;';
+    closeBtn.innerHTML = '<i class="fas fa-xmark"></i>';
     closeBtn.addEventListener('click', (e) => { e.stopPropagation(); _clearModule(); });
     chip.appendChild(closeBtn);
 
-    // Put chip as first child of input-container (left side, before plus btn)
     inputContainer.insertBefore(chip, inputContainer.firstChild);
+    Elements.modulesPopup?.classList.add('hidden');
     Elements.messageInput?.focus();
 }
 
@@ -2333,8 +2282,6 @@ function _clearModule() {
     if (Elements.messageInput) {
         Elements.messageInput.placeholder = 'Ask your Islamic question...';
     }
-
-    // Restore + button
     if (Elements.modulesBtn) {
         Elements.modulesBtn.innerHTML = '<i class="fas fa-plus"></i>';
         Elements.modulesBtn.className = 'input-action-btn';
@@ -2444,18 +2391,16 @@ window.addEventListener("load", async () => {
     const savedMode = localStorage.getItem("responseMode");
     if (savedMode) State.responseMode = savedMode;
 
-    // Apply saved font size
     const savedFontSize = localStorage.getItem('deenFontSize');
     if (savedFontSize) document.documentElement.style.setProperty('--chat-font-size', savedFontSize + 'px');
 
-    // Apply saved language pref to State
     const savedLang = localStorage.getItem('deenLang');
     if (savedLang) State.responseLang = savedLang;
 
     fetchUserProfile();
     await loadConversations();
     updateEmptyStateVisibility();
-    
+
     initSpeechToText();
 
     Elements.messageInput?.focus();
@@ -2514,4 +2459,4 @@ function _renderMemoryNotice(fact, persist = true) {
 }
 
 function showMemoryUpdatedInline(fact) { _renderMemoryNotice(fact, true); }
-function showMemoryUpdatedToast(fact) { showMemoryUpdatedInline(fact); }
+function showMemoryUpdatedToast(fact)  { showMemoryUpdatedInline(fact); }

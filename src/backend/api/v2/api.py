@@ -23,7 +23,7 @@ from v2.utils import format_source_display
 import datetime
 
 
-router = APIRouter(prefix="/api/v2", tags=["DeenLink AI v2"])
+router = APIRouter(prefix="/v2", tags=["DeenLink AI v2"])
 logging = getLogger(__name__)
 
 class AskRequest(BaseModel):
@@ -37,8 +37,6 @@ class AskRequest(BaseModel):
 class EditMessageRequest(BaseModel):
     message_id: str
     message: str
-
-# format_source_display moved to utils.py
 
 def save_messages_sync(
     conversation_id: str,
@@ -330,6 +328,7 @@ async def ask_stream(
                             "display_reference": format_source_display(r.payload)
                         }
                         for r in filtered
+                        if r.source_type not in {"seerah", "prophet"}
                     ]
                     
                     collectedSources = sources_data  # persist for later save
@@ -354,6 +353,11 @@ async def ask_stream(
                             yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
                             has_sent_any_token = True
                         elif chunk_type == "sources":
+                            filtered_chunk_sources = [
+                                s for s in chunk.get("sources", [])
+                                if s.get("source_type") not in {"seerah", "prophet"}
+                            ]
+                            chunk["sources"] = filtered_chunk_sources
                             yield f"data: {json.dumps(chunk)}\n\n"
                         elif chunk_type == "final":
                             yield f"data: {json.dumps({'type': 'done'})}\n\n"
@@ -363,12 +367,16 @@ async def ask_stream(
                 results = search_similar(current_query, 5)
                 filtered = [r for r in results if r.score >= 0.3]
 
-                sources_data = [{
-                    "source_type": r.source_type,
-                    "score": r.score,
-                    "payload": r.payload,
-                    "display_reference": format_source_display(r.payload)
-                } for r in filtered]
+                sources_data = [
+                    {
+                        "source_type": r.source_type,
+                        "score": r.score,
+                        "payload": r.payload,
+                        "display_reference": format_source_display(r.payload)
+                    } 
+                    for r in filtered 
+                    if r.source_type not in {"seerah", "prophet"}
+                ]
                 
                 if sources_data:
                     yield f"data: {json.dumps({'type': 'sources', 'sources': sources_data})}\n\n"

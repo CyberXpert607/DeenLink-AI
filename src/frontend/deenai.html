@@ -26,38 +26,31 @@
         @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
         body.dark-theme .search-spinner-css { border-color:#4a6572; border-top-color:#2ecc71; }
 
-		.header-logo-img {
-		    width: 42px;
-		    height: 42px;
-		    border-radius: 8px;
-		    object-fit: contain;
-		    flex-shrink: 0;
-		    display: block;
-		}
-		.message.ai {
-		    align-items: flex-start;
-		    gap: 10px;
-		}
-		.ai-avatar {
-		    width: 38px;
-		    height: 38px;
-		    border-radius: 8px;
-		    object-fit: contain;
-		    flex-shrink: 0;
-		    margin-top: 4px;
-		    background: #E8F5E9;
-		    padding: 2px;
-		    border: 1px solid rgba(29,111,66,0.15);
-		    display: block;
-		}
-		body.dark-theme .ai-avatar {
-		    background: rgba(46,204,113,0.12);
-		    border-color: rgba(46,204,113,0.2);
-		}
-		.message.ai .message-content {
-		    flex: 1;
-		    min-width: 0;
-		}
+        .header-logo-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+        .message.ai {
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .ai-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            object-fit: contain;
+            flex-shrink: 0;
+            margin-top: 4px;
+            display: block;
+        }
+        .message.ai .message-content {
+            flex: 1;
+            min-width: 0;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
@@ -84,15 +77,15 @@
                     <button class="menu-button" id="menuToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
                     <button class="back-button" id="backBtn" aria-label="Go back"><i class="fas fa-arrow-left"></i></button>
                     <div class="header-title">
-					    <img
-					        src="../img/deenlink-ai.png"
-					        alt="DeenLink AI"
-					        class="header-logo-img"
-					        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
-					    >
-					    <i class="fas fa-robot" style="display:none;"></i>
-					    <span>DeenLink AI</span>
-					</div>
+                        <img
+                            src="../img/deenlink-ai.png"
+                            alt="DeenLink AI"
+                            class="header-logo-img"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+                        >
+                        <i class="fas fa-robot" style="display:none;"></i>
+                        <span>DeenLink AI</span>
+                    </div>
                 </div>
                 <div class="header-right">
                     <button class="header-action-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
@@ -105,39 +98,39 @@
                         <p>How can I help you today?</p>
                     </div>
                     <div class="quick-prompts" id="quickPrompts" style="display:none;">
-                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?">🕌 Salah</button>
-                        <button class="quick-prompt-btn" data-prompt="Give me a Quranic verse about patience">📖 Patience</button>
-                        <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam">🌙 Five Pillars</button>
-                        <button class="quick-prompt-btn" data-prompt="What is the significance of Ramadan?">🌙 Ramadan</button>
-                        <button class="quick-prompt-btn" data-prompt="How do I perform Wudu correctly?">💧 Wudu</button>
-                        <button class="quick-prompt-btn" data-prompt="What does Islam say about kindness to parents?">❤️ Parents</button>
-                        <button class="quick-prompt-btn" data-prompt="What is Zakat and who must pay it?">🤲 Zakat</button>
-                        <button class="quick-prompt-btn" data-prompt="Tell me about the life of Prophet Muhammad ﷺ">☀️ Prophet ﷺ</button>
+                        <button class="quick-prompt-btn" data-prompt="What is the importance of Salah?"><i class="fas fa-mosque"></i> Salah</button>
+                        <button class="quick-prompt-btn" data-prompt="Give me a Quranic verse about patience"><i class="fas fa-book-open"></i> Patience</button>
+                        <button class="quick-prompt-btn" data-prompt="Explain the Five Pillars of Islam"><i class="fas fa-star-and-crescent"></i> Five Pillars</button>
+                        <button class="quick-prompt-btn" data-prompt="What is the significance of Ramadan?"><i class="fas fa-moon"></i> Ramadan</button>
+                        <button class="quick-prompt-btn" data-prompt="How do I perform Wudu correctly?"><i class="fas fa-droplet"></i> Wudu</button>
+                        <button class="quick-prompt-btn" data-prompt="What does Islam say about kindness to parents?"><i class="fas fa-heart"></i> Parents</button>
+                        <button class="quick-prompt-btn" data-prompt="What is Zakat and who must pay it?"><i class="fas fa-hand-holding-heart"></i> Zakat</button>
+                        <button class="quick-prompt-btn" data-prompt="Tell me about the life of Prophet Muhammad ﷺ"><i class="fas fa-sun"></i> Prophet ﷺ</button>
                     </div>
                     <div class="chat-messages" id="chatMessages"></div>
                 </div>
                 <div class="input-area">
-                    <!-- Module selection popup (sibling, rendered just above bar) -->
+                    <!-- Module selection popup -->
                     <div id="modulesPopup" class="modules-popup hidden" role="menu">
                         <div class="modules-popup-title">Choose a mode</div>
                         <button class="module-btn" data-module="books">
-                            <span class="module-btn-icon">📚</span>
+                            <span class="module-btn-icon"><i class="fas fa-book-open"></i></span>
                             <div><div class="module-btn-label">Book Inquiries</div><div class="module-btn-sub">Find Hadith, Surah or Ayah</div></div>
                         </button>
                         <button class="module-btn" data-module="motivation">
-                            <span class="module-btn-icon">💡</span>
+                            <span class="module-btn-icon"><i class="fas fa-lightbulb"></i></span>
                             <div><div class="module-btn-label">Motivation</div><div class="module-btn-sub">Islamic encouragement &amp; reminders</div></div>
                         </button>
                         <button class="module-btn" data-module="fatwa">
-                            <span class="module-btn-icon">⚖️</span>
+                            <span class="module-btn-icon"><i class="fas fa-scale-balanced"></i></span>
                             <div><div class="module-btn-label">Fatwa &amp; Rulings</div><div class="module-btn-sub">Islamic jurisprudence questions</div></div>
                         </button>
                         <button class="module-btn" data-module="general">
-                            <span class="module-btn-icon">💬</span>
+                            <span class="module-btn-icon"><i class="fas fa-comments"></i></span>
                             <div><div class="module-btn-label">General Q&amp;A</div><div class="module-btn-sub">Ask anything Islamic</div></div>
                         </button>
                         <button class="module-btn" data-module="chat">
-                            <span class="module-btn-icon">🗨️</span>
+                            <span class="module-btn-icon"><i class="fas fa-message"></i></span>
                             <div><div class="module-btn-label">Chat (Casual)</div><div class="module-btn-sub">Casual conversation</div></div>
                         </button>
                     </div>
