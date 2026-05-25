@@ -3,9 +3,11 @@ from contextlib import asynccontextmanager
 import uvicorn
 import time
 from fastapi.responses import FileResponse
-import sys, os
-# Ensure the directory containing config.py is on sys.path
-sys.path.append(os.path.dirname(__file__))
+import sys
+from pathlib import Path
+# Add the directory containing config.py to sys.path (absolute path)
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.append(str(BASE_DIR))
 from config import ALLOWED_ORIGINS
 from v2.db.database import engine
 from v2.db.models import Base
