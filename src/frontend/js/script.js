@@ -75,8 +75,6 @@ marked.setOptions({
     xhtml: false
 });
 
-/* ─── helpers ─────────────────────────────────────────────── */
-
 function createAiAvatarEl() {
     // Avatar removed per design request; return an empty transparent element
     const placeholder = document.createElement('span');
@@ -84,14 +82,6 @@ function createAiAvatarEl() {
     placeholder.style.display = 'none';
     return placeholder;
 }
-
-
-
-
-    img.onerror = function () { this.style.display = 'none'; };
-    return img;
-}
-
 async function getValidToken() {
     const now = Date.now();
     if (State.jwtToken && State.jwtExpiry && now < State.jwtExpiry - 60000) {
@@ -361,7 +351,7 @@ function renderContent(element, rawContent) {
 
     let html;
     if (isHTMLContent(cleaned)) {
-        html = cleaned;
+        html = DOMPurify.sanitize(cleaned, PurifyConfig);
     } else {
         try {
             const cleanedForMd = cleanMarkdownOutput(rawContent);

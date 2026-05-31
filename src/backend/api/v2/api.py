@@ -96,9 +96,26 @@ import time
 RATE_LIMIT_STORE = {}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX_REQUESTS = 10
+RATE_LIMIT_REDIS = None
+
+if os.getenv("REDIS_URL"):
+    try:
+        import redis
+        RATE_LIMIT_REDIS = redis.Redis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
+    except Exception as e:
+        logging.warning(f"Redis rate limiter disabled: {e}")
 
 def check_rate_limit(user_id: str):
     now = time.time()
+    if RATE_LIMIT_REDIS:
+        key = f"deenai:rate_limit:{user_id}"
+        count = RATE_LIMIT_REDIS.incr(key)
+        if count == 1:
+            RATE_LIMIT_REDIS.expire(key, RATE_LIMIT_WINDOW)
+        if count > RATE_LIMIT_MAX_REQUESTS:
+            raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+        return
+
     if user_id not in RATE_LIMIT_STORE:
         RATE_LIMIT_STORE[user_id] = []
     
@@ -118,6 +135,9 @@ def admin_login(payload: AdminLoginRequest):
     import jwt
     import datetime
     
+    if not ADMIN_PASSWORD or not ADMIN_JWT_SECRET:
+        raise HTTPException(status_code=503, detail="Admin authentication is not configured")
+
     if payload.password != ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid admin password")
         
@@ -165,6 +185,10 @@ async def ask_stream(
 
     client_datetime = payload.client_datetime.strip()
     client_timezone = payload.client_timezone.strip()
+    user_memories_list = [
+        {"id": m.id, "fact": m.fact}
+        for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
+    ]
 
     _q = cleaned_query.lower()
     _datetime_keywords = [
@@ -181,8 +205,6 @@ async def ask_stream(
         intent = "rag_all"
     elif _is_datetime_query and client_datetime:
         intent = "datetime_direct"
-    elif detected_prefix is None:
-        intent = "ambiguous"
     elif detected_prefix == "search_sources:":
         intent = "rag_all"
         if any(kw in cleaned_query.lower() for kw in ["quran", "ayah", "surah", "verse"]):
@@ -195,21 +217,27 @@ async def ask_stream(
         intent = "motivation"
     elif detected_prefix == "topic_general:":
         intent = "rag_all"
+    else:
+        classified = await classify_query_llm(cleaned_query, user_memories_list)
+        intent = classified.get("intent", "ambiguous")
+        if classified.get("confidence", 0) < 0.45:
+            intent = "ambiguous"
+        logging.info(
+            "Classified query intent=%s confidence=%s reason=%s",
+            intent,
+            classified.get("confidence"),
+            classified.get("reason"),
+        )
+
     memory_messages = None
     conversation_history = []
-    user_memories_list = [] 
     
     if intent not in {"rag_quran", "rag_hadith", "rag_all", "motivation"}:
         memory_messages = build_prompt_with_memory(db, convo)
 
         if memory_messages is None:
             memory_messages = []
-        
-        user_memories_list = [
-            {"id": m.id, "fact": m.fact}
-            for m in db.query(UserMemory).filter(UserMemory.user_id == user_id).all()
-        ]
-        
+
         memory_messages.append({"role": "user", "content": cleaned_query})
         logging.info(f"Built memory for conversation {convo.id} with {len(memory_messages)} messages")
     else:
@@ -303,22 +331,15 @@ async def ask_stream(
                 if not filtered:
                     if detected_prefix == "search_sources:":
                         fallback_msg = "No relevant information found in the Books database. Please try rephrasing your question or search general chat."
-                        full_response += fallback_msg
-                        yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
-                        has_sent_any_token = True
                     else:
-                        # Fallback to general LLM response!
-                        yield f"data: {json.dumps({'type': 'chat_start'})}\n\n"
-                        system_note = {"role": "system", "content": "No relevant local database records were found. Please answer the user's question using your general Islamic knowledge."}
-                        msg_list = local_memory_messages.copy()
-                        msg_list.insert(-1, system_note)
-                        
-                        for token in stream_chat_response(msg_list):
-                            if disconnected:
-                                break
-                            full_response += token
-                            yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-                            has_sent_any_token = True
+                        fallback_msg = (
+                            "I could not find a reliable source for this in the local Books database. "
+                            "Please try a more specific Quran, hadith, or seerah reference, or use Fatwa mode "
+                            "for a ruling from islamqa.info."
+                        )
+                    full_response += fallback_msg
+                    yield f"data: {json.dumps({'type': 'token', 'content': fallback_msg})}\n\n"
+                    has_sent_any_token = True
                 else:
                     sources_data = [
                         {
@@ -535,7 +556,7 @@ async def ask_stream(
         except Exception as e:
             logging.error(f"Error in stream: {e}", exc_info=True)
             if not disconnected:
-                error_msg = f"An error occurred while processing your request: {str(e)}"
+                error_msg = "I could not process that request right now. Please try again shortly."
                 yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
                 full_response = error_msg
             

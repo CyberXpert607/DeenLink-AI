@@ -237,11 +237,6 @@
                                     <span class="settings-nav-label">Appearance</span>
                                     <i class="fas fa-chevron-right settings-nav-chevron"></i>
                                 </button>
-                                <button class="settings-nav-row" id="navToLanguage">
-                                    <span class="settings-nav-icon"><i class="fas fa-language"></i></span>
-                                    <span class="settings-nav-label">Language & Region</span>
-                                    <i class="fas fa-chevron-right settings-nav-chevron"></i>
-                                </button>
                                 <button class="settings-nav-row" id="navToNotifications">
                                     <span class="settings-nav-icon"><i class="fas fa-bell"></i></span>
                                     <span class="settings-nav-label">Notifications</span>
@@ -276,48 +271,33 @@
                                 </div>
                                 <p class="settings-desc" style="margin-top:6px;">Preview: <span id="fontSizePreview">15px</span></p>
                             </div>
+                            <!-- Background selector -->
+                            <div class="settings-group" style="margin-top:20px;">
+                                <label class="settings-label">Background</label>
+                                <select id="backgroundSelect" class="settings-select">
+                                    <option value="">Default</option>
+                                    <option value="https://picsum.photos/seed/bg1/800/600">Wallpaper 1</option>
+                                    <option value="https://picsum.photos/seed/bg2/800/600">Wallpaper 2</option>
+                                </select>
+                                <input type="file" id="backgroundUpload" accept="image/*" style="margin-top:8px;" />
+                            </div>
+                            <!-- Font Family selector -->
+                            <div class="settings-group" style="margin-top:20px;">
+                                <label class="settings-label">Font Family</label>
+                                <select id="fontFamilySelect" class="settings-select">
+                                    <option value="system-ui">System UI</option>
+                                    <option value="Arial, Helvetica, sans-serif">Arial</option>
+                                    <option value='"Times New Roman", Times, serif'>Times New Roman</option>
+                                    <option value="Georgia, serif">Georgia</option>
+                                    <option value='"Courier New", Courier, monospace'>Courier New</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="feedback-modal-footer">
                             <button id="saveAppearanceBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
                         </div>
                     </div>
 
-                    <!-- Page: Language -->
-                    <div class="settings-page hidden" id="settingsPageLanguage">
-                        <div class="feedback-modal-header">
-                            <button class="settings-back-btn" id="backFromLanguage"><i class="fas fa-chevron-left"></i></button>
-                            <h3>Language & Region</h3>
-                            <button id="closeSettingsFromLanguage" aria-label="Close"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="feedback-modal-body">
-                            <div class="settings-group">
-                                <label class="settings-label">Response Language</label>
-                                <p class="settings-desc">The language DeenLink AI uses in responses.</p>
-                                <select id="responseLangSelect" class="settings-select">
-                                    <option value="en">English</option>
-                                    <option value="ar">العربية (Arabic)</option>
-                                    <option value="ur">اردو (Urdu)</option>
-                                    <option value="fr">Français (French)</option>
-                                    <option value="ms">Bahasa Melayu</option>
-                                    <option value="tr">Türkçe (Turkish)</option>
-                                    <option value="id">Bahasa Indonesia</option>
-                                </select>
-                            </div>
-                            <div class="settings-group" style="margin-top:20px;">
-                                <label class="settings-label">Quran Translation</label>
-                                <p class="settings-desc">Preferred English translation for Quranic verses.</p>
-                                <select id="quranTranslationSelect" class="settings-select">
-                                    <option value="sahih">Sahih International</option>
-                                    <option value="pickthall">Pickthall</option>
-                                    <option value="yusuf">Yusuf Ali</option>
-                                    <option value="hilali">Hilali & Khan</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="feedback-modal-footer">
-                            <button id="saveLanguageBtn" class="feedback-btn-submit" style="width:100%;justify-content:center;">Save</button>
-                        </div>
-                    </div>
 
                     <!-- Page: Notifications -->
                     <div class="settings-page hidden" id="settingsPageNotifications">

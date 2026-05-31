@@ -24,7 +24,7 @@ def verify_jwt(
         print(f"JWT Verification Error: {e}", flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired token: {e}",
+            detail="Invalid or expired token",
         )
 
     user_id = payload.get("sub")
@@ -43,6 +43,12 @@ def verify_jwt(
 def verify_admin_jwt(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+    if not ADMIN_JWT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin authentication is not configured",
+        )
+
     token = credentials.credentials
 
     try:
@@ -55,7 +61,7 @@ def verify_admin_jwt(
         print(f"Admin JWT Verification Error: {e}", flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired admin token: {e}",
+            detail="Invalid or expired admin token",
         )
 
     if payload.get("user_type") != "admin":

@@ -2,13 +2,14 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from v2.embeddings import embed_text
 from v2.vectore_types import VectorSearchResult
+from config import QDRANT_COLLECTION, QDRANT_URL
 from typing import List
 import uuid
 
-COLLECTION_NAME = "islamic_sources"
+COLLECTION_NAME = QDRANT_COLLECTION
 
 client = QdrantClient(
-    url="http://localhost:6333"
+    url=QDRANT_URL
 )
 
 def ensure_collection():

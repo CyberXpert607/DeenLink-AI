@@ -37,7 +37,6 @@ Rules for Quran Detection:
 Rules for History/Prophets/Expert Knowledge (rag_all):
 - User asks about: Prophet names (Adam, Yusuf, Isa, etc.), Companions/Sahaba (Abu Bakr, Umar, etc.), 99 names of Allah
 - User asks for stories of prophets or history of early Islam
-- User asks for a general fatwa or scholarly ruling
 
 Rules for Motivation:
 - User asks "What does Islam say about X?" where X is a life situation
@@ -169,6 +168,37 @@ async def classify_query_llm(text: str, user_memories: list = None) -> dict:
         return {"intent": "chat", "confidence": 1.0, "reason": "Explicit chat mode selected"}
 
     local_entities = extract_hadith_entities_local(text)
+
+    fatwa_terms = [
+        "fatwa", "ruling", "halal", "haram", "permissible", "impermissible",
+        "is it allowed", "can i", "may i", "what do scholars say"
+    ]
+    current_terms = ["latest", "current", "today", "news", "recent", "now", "this year", "2026"]
+    islamic_scope_terms = [
+        "islam", "muslim", "quran", "hadith", "hajj", "umrah", "ramadan",
+        "eid", "masjid", "mosque", "scholar", "fatwa"
+    ]
+    if any(term in text_lower for term in fatwa_terms):
+        return {
+            "intent": "web_search",
+            "confidence": 1.0,
+            "reason": "Explicit fatwa/ruling/permissibility wording",
+            "detected_entities": local_entities,
+        }
+    if any(term in text_lower for term in current_terms) and any(term in text_lower for term in islamic_scope_terms):
+        return {
+            "intent": "web_search",
+            "confidence": 0.95,
+            "reason": "Current Islamic information requested",
+            "detected_entities": local_entities,
+        }
+    if local_entities.get("collection") or local_entities.get("hadith_number"):
+        return {
+            "intent": "rag_hadith",
+            "confidence": 0.95,
+            "reason": "Hadith collection or number detected locally",
+            "detected_entities": local_entities,
+        }
 
     # Build the memory block to inject into the prompt
     if user_memories:

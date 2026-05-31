@@ -2,7 +2,7 @@ from groq import Groq
 import logging
 import json
 import datetime
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 from config import MODEL, GOOGLE_API_KEY, GOOGLE_SEARCH_ENGINE_ID
 import requests
 
@@ -17,8 +17,6 @@ TRUSTED_DOMAINS = {
     "daruliftaa.com",
     "muftionline.co.za",
     "islamicfinder.org",
-    # "myislam.org" is handled conditionally below
-    # General fact / news
     "wikipedia.org",
     "timeanddate.com",
     "bbc.com",
@@ -26,52 +24,70 @@ TRUSTED_DOMAINS = {
     "aljazeera.com",
     "reuters.com",
     "apnews.com",
+    "arabnews.com",
+    "spa.gov.sa",
+    "saudigazette.com.sa",
+    "aboutislam.net",
+    "muslimnews.co.uk",
+    "islamic-relief.org",
+    "muslimmatters.org",
+    "hajj.nusuk.sa",
+}
+
+FATWA_DOMAIN = "islamqa.info"
+HTTP_HEADERS = {
+    "User-Agent": "DeenLinkAI/1.0 (+https://deenlink.org; Islamic knowledge assistant)"
 }
 
 
 def _domain_of(url: str) -> str:
     try:
-        host = urlparse(url).netloc.lower().lstrip("www.")
-        # handle subdomains — keep last two parts
-        parts = host.split(".")
-        return ".".join(parts[-2:]) if len(parts) >= 2 else host
+        return urlparse(url).netloc.lower().lstrip("www.")
     except Exception:
         return ""
 
 
+def _matches_domain(url: str, domain: str) -> bool:
+    host = _domain_of(url)
+    return host == domain or host.endswith("." + domain)
+
+
 def _is_trusted(url: str, query: str = "") -> bool:
-    dom = _domain_of(url)
-    
-    # Conditional trust for myislam.org and islamqa.info
-    if dom == "myislam.org":
+    if _matches_domain(url, "myislam.org"):
         keywords = ["allah", "prophet", "companion", "sahaba", "history", "seerah", "names of", "story of"]
-        if query and any(kw in query.lower() for kw in keywords):
-            return True
-        return False
-    
-    if dom == "islamqa.info":
+        return bool(query and any(kw in query.lower() for kw in keywords))
+
+    if _matches_domain(url, FATWA_DOMAIN):
         if "site:islamqa.info" in query.lower():
             return True
         keywords = ["fatwa", "ruling", "permissible", "halal", "haram", "can i", "is it", "ruling on"]
-        if query and any(kw in query.lower() for kw in keywords):
-            return True
-        return False
+        return bool(query and any(kw in query.lower() for kw in keywords))
 
-    return any(dom == td or dom.endswith("." + td) for td in TRUSTED_DOMAINS)
+    return any(_matches_domain(url, td) for td in TRUSTED_DOMAINS)
 
-# Query rewriter
+
+def _fetch_page_text(url: str, max_chars: int = 3500) -> str:
+    """Fetch a short readable extract so answers are not based only on snippets."""
+    try:
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=12)
+        resp.raise_for_status()
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
+            tag.decompose()
+        return " ".join(soup.get_text(" ").split())[:max_chars]
+    except Exception as exc:
+        logger.warning(f"Could not fetch page text for {url}: {exc}")
+        return ""
+
 
 def _rewrite_query(user_query: str, context_summary: str = "") -> str:
-    """
-    Ask the LLM to turn the raw user message into a focused search query.
-    Falls back to the original query on any error.
-    """
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     context_clause = f"\nConversation context: {context_summary}" if context_summary else ""
     prompt = (
         f"Today is {today}.{context_clause}\n\n"
-        "Rewrite the following user message into a concise, effective web-search query "
-        "(max 10 words). Output ONLY the search query — no explanation, no quotes.\n\n"
+        "Rewrite the following user message into a concise, effective Islamic web-search query "
+        "(max 10 words). Output ONLY the search query - no explanation, no quotes.\n\n"
         f"User message: {user_query}"
     )
     try:
@@ -81,87 +97,145 @@ def _rewrite_query(user_query: str, context_summary: str = "") -> str:
             temperature=0.0,
             max_tokens=30,
         )
-        return resp.choices[0].message.content.strip()
+        rewritten = resp.choices[0].message.content.strip()
+        return rewritten or user_query
     except Exception as exc:
         logger.warning(f"Query rewrite failed: {exc}")
         return user_query
 
 
-# Search helper
+def _search_duckduckgo(query: str, max_results: int, is_fatwa: bool) -> tuple[list, list]:
+    trusted, others = [], []
+    rows = _search_duckduckgo_html(query, max_results)
+
+    for r in rows:
+        entry = {
+            "title": r.get("title", ""),
+            "url": r.get("href", "") or r.get("url", ""),
+            "body": r.get("body", ""),
+        }
+        if is_fatwa and not _matches_domain(entry["url"], FATWA_DOMAIN):
+            continue
+        if _is_trusted(entry["url"], query):
+            trusted.append(entry)
+        elif not is_fatwa:
+            others.append(entry)
+    return trusted, others
+
+
+def _search_duckduckgo_html(query: str, max_results: int) -> list[dict]:
+    try:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        resp = requests.get(
+            "https://html.duckduckgo.com/html/",
+            params={"q": query},
+            headers=HTTP_HEADERS,
+            timeout=12,
+            verify=False,
+        )
+        resp.raise_for_status()
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(resp.text, "html.parser")
+        rows = []
+        for result in soup.select(".result")[:max_results]:
+            link = result.select_one(".result__a")
+            snippet = result.select_one(".result__snippet")
+            if not link:
+                continue
+            href = link.get("href", "")
+            parsed = urlparse(href)
+            qs = parse_qs(parsed.query)
+            final_url = unquote(qs.get("uddg", [href])[0])
+            rows.append({
+                "title": link.get_text(" ", strip=True),
+                "href": final_url,
+                "body": snippet.get_text(" ", strip=True) if snippet else "",
+            })
+        return rows
+    except Exception as exc:
+        logger.warning(f"DuckDuckGo HTML search failed: {type(exc).__name__}")
+        return []
+
+
+def _enrich_results(results: list) -> None:
+    for entry in results[:3]:
+        fetched_text = _fetch_page_text(entry["url"])
+        if fetched_text:
+            entry["body"] = f"{entry['body']}\n\nPage extract: {fetched_text}"
+
+
 def perform_web_search(query: str, max_results: int = 8, is_fatwa: bool = False) -> tuple[list, list]:
     """
     Returns (trusted_results, fallback_results).
-    trusted_results — from TRUSTED_DOMAINS
-    fallback_results — everything else (used only if trusted is thin)
+    Fatwa mode is intentionally restricted to islamqa.info only.
     """
-    if is_fatwa:
-        if "site:islamqa.info" not in query.lower():
-            query = f"site:islamqa.info {query}"
-
-    if not GOOGLE_API_KEY or not GOOGLE_SEARCH_ENGINE_ID:
-        logger.error("Google Custom Search API key or Search Engine ID is not configured.")
-        return [], []
+    if is_fatwa and "site:islamqa.info" not in query.lower():
+        query = f"site:islamqa.info {query}"
 
     try:
-        url = "https://www.googleapis.com/customsearch/v1"
-        params = {
-            "key": GOOGLE_API_KEY,
-            "cx": GOOGLE_SEARCH_ENGINE_ID,
-            "q": query,
-            "num": min(max_results, 10),
-        }
-        resp = requests.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-        
-        trusted, others = [], []
-        for item in data.get("items", []):
-            entry = {
-                "title": item.get("title", ""),
-                "url": item.get("link", ""),
-                "body": item.get("snippet", ""),
+        if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                "key": GOOGLE_API_KEY,
+                "cx": GOOGLE_SEARCH_ENGINE_ID,
+                "q": query,
+                "num": min(max_results, 10),
             }
-            if _is_trusted(entry["url"], query):
-                trusted.append(entry)
-            else:
-                others.append(entry)
-        return trusted, others
-    except Exception as exc:
-        logger.error(f"Google Custom Search error: {exc}. Falling back to DuckDuckGo search.")
-        try:
-            from duckduckgo_search import DDGS
+            resp = requests.get(url, params=params, headers=HTTP_HEADERS, timeout=12)
+            resp.raise_for_status()
+            data = resp.json()
+
             trusted, others = [], []
-            with DDGS() as ddgs:
-                for r in ddgs.text(query, max_results=max_results):
-                    entry = {
-                        "title": r.get("title", ""),
-                        "url": r.get("href", ""),
-                        "body": r.get("body", ""),
-                    }
-                    if _is_trusted(entry["url"], query):
-                        trusted.append(entry)
-                    else:
-                        others.append(entry)
-            return trusted, others
+            for item in data.get("items", []):
+                entry = {
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),
+                    "body": item.get("snippet", ""),
+                }
+                if is_fatwa and not _matches_domain(entry["url"], FATWA_DOMAIN):
+                    continue
+                if _is_trusted(entry["url"], query):
+                    trusted.append(entry)
+                elif not is_fatwa:
+                    others.append(entry)
+        else:
+            logger.warning("Google Custom Search is not configured; using DuckDuckGo fallback.")
+            trusted, others = _search_duckduckgo(query, max_results, is_fatwa)
+
+        if not is_fatwa and not trusted:
+            targeted_query = f"{query} site:arabnews.com OR site:spa.gov.sa OR site:hajj.nusuk.sa"
+            targeted_trusted, _ = _search_duckduckgo(targeted_query, max_results, False)
+            if targeted_trusted:
+                trusted = targeted_trusted
+
+        _enrich_results(trusted)
+        return (trusted, []) if is_fatwa else (trusted, others)
+    except Exception as exc:
+        logger.error(f"Search error via Google Custom Search: {type(exc).__name__}. Falling back to DuckDuckGo search.")
+        try:
+            trusted, others = _search_duckduckgo(query, max_results, is_fatwa)
+            if not is_fatwa and not trusted:
+                targeted_query = f"{query} site:arabnews.com OR site:spa.gov.sa OR site:hajj.nusuk.sa"
+                targeted_trusted, _ = _search_duckduckgo(targeted_query, max_results, False)
+                if targeted_trusted:
+                    trusted = targeted_trusted
+            _enrich_results(trusted)
+            return (trusted, []) if is_fatwa else (trusted, others)
         except Exception as ddg_exc:
             logger.error(f"DuckDuckGo fallback search error: {ddg_exc}")
             return [], []
 
 
-# Context summariser (extract recent user facts from history)
 def _context_summary(context_history: list) -> str:
-    """Build a short human-readable summary of recent conversation turns."""
     if not context_history:
         return ""
     lines = []
-    for m in context_history[-6:]:  # last 3 pairs
+    for m in context_history[-6:]:
         role = "User" if m.get("role") == "user" else "AI"
         lines.append(f"{role}: {str(m.get('content', ''))[:120]}")
     return "\n".join(lines)
 
-
-
-# Main streaming function
 
 def stream_web_search_answer(
     question: str,
@@ -169,79 +243,71 @@ def stream_web_search_answer(
     user_memories: list = None,
     is_fatwa: bool = False,
 ):
-    """
-    Generator that yields JSON-encoded SSE data strings.
-    """
     context_history = context_history or []
     user_memories = user_memories or []
 
     today = datetime.datetime.now().strftime("%A, %d %B %Y")
-
-    # Build a context summary for query rewriting
     ctx_summary = _context_summary(context_history)
-
-    # Rewrite the user's query for better search results
     search_query = _rewrite_query(question, ctx_summary)
-    logger.info(f"Web search | original='{question}' | rewritten='{search_query}'")
+    logger.info(f"Web search | original='{question}' | rewritten='{search_query}' | fatwa={is_fatwa}")
 
-    # Perform search
     trusted, fallback = perform_web_search(search_query, is_fatwa=is_fatwa)
-
-    # Prefer trusted; pad with fallback only if we have fewer than 2 trusted hits
     results = trusted[:3]
-    if len(results) < 2:
+    if not is_fatwa and len(results) < 2:
         results += fallback[: (2 - len(results))]
 
     if not results:
-        yield json.dumps({
-            "type": "token",
-            "content": "I searched the web but couldn't find any relevant results for your question."
-        }) + "\n\n"
+        message = (
+            "I could not find a relevant islamqa.info result for that fatwa question. "
+            "Please rephrase it with the specific ruling you need."
+            if is_fatwa
+            else "I searched the web but could not find reliable Islamic/current sources for that question."
+        )
+        yield json.dumps({"type": "token", "content": message}) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"
         return
 
-    # Format sources context for the LLM
     sources_text = "\n\n".join(
-        f"[Source {i+1}] {r['title']}\nURL: {r['url']}\nSnippet: {r['body']}"
+        f"[Source {i+1}] {r['title']}\nURL: {r['url']}\nContent: {str(r['body'])[:4000]}"
         for i, r in enumerate(results)
     )
 
-    # Build memory block
     memory_block = ""
     if user_memories:
         facts = "\n".join(f"- {m}" for m in user_memories)
-        memory_block = f"\nKnown facts about the user (use when relevant):\n{facts}\n"
+        memory_block = f"\nKnown facts about the user (use only when relevant):\n{facts}\n"
 
+    fatwa_rule = (
+        "- This is a fatwa/ruling answer. Use ONLY islamqa.info sources in the search results.\n"
+        if is_fatwa else
+        "- This is a current-information answer. Keep it within Islamic topics and cite the provided sources.\n"
+    )
     system_prompt = (
-        f"You are DeenLink AI, a helpful and knowledgeable Islamic assistant.\n"
+        f"You are DeenLink AI, a careful Islamic assistant.\n"
         f"Today's date is {today}.\n"
         f"{memory_block}\n"
-        "You have performed a web search. Use the search results below to answer "
-        "the user's question accurately and concisely.\n"
+        "Use the search results below to answer accurately and concisely.\n"
         "Rules:\n"
         "- Answer directly; no filler phrases.\n"
         "- Cite sources inline using [Source N] notation.\n"
-        "- If search results don't answer the question, say so clearly.\n"
-        "- For Islamic questions, always end with 'Wallahu A'lam'.\n"
-        "- Do NOT make up information not present in the sources.\n\n"
+        "- If the sources do not answer the question, say so clearly.\n"
+        "- Do NOT make up information not present in the sources.\n"
+        f"{fatwa_rule}"
+        "- For Islamic questions, end with 'Wallahu A'lam'.\n\n"
         f"Search results:\n{sources_text}"
     )
 
     messages = [{"role": "system", "content": system_prompt}]
-
-    # Include recent conversation history for context
-    if context_history:
-        for m in context_history[-6:]:
-            if m.get("role") in ("user", "assistant"):
-                messages.append({"role": m["role"], "content": str(m.get("content", ""))})
-
+    for m in context_history[-6:]:
+        if m.get("role") in ("user", "assistant"):
+            messages.append({"role": m["role"], "content": str(m.get("content", ""))})
     messages.append({"role": "user", "content": question})
 
     try:
         stream = client.chat.completions.create(
             model=MODEL,
             messages=messages,
-            temperature=0.3,
+            temperature=0.2,
             stream=True,
         )
 
@@ -250,7 +316,6 @@ def stream_web_search_answer(
             if delta:
                 yield json.dumps({"type": "token", "content": delta}) + "\n\n"
 
-        # Yield sources for UI rendering
         sources_data = []
         for r in results:
             hostname = _domain_of(r["url"])
@@ -260,7 +325,7 @@ def stream_web_search_answer(
                 "payload": {
                     "title": r["title"],
                     "url": r["url"],
-                    "snippet": r["body"][:300],
+                    "snippet": str(r["body"])[:300],
                     "hostname": hostname,
                     "is_trusted": _is_trusted(r["url"], search_query),
                     "favicon_url": f"https://www.google.com/s2/favicons?domain={hostname}&sz=32",
@@ -271,11 +336,10 @@ def stream_web_search_answer(
 
         yield json.dumps({"type": "sources", "sources": sources_data}) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"
-
     except Exception as exc:
         logger.error(f"Error streaming web search answer: {exc}")
         yield json.dumps({
             "type": "token",
-            "content": "I encountered an error while processing the search results. Please try again."
+            "content": "I found sources, but could not generate the answer right now. Please try again."
         }) + "\n\n"
         yield json.dumps({"type": "done"}) + "\n\n"

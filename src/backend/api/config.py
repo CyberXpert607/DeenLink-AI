@@ -12,8 +12,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "https://deenlink.org").split(",")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GOOGLE_SEARCH_ENGINE_ID = os.getenv("GOOGLE_SEARCH_ENGINE_ID")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123") #testofc
-ADMIN_JWT_SECRET = os.getenv("ADMIN_JWT_SECRET", "deenai_super_analytics_2026") #testofc
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_JWT_SECRET = os.getenv("ADMIN_JWT_SECRET")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "islamic_sources")
 
 key_path = Path(__file__).parent / "v2" / "keys" / "public.pem"
 with open(key_path, "r") as f:

@@ -2,13 +2,9 @@ from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 import uvicorn
 import time
+import os
 from fastapi.responses import FileResponse
-import sys
-from pathlib import Path
-# Add the directory containing config.py to sys.path (absolute path)
-BASE_DIR = Path(__file__).resolve().parent
-sys.path.append(str(BASE_DIR))
-from config import ALLOWED_ORIGINS
+from .config import ALLOWED_ORIGINS
 from v2.db.database import engine
 from v2.db.models import Base
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +13,8 @@ from metrics import SYSTEM_METRICS
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    if os.getenv("AUTO_CREATE_TABLES", "false").lower() == "true":
+        Base.metadata.create_all(bind=engine)
     yield
 
 app = FastAPI(title="DeenLink AI", lifespan=lifespan)
