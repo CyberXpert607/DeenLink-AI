@@ -45,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(router_v2)
+app.include_router(router_v2, prefix="/api")
 
 @app.get("/admin/dashboard")
 async def serve_dashboard():
