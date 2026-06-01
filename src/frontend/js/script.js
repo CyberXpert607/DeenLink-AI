@@ -24,6 +24,8 @@ const State = {
     responseLang: 'en',
     userProfile: null,
     queryModule: null,
+    modeLocked: false,
+    modeLockedConversationId: null,
 };
 
 const Elements = {
@@ -74,6 +76,32 @@ marked.setOptions({
     smartypants: true,
     xhtml: false
 });
+
+const TAB_MODE_KEY = 'deen_active_mode';
+const TAB_MODE_LOCK_KEY = 'deen_mode_lock';
+
+function _readTabModeLock() {
+    try {
+        return JSON.parse(sessionStorage.getItem(TAB_MODE_LOCK_KEY) || 'null');
+    } catch {
+        return null;
+    }
+}
+
+function _writeTabModeLock() {
+    if (!State.queryModule || !State.modeLocked || !State.activeConversationId) return;
+    sessionStorage.setItem(TAB_MODE_LOCK_KEY, JSON.stringify({
+        module: State.queryModule,
+        conversationId: State.activeConversationId
+    }));
+}
+
+function _clearTabModeLock() {
+    sessionStorage.removeItem(TAB_MODE_KEY);
+    sessionStorage.removeItem(TAB_MODE_LOCK_KEY);
+    State.modeLocked = false;
+    State.modeLockedConversationId = null;
+}
 
 function createAiAvatarEl() {
     // Avatar removed per design request; return an empty transparent element
@@ -1132,6 +1160,7 @@ async function switchToConversation(id) {
     try {
         await loadConversation(id);
         State.activeConversationId = id;
+        _syncModeLockForConversation(id);
         document.querySelectorAll('.conversation-card').forEach(card => {
             card.classList.toggle('active', card.dataset.id === id);
         });
@@ -1304,6 +1333,13 @@ async function sendMessage(retryData = null) {
         }
     }
 
+    if (State.queryModule && (!State.modeLocked || State.modeLockedConversationId !== State.activeConversationId)) {
+        State.modeLocked = true;
+        State.modeLockedConversationId = State.activeConversationId;
+        _writeTabModeLock();
+        _renderActiveModuleChip();
+    }
+
     if (!retryData) {
         Elements.messageInput.value = "";
         Elements.messageInput.style.height = "auto";
@@ -1419,59 +1455,40 @@ async function sendMessage(retryData = null) {
                         promptText.style.cssText = 'margin:0;font-weight:600;font-size:14px;color:var(--text-dark);';
                         selectionContainer.appendChild(promptText);
 
-                        const cardsGrid = document.createElement('div');
-                        cardsGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;width:100%;';
+                        const choiceRow = document.createElement('div');
+                        choiceRow.className = 'intent-select-row';
+                        choiceRow.style.cssText = 'display:flex;gap:8px;width:100%;align-items:center;';
+
+                        const intentSelect = document.createElement('select');
+                        intentSelect.className = 'intent-select';
+                        intentSelect.style.cssText = 'flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text-dark);font:inherit;';
 
                         data.options.forEach(opt => {
-                            const card = document.createElement('button');
-                            card.type = 'button';
-                            card.style.cssText = `
-                                display:flex;
-                                flex-direction:column;
-                                align-items:center;
-                                justify-content:center;
-                                gap:8px;
-                                padding:16px;
-                                background:var(--glass-bg);
-                                backdrop-filter:blur(10px);
-                                -webkit-backdrop-filter:blur(10px);
-                                border:1px solid var(--glass-border);
-                                border-radius:14px;
-                                cursor:pointer;
-                                transition:all 0.2s ease;
-                                text-align:center;
-                                box-shadow:var(--glass-shadow);
-                            `;
-                            card.innerHTML = `
-                                <span style="font-size:24px;">${opt.icon}</span>
-                                <span style="font-size:13px;font-weight:600;color:var(--text-dark);">${opt.label}</span>
-                            `;
-
-                            card.addEventListener('mouseenter', () => {
-                                card.style.transform = 'translateY(-2px)';
-                                card.style.boxShadow = '0 8px 24px rgba(var(--primary-green-rgb), 0.15)';
-                                card.style.borderColor = 'var(--glass-green-border)';
-                            });
-                            card.addEventListener('mouseleave', () => {
-                                card.style.transform = 'none';
-                                card.style.boxShadow = 'var(--glass-shadow)';
-                                card.style.borderColor = 'var(--glass-border)';
-                            });
-
-                            card.addEventListener('click', () => {
-                                const promptTextVal = streamingMsg.container.dataset.prompt;
-                                _applyModule(opt.id);
-                                streamingMsg.container.remove();
-                                sendMessage({
-                                    message: promptTextVal,
-                                    isCallbackResend: true
-                                });
-                            });
-
-                            cardsGrid.appendChild(card);
+                            const option = document.createElement('option');
+                            option.value = opt.id;
+                            option.textContent = opt.label;
+                            intentSelect.appendChild(option);
                         });
 
-                        selectionContainer.appendChild(cardsGrid);
+                        const confirmIntentBtn = document.createElement('button');
+                        confirmIntentBtn.type = 'button';
+                        confirmIntentBtn.className = 'intent-confirm-btn';
+                        confirmIntentBtn.style.cssText = 'height:44px;padding:0 14px;border-radius:12px;border:0;background:var(--primary-green);color:#fff;font-weight:700;cursor:pointer;';
+                        confirmIntentBtn.textContent = 'Use mode';
+
+                        confirmIntentBtn.addEventListener('click', () => {
+                            const promptTextVal = streamingMsg.container.dataset.prompt;
+                            _applyModule(intentSelect.value, { lock: true });
+                            streamingMsg.container.remove();
+                            sendMessage({
+                                message: promptTextVal,
+                                isCallbackResend: true
+                            });
+                        });
+
+                        choiceRow.appendChild(intentSelect);
+                        choiceRow.appendChild(confirmIntentBtn);
+                        selectionContainer.appendChild(choiceRow);
 
                         streamingMsg.container.style.display = 'flex';
                         aiMessageEl.innerHTML = '';
@@ -1684,6 +1701,11 @@ function initEventListeners() {
 
     document.querySelectorAll('.module-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (State.modeLocked) {
+                showSuccessToast('Mode is locked for this chat.');
+                Elements.modulesPopup?.classList.add('hidden');
+                return;
+            }
             _applyModule(btn.dataset.module);
         });
     });
@@ -1798,7 +1820,7 @@ function initEventListeners() {
             const newConv = await createNewConversation();
             State.activeConversationId = newConv.id;
             Elements.chatMessages.innerHTML = "";
-            _clearModule();
+            _clearModule({ force: true });
             updateEmptyStateVisibility();
             closeSidebar();
             await loadConversations();
@@ -2016,7 +2038,7 @@ function initEventListeners() {
         let selectedMode = 'auto';
         Elements.modeRadios?.forEach(r => { if (r.checked) selectedMode = r.value; });
         State.responseMode = selectedMode;
-        localStorage.setItem('responseMode', selectedMode);
+        sessionStorage.setItem('responseMode', selectedMode);
         closeSettings();
         showSuccessToast('Settings saved!');
     });
@@ -2025,7 +2047,7 @@ function initEventListeners() {
         let selectedMode = 'auto';
         Elements.modeRadios?.forEach(r => { if (r.checked) selectedMode = r.value; });
         State.responseMode = selectedMode;
-        localStorage.setItem('responseMode', selectedMode);
+        sessionStorage.setItem('responseMode', selectedMode);
         showSuccessToast('Response mode saved!');
         showSettingsPage('settingsPageMain');
     });
@@ -2242,20 +2264,43 @@ const MODULE_CONFIG = {
     chat:       { label: 'Chat',       icon: '<i class="fas fa-message"></i>',        placeholder: 'Casual conversation...', prefix: '' }
 };
 
-function _applyModule(moduleId) {
+function _applyModule(moduleId, options = {}) {
     const config = MODULE_CONFIG[moduleId];
     if (!config) return;
+    if (State.modeLocked && !options.force && moduleId !== State.queryModule) {
+        showSuccessToast('Mode is locked for this chat.');
+        return;
+    }
     State.queryModule = moduleId;
+    if (options.lock) {
+        State.modeLocked = true;
+        State.modeLockedConversationId = State.activeConversationId;
+    }
+    sessionStorage.setItem(TAB_MODE_KEY, moduleId);
+    _writeTabModeLock();
     if (Elements.messageInput) Elements.messageInput.placeholder = config.placeholder;
 
-    _clearModuleChip();
+    _renderActiveModuleChip();
+    Elements.modulesPopup?.classList.add('hidden');
+    Elements.messageInput?.focus();
+}
+
+function _renderActiveModuleChip() {
+    const config = MODULE_CONFIG[State.queryModule];
+    if (!config) {
+        _clearModuleChip();
+        return;
+    }
 
     const inputContainer = document.querySelector('.input-container');
     if (!inputContainer) return;
 
+    _clearModuleChip();
+
     const chip = document.createElement('div');
     chip.id = 'activeModuleChip';
     chip.className = 'active-module-chip';
+    if (State.modeLocked) chip.classList.add('locked');
 
     // icon rendered as HTML; label as safe text node
     const iconSpan = document.createElement('span');
@@ -2266,20 +2311,35 @@ function _applyModule(moduleId) {
     labelSpan.textContent = config.label;
     chip.appendChild(labelSpan);
 
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.setAttribute('aria-label', 'Clear mode');
-    closeBtn.innerHTML = '<i class="fas fa-xmark"></i>';
-    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); _clearModule(); });
-    chip.appendChild(closeBtn);
+    if (State.modeLocked) {
+        const lockIcon = document.createElement('span');
+        lockIcon.className = 'module-lock-icon';
+        lockIcon.innerHTML = '<i class="fas fa-lock"></i>';
+        lockIcon.title = 'Locked for this chat';
+        chip.appendChild(lockIcon);
+    } else {
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.setAttribute('aria-label', 'Clear mode');
+        closeBtn.innerHTML = '<i class="fas fa-xmark"></i>';
+        closeBtn.addEventListener('click', (e) => { e.stopPropagation(); _clearModule(); });
+        chip.appendChild(closeBtn);
+    }
 
     inputContainer.insertBefore(chip, inputContainer.firstChild);
     Elements.modulesPopup?.classList.add('hidden');
     Elements.messageInput?.focus();
 }
 
-function _clearModule() {
+function _clearModule(options = {}) {
+    if (State.modeLocked && !options.force) {
+        showSuccessToast('Mode is locked for this chat.');
+        return;
+    }
     State.queryModule = null;
+    State.modeLocked = false;
+    State.modeLockedConversationId = null;
+    if (!options.preserveStorage) _clearTabModeLock();
     if (Elements.messageInput) {
         Elements.messageInput.placeholder = 'Ask your Islamic question...';
     }
@@ -2292,6 +2352,36 @@ function _clearModule() {
 
 function _clearModuleChip() {
     document.getElementById('activeModuleChip')?.remove();
+}
+
+function _restoreTabMode() {
+    const savedModule = sessionStorage.getItem(TAB_MODE_KEY);
+    const savedLock = _readTabModeLock();
+    if (savedModule && MODULE_CONFIG[savedModule]) {
+        State.queryModule = savedModule;
+        if (Elements.messageInput) Elements.messageInput.placeholder = MODULE_CONFIG[savedModule].placeholder;
+    }
+    if (savedLock?.module && MODULE_CONFIG[savedLock.module]) {
+        State.queryModule = savedLock.module;
+        State.modeLocked = Boolean(State.activeConversationId && State.activeConversationId === savedLock.conversationId);
+        State.modeLockedConversationId = savedLock.conversationId || null;
+        if (Elements.messageInput) Elements.messageInput.placeholder = MODULE_CONFIG[savedLock.module].placeholder;
+    }
+    _renderActiveModuleChip();
+}
+
+function _syncModeLockForConversation(conversationId) {
+    const savedLock = _readTabModeLock();
+    if (savedLock?.conversationId === conversationId && MODULE_CONFIG[savedLock.module]) {
+        State.queryModule = savedLock.module;
+        State.modeLocked = true;
+        State.modeLockedConversationId = conversationId;
+        if (Elements.messageInput) Elements.messageInput.placeholder = MODULE_CONFIG[savedLock.module].placeholder;
+        _renderActiveModuleChip();
+        return;
+    }
+
+    _clearModule({ force: true, preserveStorage: true });
 }
 
 function initSpeechToText() {
@@ -2389,7 +2479,7 @@ window.addEventListener("load", async () => {
         }
     }
 
-    const savedMode = localStorage.getItem("responseMode");
+    const savedMode = sessionStorage.getItem("responseMode") || localStorage.getItem("responseMode");
     if (savedMode) State.responseMode = savedMode;
 
     const savedFontSize = localStorage.getItem('deenFontSize');
@@ -2397,6 +2487,8 @@ window.addEventListener("load", async () => {
 
     const savedLang = localStorage.getItem('deenLang');
     if (savedLang) State.responseLang = savedLang;
+
+    _restoreTabMode();
 
     fetchUserProfile();
     await loadConversations();

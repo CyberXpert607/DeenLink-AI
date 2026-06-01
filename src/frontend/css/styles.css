@@ -1301,6 +1301,18 @@ body.dark-theme .active-module-chip { background: rgba(46,204,113,0.14); border-
 }
 .active-module-chip button:hover { opacity: 1; }
 
+.active-module-chip.locked {
+    padding-right: 12px;
+}
+
+.module-lock-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    opacity: 0.72;
+}
+
 /* ============================================================
    SCROLL TO BOTTOM — Glass circle
    ============================================================ */

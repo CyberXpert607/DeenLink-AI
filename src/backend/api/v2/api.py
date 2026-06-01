@@ -109,12 +109,17 @@ def check_rate_limit(user_id: str):
     now = time.time()
     if RATE_LIMIT_REDIS:
         key = f"deenai:rate_limit:{user_id}"
-        count = RATE_LIMIT_REDIS.incr(key)
-        if count == 1:
-            RATE_LIMIT_REDIS.expire(key, RATE_LIMIT_WINDOW)
-        if count > RATE_LIMIT_MAX_REQUESTS:
-            raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
-        return
+        try:
+            count = RATE_LIMIT_REDIS.incr(key)
+            if count == 1:
+                RATE_LIMIT_REDIS.expire(key, RATE_LIMIT_WINDOW)
+            if count > RATE_LIMIT_MAX_REQUESTS:
+                raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+            return
+        except HTTPException:
+            raise
+        except Exception as e:
+            logging.warning(f"Redis rate limiter unavailable, using local fallback: {e}")
 
     if user_id not in RATE_LIMIT_STORE:
         RATE_LIMIT_STORE[user_id] = []
