@@ -81,5 +81,54 @@ SIGNING_KEY="{config.STELLAR_PLATFORM_PUBLIC_KEY}"
 async def serve_dashboard():
     return FileResponse("src/backend/api/static/dashboard.html")
 
+# ---------------------------------------------------------------------------
+# Local-dev token endpoint
+# Mints a short-lived RS256 JWT using the same key pair as production so the
+# frontend can authenticate against this FastAPI backend without needing the
+# PHP token service.
+# ONLY active when IS_LOCAL_DEV=true in .env — never enabled in production.
+# ---------------------------------------------------------------------------
+_IS_LOCAL_DEV = os.getenv("IS_LOCAL_DEV", "false").lower() == "true"
+
+if _IS_LOCAL_DEV:
+    from fastapi.responses import JSONResponse
+    from pathlib import Path
+    import jwt as _jwt
+    from datetime import datetime, timedelta, timezone
+
+    _DEV_PRIVATE_KEY_PATH = os.getenv("DEV_JWT_PRIVATE_KEY_PATH", "")
+
+    @app.post("/api/auth/ai_token.php")
+    async def dev_mint_token():
+        """
+        Mint a short-lived RS256 JWT for local development.
+        Requires DEV_JWT_PRIVATE_KEY_PATH in .env pointing to the RSA private key.
+        """
+        if not _DEV_PRIVATE_KEY_PATH:
+            raise HTTPException(
+                status_code=503,
+                detail="DEV_JWT_PRIVATE_KEY_PATH not set in .env"
+            )
+        key_path = Path(_DEV_PRIVATE_KEY_PATH)
+        if not key_path.is_file():
+            raise HTTPException(
+                status_code=503,
+                detail=f"Private key not found at: {_DEV_PRIVATE_KEY_PATH}"
+            )
+        private_key = key_path.read_text()
+        now = datetime.now(timezone.utc)
+        payload = {
+            "sub": "local-dev-user",
+            "username": "dev",
+            "full_name": "Local Dev",
+            "user_type": "admin",
+            "iss": config.AI_JWT_ISS,
+            "aud": config.AI_JWT_AUD,
+            "iat": now,
+            "exp": now + timedelta(minutes=30),
+        }
+        token = _jwt.encode(payload, private_key, algorithm="RS256")
+        return JSONResponse({"ai_jwt": token})
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000)
