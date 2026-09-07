@@ -4,7 +4,7 @@ import uvicorn
 import time
 import os
 from fastapi.responses import FileResponse
-from .config import ALLOWED_ORIGINS
+from config import ALLOWED_ORIGINS
 from v2.db.database import engine
 from v2.db.models import Base
 from fastapi.middleware.cors import CORSMiddleware
