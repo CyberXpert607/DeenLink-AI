@@ -1,16 +1,16 @@
-from stellar_sdk import Server, Network, Keypair, TransactionBuilder, Asset
 import os
 import asyncio
-from ..config import STELLAR_NETWORK, STELLAR_PLATFORM_PUBLIC_KEY
+from stellar_sdk import Server, Network, Keypair, TransactionBuilder, Asset
+import config
 
 async def get_server():
-    if STELLAR_NETWORK == "mainnet":
+    if config.STELLAR_NETWORK == "mainnet":
         return Server("https://horizon.stellar.org")
     else:
         return Server("https://horizon-testnet.stellar.org")
 
 async def get_network_passphrase():
-    if STELLAR_NETWORK == "mainnet":
+    if config.STELLAR_NETWORK == "mainnet":
         return Network.PUBLIC_NETWORK_PASSPHRASE
     else:
         return Network.TESTNET_NETWORK_PASSPHRASE
@@ -19,19 +19,16 @@ async def build_payment_transaction(sender_public_key: str, amount: str, memo: s
     """
     Builds an unsigned payment transaction (XDR) from the sender to the platform.
     """
-    if not STELLAR_PLATFORM_PUBLIC_KEY:
+    if not config.STELLAR_PLATFORM_PUBLIC_KEY:
         raise ValueError("Platform public key is not configured")
         
     server = await get_server()
     
-    # Load the sender account to get sequence number
+    # Load the sender account to get sequence number and Account object
     try:
-        # Run synchronous horizon request in threadpool
-        account = await asyncio.to_thread(server.accounts().account_id(sender_public_key).call)
+        account = await asyncio.to_thread(server.load_account, sender_public_key)
     except Exception as e:
         raise ValueError(f"Sender account not found or invalid: {e}")
-        
-    sequence = account["sequence"]
     
     # We will use native XLM for simplicity, but could be adapted for USDC
     # The requirement says USDC but let's assume standard Asset.native() or we specify asset.
@@ -49,7 +46,7 @@ async def build_payment_transaction(sender_public_key: str, amount: str, memo: s
     )
     
     tx_builder.append_payment_op(
-        destination=STELLAR_PLATFORM_PUBLIC_KEY,
+        destination=config.STELLAR_PLATFORM_PUBLIC_KEY,
         amount=str(amount),
         asset=asset
     )
@@ -78,7 +75,7 @@ async def verify_payment(tx_hash: str, expected_amount: float = None) -> bool:
         
         for op in ops["_embedded"]["records"]:
             if op["type"] == "payment":
-                if op["to"] == STELLAR_PLATFORM_PUBLIC_KEY:
+                if op["to"] == config.STELLAR_PLATFORM_PUBLIC_KEY:
                     if expected_amount is None or float(op["amount"]) >= expected_amount:
                         return True
                         

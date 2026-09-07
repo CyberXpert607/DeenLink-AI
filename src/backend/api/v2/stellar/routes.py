@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Dict, Any
 
 from ..auth import verify_jwt
-from ...config import STELLAR_PAYMENTS_ENABLED, STELLAR_PLATFORM_PUBLIC_KEY, STELLAR_NETWORK
+import config
 from .service import build_payment_transaction, verify_payment
 
 router = APIRouter(prefix="/stellar", tags=["Stellar Payments"])
@@ -18,7 +18,7 @@ class VerifyPaymentRequest(BaseModel):
 
 @router.post("/payment/initialize")
 async def initialize_payment(payload: InitPaymentRequest, user=Depends(verify_jwt)):
-    if not STELLAR_PAYMENTS_ENABLED:
+    if not config.STELLAR_PAYMENTS_ENABLED:
         raise HTTPException(status_code=404, detail="Stellar payments feature is disabled")
         
     try:
@@ -31,7 +31,7 @@ async def initialize_payment(payload: InitPaymentRequest, user=Depends(verify_jw
 
 @router.post("/payment/verify")
 async def check_payment(payload: VerifyPaymentRequest, user=Depends(verify_jwt)):
-    if not STELLAR_PAYMENTS_ENABLED:
+    if not config.STELLAR_PAYMENTS_ENABLED:
         raise HTTPException(status_code=404, detail="Stellar payments feature is disabled")
         
     is_valid = await verify_payment(payload.tx_hash)
@@ -45,10 +45,10 @@ async def check_payment(payload: VerifyPaymentRequest, user=Depends(verify_jwt))
 
 @router.get("/wallet/info")
 async def wallet_info():
-    if not STELLAR_PAYMENTS_ENABLED:
+    if not config.STELLAR_PAYMENTS_ENABLED:
         raise HTTPException(status_code=404, detail="Stellar payments feature is disabled")
         
     return {
-        "public_key": STELLAR_PLATFORM_PUBLIC_KEY,
-        "network": STELLAR_NETWORK
+        "public_key": config.STELLAR_PLATFORM_PUBLIC_KEY,
+        "network": config.STELLAR_NETWORK
     }

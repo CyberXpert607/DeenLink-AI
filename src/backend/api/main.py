@@ -1,16 +1,16 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from contextlib import asynccontextmanager
 import uvicorn
 import time
 import os
 from fastapi.responses import FileResponse
-from config import ALLOWED_ORIGINS
+import config
+from config import ALLOWED_ORIGINS, STELLAR_PAYMENTS_ENABLED
 from v2.db.database import engine
 from v2.db.models import Base
 from fastapi.middleware.cors import CORSMiddleware
 from v2.api import router as router_v2
 from v2.stellar.routes import router as stellar_router
-from config import STELLAR_PAYMENTS_ENABLED
 from metrics import SYSTEM_METRICS
 
 @asynccontextmanager
@@ -55,18 +55,18 @@ if STELLAR_PAYMENTS_ENABLED:
 @app.get("/api/config/features")
 async def get_features():
     return {
-        "stellar_payments": STELLAR_PAYMENTS_ENABLED
+        "stellar_payments": config.STELLAR_PAYMENTS_ENABLED
     }
 
 @app.get("/.well-known/stellar.toml")
 async def get_stellar_toml():
     from fastapi.responses import PlainTextResponse
-    if not STELLAR_PAYMENTS_ENABLED:
+    if not config.STELLAR_PAYMENTS_ENABLED:
         raise HTTPException(status_code=404, detail="Not Found")
     
     toml_content = f"""
 [[ACCOUNTS]]
-SIGNING_KEY="{STELLAR_PLATFORM_PUBLIC_KEY}"
+SIGNING_KEY="{config.STELLAR_PLATFORM_PUBLIC_KEY}"
 """
     return PlainTextResponse(content=toml_content)
 

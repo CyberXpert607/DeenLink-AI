@@ -48,23 +48,29 @@ async def test_stellar_disabled_by_default():
 
 @pytest.mark.asyncio
 async def test_stellar_enabled_features():
+    from stellar_sdk import Keypair
+    platform_kp = Keypair.random()
+    sender_kp = Keypair.random()
+
     original = config.STELLAR_PAYMENTS_ENABLED
     config.STELLAR_PAYMENTS_ENABLED = True
-    config.STELLAR_PLATFORM_PUBLIC_KEY = "GDQJUTQYK2MQX2VGDR2FYWLIYAQIEGXTQVTFEMGH2BEWFG4BRCEWE5IL"
+    config.STELLAR_PLATFORM_PUBLIC_KEY = platform_kp.public_key
     
     # We must ensure the router is mounted. The app initialization already happened, so we test the endpoints directly by calling the router logic or re-importing.
     # To simplify, we can test the service functions directly if the router wasn't mounted during app init.
     
     # Test service logic
+    from stellar_sdk import Account
+    sender_pk = sender_kp.public_key
+
     with patch("v2.stellar.service.get_server") as mock_get_server:
         mock_server = MagicMock()
         
-        # Mock account response for sequence number
-        mock_server.accounts().account_id().call.return_value = {"sequence": "123456789"}
+        # Mock load_account response
+        mock_server.load_account.return_value = Account(account=sender_pk, sequence=123456789)
         mock_get_server.return_value = mock_server
         
         # Build TX
-        sender_pk = "GA2HGBJIJKI6O4XEM7CZWY5PS6GKSXL6D34ERAJYQSPYA6X6AI7NJW36"
         xdr = await build_payment_transaction(sender_pk, "10", "Test Memo")
         assert xdr is not None
         assert isinstance(xdr, str)
@@ -77,7 +83,7 @@ async def test_stellar_enabled_features():
                 "records": [
                     {
                         "type": "payment",
-                        "to": "GDQJUTQYK2MQX2VGDR2FYWLIYAQIEGXTQVTFEMGH2BEWFG4BRCEWE5IL",
+                        "to": platform_kp.public_key,
                         "amount": "10.0000000"
                     }
                 ]
