@@ -26,6 +26,7 @@ const State = {
     queryModule: null,
     modeLocked: false,
     modeLockedConversationId: null,
+    stellarPaymentsEnabled: false,
 };
 
 const Elements = {
@@ -679,6 +680,201 @@ function createStreamingMessage() {
 
     messageDiv.innerHTML += `
         <div class="message-content">
+    }
+}
+
+function removeTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function filterBestSources(sources, rawContent) {
+    if (!sources || sources.length === 0) return sources;
+    // If rawContent contains inline citations like [1] keep all sources
+    if (rawContent && /\[\d+\]/.test(rawContent)) {
+        return sources.filter(s => s && s.payload);
+    }
+    // Otherwise, return the most relevant source (first with payload)
+    const first = sources.find(s => s && s.payload);
+    return first ? [first] : [];
+}
+
+function _sourcesKey(messageId) { return `deen_sources_${messageId}`; }
+
+function persistSources(messageId, sources) {
+    if (!messageId || !sources || !sources.length) return;
+    try {
+        localStorage.setItem(_sourcesKey(messageId), JSON.stringify(sources));
+    } catch {}
+}
+
+function restoreSources(messageId) {
+    try {
+        const raw = localStorage.getItem(_sourcesKey(messageId));
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+}
+
+function createSourcesPanel(sources) {
+    const panel = document.createElement('div');
+    panel.className = 'sources-panel';
+    const validSources = sources.filter(s => s && s.payload);
+    if (!validSources.length) return panel;
+
+    const pillBtn = document.createElement('button');
+    pillBtn.className = 'sources-pill-btn';
+
+    const pillIcons = document.createElement('span');
+    pillIcons.className = 'sources-pill-icons';
+    validSources.slice(0, 3).forEach(src => {
+        const wrap = document.createElement('span');
+        wrap.className = 'sources-pill-icon';
+        if (src.source_type === 'web' && src.payload?.url) {
+            let h = '';
+            try { h = new URL(src.payload.url).hostname; } catch {}
+            const img = document.createElement('img');
+            img.src = `https://www.google.com/s2/favicons?domain=${h}&sz=32`;
+            img.alt = '';
+            img.onerror = function () {
+                const i = document.createElement('i');
+                i.className = 'fas fa-globe';
+                this.parentElement.replaceChildren(i);
+            };
+            wrap.appendChild(img);
+        } else {
+            const i = document.createElement('i');
+            i.className = src.source_type === 'hadith' ? 'fas fa-book' : 'fas fa-quran';
+            wrap.appendChild(i);
+        }
+        pillIcons.appendChild(wrap);
+    });
+
+    const pillLabel = document.createElement('span');
+    pillLabel.textContent = `${validSources.length} source${validSources.length > 1 ? 's' : ''}`;
+
+    const chevron = document.createElement('i');
+    chevron.className = 'fas fa-chevron-down';
+    chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
+
+    pillBtn.appendChild(pillIcons);
+    pillBtn.appendChild(pillLabel);
+    pillBtn.appendChild(chevron);
+
+    const expandedList = document.createElement('div');
+    expandedList.className = 'sources-expanded-list';
+
+    validSources.forEach(src => {
+        const payload = src.payload || {};
+        const isHadith = src.source_type === 'hadith';
+        const isWeb = src.source_type === 'web';
+
+        let title = '', meta = '', preview = '', hostname = '';
+
+        if (isWeb) {
+            try { hostname = new URL(payload.url || '').hostname.replace('www.', ''); } catch {}
+            title   = payload.title || hostname || 'Web Source';
+            meta    = hostname;
+            preview = payload.snippet || '';
+        } else if (src.display_reference) {
+            title   = src.display_reference;
+            preview = payload.english || '';
+        } else if (isHadith) {
+            title   = `${payload.collection || 'Hadith'} ${payload.hadith_number_display || ''}`.trim();
+            meta    = payload.collection || '';
+            preview = payload.english || '';
+        } else {
+            title   = (payload.surah_name && payload.ayah) ? `${payload.surah_name} — Ayah ${payload.ayah}` : "Qur'an";
+            meta    = payload.surah_name || '';
+            preview = payload.english || '';
+        }
+
+        const item = (isWeb && payload.url) ? document.createElement('a') : document.createElement('div');
+        item.className = 'source-list-item';
+        if (isWeb && payload.url) { item.href = payload.url; item.target = '_blank'; item.rel = 'noopener noreferrer'; }
+
+        const iconBox = document.createElement('div');
+        iconBox.className = 'source-list-icon';
+        if (isWeb) {
+            const img = document.createElement('img');
+            img.src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+            img.alt = '';
+            img.onerror = function () {
+                const i = document.createElement('i'); i.className = 'fas fa-globe';
+                this.parentElement.replaceChildren(i);
+            };
+            iconBox.appendChild(img);
+        } else {
+            const i = document.createElement('i');
+            i.className = isHadith ? 'fas fa-book' : 'fas fa-quran';
+            iconBox.appendChild(i);
+        }
+
+        const body = document.createElement('div');
+        body.className = 'source-list-body';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'source-list-title';
+        titleEl.textContent = title;
+        body.appendChild(titleEl);
+
+        if (meta) {
+            const metaEl = document.createElement('div');
+            metaEl.className = 'source-list-meta';
+            metaEl.textContent = meta;
+            body.appendChild(metaEl);
+        }
+
+        if (payload.arabic && !isWeb) {
+            const ar = document.createElement('div');
+            ar.className = 'rag-arabic';
+            ar.dir = 'rtl';
+            ar.style.cssText = 'font-size:13px;margin-top:6px;white-space:normal;word-break:break-word;line-height:1.9;';
+            ar.textContent = payload.arabic;
+            body.appendChild(ar);
+        }
+
+        if (preview) {
+            const prev = document.createElement('div');
+            prev.className = 'source-list-preview';
+            prev.textContent = preview;
+            body.appendChild(prev);
+        }
+
+        item.appendChild(iconBox);
+        item.appendChild(body);
+        expandedList.appendChild(item);
+    });
+
+    pillBtn.addEventListener('click', () => {
+        const open = expandedList.classList.toggle('visible');
+        chevron.className = open ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        chevron.style.cssText = 'font-size:10px;margin-left:4px;opacity:0.6;';
+    });
+
+    panel.appendChild(pillBtn);
+    panel.appendChild(expandedList);
+    return panel;
+}
+
+function createStreamingMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message ai streaming';
+    messageDiv.dataset.messageId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+    messageDiv.appendChild(createAiAvatarEl());
+
+    messageDiv.innerHTML += `
+        <div class="message-content">
             <div class="message-text"></div>
             <div class="message-feedback" style="display: none;">
                 <button class="feedback-btn like-btn" title="Helpful response">
@@ -692,6 +888,10 @@ function createStreamingMessage() {
                 <button class="feedback-btn copy-btn" title="Copy response">
                     <i class="far fa-copy"></i>
                     <span>Copy</span>
+                </button>
+                <button class="feedback-btn support-btn" title="Support this answer" style="display: ${State.stellarPaymentsEnabled ? 'flex' : 'none'};">
+                    <i class="fas fa-coins"></i>
+                    <span>Support</span>
                 </button>
             </div>
         </div>
@@ -771,6 +971,13 @@ function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
     const likeBtn = feedbackDiv.querySelector('.like-btn');
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
+    const supportBtn = feedbackDiv.querySelector('.support-btn');
+
+    if (supportBtn) {
+        supportBtn.addEventListener('click', () => {
+            document.getElementById('stellarSupportModal').classList.remove('hidden');
+        });
+    }
 
     likeBtn.addEventListener('click', async () => {
         const response = textEl?.innerText || '';
@@ -983,11 +1190,22 @@ function createFeedbackButtons(messageContent) {
             <i class="far fa-copy"></i>
             <span>Copy</span>
         </button>
+        <button class="feedback-btn support-btn" title="Support this answer" style="display: ${State.stellarPaymentsEnabled ? 'flex' : 'none'};">
+            <i class="fas fa-coins"></i>
+            <span>Support</span>
+        </button>
     `;
     const likeBtn = feedbackDiv.querySelector('.like-btn');
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
+    const supportBtn = feedbackDiv.querySelector('.support-btn');
     const textEl = messageContent.querySelector('.message-text');
+
+    if (supportBtn) {
+        supportBtn.addEventListener('click', () => {
+            document.getElementById('stellarSupportModal').classList.remove('hidden');
+        });
+    }
 
     likeBtn.addEventListener('click', async () => {
         const msgContainer = messageContent.closest('.message');
@@ -2491,10 +2709,12 @@ window.addEventListener("load", async () => {
     _restoreTabMode();
 
     fetchUserProfile();
+    await fetchFeatures();
     await loadConversations();
     updateEmptyStateVisibility();
 
     initSpeechToText();
+    initStellarModal();
 
     Elements.messageInput?.focus();
 });
@@ -2553,3 +2773,97 @@ function _renderMemoryNotice(fact, persist = true) {
 
 function showMemoryUpdatedInline(fact) { _renderMemoryNotice(fact, true); }
 function showMemoryUpdatedToast(fact)  { showMemoryUpdatedInline(fact); }
+
+async function fetchFeatures() {
+    try {
+        const res = await fetch(`${API_BASE_URL.replace('/v2', '')}/config/features`);
+        if (res.ok) {
+            const data = await res.json();
+            State.stellarPaymentsEnabled = !!data.stellar_payments;
+        }
+    } catch (e) {
+        console.error("Failed to fetch features", e);
+    }
+}
+
+function initStellarModal() {
+    const modal = document.getElementById('stellarSupportModal');
+    if (!modal) return;
+    
+    document.getElementById('closeStellarSupportModal').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('cancelStellarSupportBtn').addEventListener('click', () => modal.classList.add('hidden'));
+    
+    const initBtn = document.getElementById('initStellarSupportBtn');
+    const verifyBtn = document.getElementById('verifyStellarSupportBtn');
+    const xdrContainer = document.getElementById('stellarXdrContainer');
+    
+    initBtn.addEventListener('click', async () => {
+        const pubKey = document.getElementById('stellarPublicKeyInput').value;
+        const amount = document.getElementById('stellarAmountInput').value;
+        if (!pubKey || !amount) {
+            showErrorToast('Please enter your public key and amount');
+            return;
+        }
+        
+        try {
+            const token = await getValidToken();
+            const res = await fetch(`${API_BASE_URL}/stellar/payment/initialize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ public_key: pubKey, amount: amount, memo: "DeenLink Support" })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('stellarXdrOutput').value = data.xdr;
+                xdrContainer.classList.remove('hidden');
+                initBtn.classList.add('hidden');
+                verifyBtn.classList.remove('hidden');
+            } else {
+                const err = await res.json();
+                showErrorToast(err.detail || 'Failed to initialize payment');
+            }
+        } catch (e) {
+            showErrorToast('Network error');
+        }
+    });
+    
+    verifyBtn.addEventListener('click', async () => {
+        const txHash = document.getElementById('stellarTxHashInput').value;
+        if (!txHash) {
+            showErrorToast('Please enter the transaction hash');
+            return;
+        }
+        
+        try {
+            const token = await getValidToken();
+            const res = await fetch(`${API_BASE_URL}/stellar/payment/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tx_hash: txHash })
+            });
+            
+            if (res.ok) {
+                showSuccessToast('Payment verified! Jazakallah Khair for your support.');
+                modal.classList.add('hidden');
+                
+                // Reset form
+                document.getElementById('stellarXdrOutput').value = '';
+                document.getElementById('stellarTxHashInput').value = '';
+                xdrContainer.classList.add('hidden');
+                verifyBtn.classList.add('hidden');
+                initBtn.classList.remove('hidden');
+            } else {
+                showErrorToast('Payment verification failed');
+            }
+        } catch (e) {
+            showErrorToast('Network error');
+        }
+    });
+}

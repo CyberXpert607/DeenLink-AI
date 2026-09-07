@@ -179,6 +179,39 @@
                 </div>
             </div>
 
+            <!-- Stellar Support Modal -->
+            <div id="stellarSupportModal" class="feedback-modal hidden">
+                <div class="feedback-modal-overlay"></div>
+                <div class="feedback-modal-content">
+                    <div class="feedback-modal-header">
+                        <h3>Support DeenLink AI</h3>
+                        <button id="closeStellarSupportModal" aria-label="Close modal"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="feedback-modal-body">
+                        <p>Support this answer by sending Stellar lumens (XLM) or USDC.</p>
+                        <div style="margin-bottom: 10px;">
+                            <label for="stellarPublicKeyInput" style="display:block;margin-bottom:5px;">Your Stellar Public Key</label>
+                            <input type="text" id="stellarPublicKeyInput" placeholder="G..." style="width:100%;padding:8px;border-radius:4px;border:1px solid #ccc;background:var(--input-bg);color:var(--text-color);">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label for="stellarAmountInput" style="display:block;margin-bottom:5px;">Amount</label>
+                            <input type="number" id="stellarAmountInput" placeholder="10" value="10" style="width:100%;padding:8px;border-radius:4px;border:1px solid #ccc;background:var(--input-bg);color:var(--text-color);">
+                        </div>
+                        <div id="stellarXdrContainer" class="hidden" style="margin-top: 15px;">
+                            <label style="display:block;margin-bottom:5px;">Sign this Transaction (XDR):</label>
+                            <textarea id="stellarXdrOutput" rows="4" readonly style="width:100%;padding:8px;border-radius:4px;border:1px solid #ccc;background:var(--input-bg);color:var(--text-color);word-break:break-all;"></textarea>
+                            <p style="font-size: 0.85em; margin-top: 5px; color: var(--text-color-secondary);">Sign this with your wallet and submit to the network, then paste the tx hash below:</p>
+                            <input type="text" id="stellarTxHashInput" placeholder="Transaction Hash" style="width:100%;padding:8px;border-radius:4px;border:1px solid #ccc;background:var(--input-bg);color:var(--text-color);margin-top:5px;">
+                        </div>
+                    </div>
+                    <div class="feedback-modal-footer">
+                        <button id="cancelStellarSupportBtn" class="feedback-btn-cancel">Cancel</button>
+                        <button id="initStellarSupportBtn" class="feedback-btn-submit">Generate Transaction</button>
+                        <button id="verifyStellarSupportBtn" class="feedback-btn-submit hidden">Verify Payment</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Modal — multi-page -->
             <div id="settingsModal" class="feedback-modal hidden">
                 <div class="feedback-modal-overlay" id="settingsOverlay"></div>
