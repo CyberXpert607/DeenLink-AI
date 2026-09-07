@@ -58,6 +58,18 @@ async def get_features():
         "stellar_payments": STELLAR_PAYMENTS_ENABLED
     }
 
+@app.get("/.well-known/stellar.toml")
+async def get_stellar_toml():
+    from fastapi.responses import PlainTextResponse
+    if not STELLAR_PAYMENTS_ENABLED:
+        raise HTTPException(status_code=404, detail="Not Found")
+    
+    toml_content = f"""
+[[ACCOUNTS]]
+SIGNING_KEY="{STELLAR_PLATFORM_PUBLIC_KEY}"
+"""
+    return PlainTextResponse(content=toml_content)
+
 @app.get("/admin/dashboard")
 async def serve_dashboard():
     return FileResponse("src/backend/api/static/dashboard.html")
