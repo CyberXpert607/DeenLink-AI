@@ -1,8 +1,15 @@
+import sys
+import os
+
+# Ensure current directory is in sys.path so sibling imports work when invoked from root
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 from fastapi import FastAPI, Request, HTTPException
 from contextlib import asynccontextmanager
 import uvicorn
 import time
-import os
 from fastapi.responses import FileResponse
 import config
 from config import ALLOWED_ORIGINS, STELLAR_PAYMENTS_ENABLED
