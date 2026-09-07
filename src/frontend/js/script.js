@@ -2,7 +2,7 @@ const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127
 const API_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000/api/v2' : 'https://api.deenlink.org/api/v2';
 const TOKEN_ENDPOINT = IS_LOCAL ? 'http://127.0.0.1:8000/api/auth/ai_token.php' : 'https://deenlink.org/api/auth/ai_token.php';
 const SITE_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000' : 'https://deenlink.org';
-const AI_AVATAR_SRC = '../img/deenlink-ai.jpg';
+const AI_AVATAR_SRC = 'img/deenlink-ai.jpg';
 
 const State = {
     activeConversationId: null,
@@ -227,11 +227,16 @@ async function fetchUserProfile() {
 
 function showError(message, duration = 4000) {
     const toast = Elements.errorToast;
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.remove("hidden");
     setTimeout(() => {
         toast.classList.add("hidden");
     }, duration);
+}
+
+function showErrorToast(message, duration = 4000) {
+    showError(message, duration);
 }
 
 function showSuccessToast(message) {
@@ -2587,6 +2592,15 @@ async function fetchFeatures() {
         if (res.ok) {
             const data = await res.json();
             State.stellarPaymentsEnabled = !!data.stellar_payments;
+            
+            // Dynamically update visibility across the DOM
+            document.querySelectorAll('.support-btn').forEach(btn => {
+                btn.style.display = State.stellarPaymentsEnabled ? 'flex' : 'none';
+            });
+            const headerSupport = document.getElementById('headerSupportBtn');
+            if (headerSupport) headerSupport.style.display = State.stellarPaymentsEnabled ? 'inline-flex' : 'none';
+            const sidebarSupport = document.getElementById('sidebarSupportBtn');
+            if (sidebarSupport) sidebarSupport.style.display = State.stellarPaymentsEnabled ? 'flex' : 'none';
         }
     } catch (e) {
         console.error("Failed to fetch features", e);
@@ -2597,8 +2611,10 @@ function initStellarModal() {
     const modal = document.getElementById('stellarSupportModal');
     if (!modal) return;
     
-    document.getElementById('closeStellarSupportModal').addEventListener('click', () => modal.classList.add('hidden'));
-    document.getElementById('cancelStellarSupportBtn').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('closeStellarSupportModal')?.addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('cancelStellarSupportBtn')?.addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('headerSupportBtn')?.addEventListener('click', () => modal.classList.remove('hidden'));
+    document.getElementById('sidebarSupportBtn')?.addEventListener('click', () => modal.classList.remove('hidden'));
     
     const initBtn = document.getElementById('initStellarSupportBtn');
     const verifyBtn = document.getElementById('verifyStellarSupportBtn');

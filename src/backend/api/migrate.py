@@ -6,8 +6,12 @@ Run on the VPS after pulling code and before restarting the service:
 """
 from sqlalchemy import inspect, text
 
-from .v2.db.database import engine
-from .v2.db.models import Base
+try:
+    from .v2.db.database import engine
+    from .v2.db.models import Base
+except ImportError:
+    from v2.db.database import engine
+    from v2.db.models import Base
 
 
 def column_exists(conn, table: str, column: str) -> bool:

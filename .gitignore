@@ -1,6 +1,11 @@
 .env
 tests
 .venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 src/backend/api/__pycache__/
 src/backend/api/v2/__pycache__/
 src/backend/api/v1/__pycache__/

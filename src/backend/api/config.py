@@ -5,7 +5,7 @@ from pathlib import Path
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 AI_JWT_ISS= os.getenv("AI_JWT_ISS")
 AI_JWT_AUD = os.getenv("AI_JWT_AUD")
 DATABASE_URL = os.getenv("DATABASE_URL")

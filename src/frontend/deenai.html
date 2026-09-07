@@ -65,6 +65,9 @@
             </div>
             <div id="conversationList" class="conversation-list"></div>
             <div class="sidebar-footer">
+                <button id="sidebarSupportBtn" class="sidebar-settings-btn" style="display: none; margin-bottom: 8px; color: var(--accent-gold); border-color: rgba(212, 175, 55, 0.35);">
+                    <i class="fas fa-coins"></i> Support DeenLink
+                </button>
                 <button id="settingsBtn" class="sidebar-settings-btn">
                     <i class="fas fa-cog"></i> Settings
                 </button>
@@ -78,7 +81,7 @@
                     <button class="back-button" id="backBtn" aria-label="Go back"><i class="fas fa-arrow-left"></i></button>
                     <div class="header-title">
                         <img
-                            src="../img/deenlink-ai.png"
+                            src="img/deenlink-ai.jpg"
                             alt="DeenLink AI"
                             class="header-logo-img"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -88,6 +91,9 @@
                     </div>
                 </div>
                 <div class="header-right">
+                    <button class="header-action-btn" id="headerSupportBtn" aria-label="Support DeenLink" title="Support DeenLink AI" style="display: none; color: #ffd700;">
+                        <i class="fas fa-coins"></i>
+                    </button>
                     <button class="header-action-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
                 </div>
             </header>

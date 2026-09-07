@@ -5,7 +5,10 @@ from sqlalchemy import (
 )
 import sqlalchemy
 from sqlalchemy.orm import relationship
-from v2.db.database import Base
+try:
+    from .database import Base
+except ImportError:
+    from v2.db.database import Base
 
 
 class Conversation(Base):

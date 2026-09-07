@@ -58,6 +58,7 @@ app.include_router(router_v2, prefix="/api")
 
 if STELLAR_PAYMENTS_ENABLED:
     app.include_router(stellar_router, prefix="/api")
+    app.include_router(stellar_router, prefix="/api/v2")
 
 @app.get("/api/config/features")
 async def get_features():
