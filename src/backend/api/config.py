@@ -17,6 +17,10 @@ ADMIN_JWT_SECRET = os.getenv("ADMIN_JWT_SECRET")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "islamic_sources")
 
+STELLAR_PAYMENTS_ENABLED = os.getenv("STELLAR_PAYMENTS_ENABLED", "false").lower() == "true"
+STELLAR_NETWORK = os.getenv("STELLAR_NETWORK", "testnet")
+STELLAR_PLATFORM_PUBLIC_KEY = os.getenv("STELLAR_PLATFORM_PUBLIC_KEY")
+
 key_path = Path(__file__).parent / "v2" / "keys" / "public.pem"
 with open(key_path, "r") as f:
     AI_JWT_PUBLIC_KEY = f.read()
