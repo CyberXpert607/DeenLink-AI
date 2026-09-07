@@ -9,6 +9,8 @@ from v2.db.database import engine
 from v2.db.models import Base
 from fastapi.middleware.cors import CORSMiddleware
 from v2.api import router as router_v2
+from v2.stellar.routes import router as stellar_router
+from config import STELLAR_PAYMENTS_ENABLED
 from metrics import SYSTEM_METRICS
 
 @asynccontextmanager
@@ -17,7 +19,7 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
     yield
 
-app = FastAPI(title="DeenLink AI", lifespan=lifespan)
+app = FastAPI(title="DeenLink AI", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 @app.middleware("http")
 async def track_metrics(request: Request, call_next):
@@ -46,6 +48,15 @@ app.add_middleware(
 
 app.include_router(router_v2)
 app.include_router(router_v2, prefix="/api")
+
+if STELLAR_PAYMENTS_ENABLED:
+    app.include_router(stellar_router, prefix="/api")
+
+@app.get("/api/config/features")
+async def get_features():
+    return {
+        "stellar_payments": STELLAR_PAYMENTS_ENABLED
+    }
 
 @app.get("/admin/dashboard")
 async def serve_dashboard():
