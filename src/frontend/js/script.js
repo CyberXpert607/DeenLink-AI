@@ -1,5 +1,7 @@
-const API_BASE_URL = 'https://api.deenlink.org/api/v2';
-const TOKEN_ENDPOINT = 'https://deenlink.org/api/auth/ai_token.php';
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const API_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000/api/v2' : 'https://api.deenlink.org/api/v2';
+const TOKEN_ENDPOINT = IS_LOCAL ? 'http://127.0.0.1:8000/api/auth/ai_token.php' : 'https://deenlink.org/api/auth/ai_token.php';
+const SITE_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000' : 'https://deenlink.org';
 const AI_AVATAR_SRC = '../img/deenlink-ai.jpg';
 
 const State = {
@@ -199,7 +201,7 @@ async function fetchUserProfile() {
                 fullAvatarUrl = rawAvatar;
             } else {
                 const filename = rawAvatar.split('/').pop();
-                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
+                fullAvatarUrl = `${SITE_BASE_URL}/uploads/profile/${filename}`;
             }
 
             const img = document.createElement('img');
@@ -2029,7 +2031,7 @@ function initEventListeners() {
                 fullAvatarUrl = rawAvatar;
             } else {
                 const filename = rawAvatar.split('/').pop();
-                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
+                fullAvatarUrl = `${SITE_BASE_URL}/uploads/profile/${filename}`;
             }
             const img = document.createElement('img');
             img.src = fullAvatarUrl;
@@ -2531,7 +2533,7 @@ if (backBtn) {
         if (document.referrer && document.referrer.includes('deenlink.org')) {
             window.history.back();
         } else {
-            window.location.href = 'https://deenlink.org/index.html';
+            window.location.href = `${SITE_BASE_URL}/index.html`;
         }
     });
 }
