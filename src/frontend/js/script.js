@@ -1,6 +1,8 @@
-const API_BASE_URL = 'https://api.deenlink.org/api/v2';
-const TOKEN_ENDPOINT = 'https://deenlink.org/api/auth/ai_token.php';
-const AI_AVATAR_SRC = '../img/deenlink-ai.jpg';
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const API_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000/api/v2' : 'https://api.deenlink.org/api/v2';
+const TOKEN_ENDPOINT = IS_LOCAL ? 'http://127.0.0.1:8000/api/auth/ai_token.php' : 'https://deenlink.org/api/auth/ai_token.php';
+const SITE_BASE_URL = IS_LOCAL ? 'http://127.0.0.1:8000' : 'https://deenlink.org';
+const AI_AVATAR_SRC = 'img/deenlink-ai.jpg';
 
 const State = {
     activeConversationId: null,
@@ -26,6 +28,7 @@ const State = {
     queryModule: null,
     modeLocked: false,
     modeLockedConversationId: null,
+    stellarPaymentsEnabled: false,
 };
 
 const Elements = {
@@ -198,7 +201,7 @@ async function fetchUserProfile() {
                 fullAvatarUrl = rawAvatar;
             } else {
                 const filename = rawAvatar.split('/').pop();
-                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
+                fullAvatarUrl = `${SITE_BASE_URL}/uploads/profile/${filename}`;
             }
 
             const img = document.createElement('img');
@@ -224,11 +227,16 @@ async function fetchUserProfile() {
 
 function showError(message, duration = 4000) {
     const toast = Elements.errorToast;
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.remove("hidden");
     setTimeout(() => {
         toast.classList.add("hidden");
     }, duration);
+}
+
+function showErrorToast(message, duration = 4000) {
+    showError(message, duration);
 }
 
 function showSuccessToast(message) {
@@ -693,6 +701,10 @@ function createStreamingMessage() {
                     <i class="far fa-copy"></i>
                     <span>Copy</span>
                 </button>
+                <button class="feedback-btn support-btn" title="Support this answer" style="display: ${State.stellarPaymentsEnabled ? 'flex' : 'none'};">
+                    <i class="fas fa-coins"></i>
+                    <span>Support</span>
+                </button>
             </div>
         </div>
     `;
@@ -771,6 +783,13 @@ function setupFeedbackButtons(feedbackDiv, textEl, prompt) {
     const likeBtn = feedbackDiv.querySelector('.like-btn');
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
+    const supportBtn = feedbackDiv.querySelector('.support-btn');
+
+    if (supportBtn) {
+        supportBtn.addEventListener('click', () => {
+            document.getElementById('stellarSupportModal').classList.remove('hidden');
+        });
+    }
 
     likeBtn.addEventListener('click', async () => {
         const response = textEl?.innerText || '';
@@ -983,11 +1002,22 @@ function createFeedbackButtons(messageContent) {
             <i class="far fa-copy"></i>
             <span>Copy</span>
         </button>
+        <button class="feedback-btn support-btn" title="Support this answer" style="display: ${State.stellarPaymentsEnabled ? 'flex' : 'none'};">
+            <i class="fas fa-coins"></i>
+            <span>Support</span>
+        </button>
     `;
     const likeBtn = feedbackDiv.querySelector('.like-btn');
     const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
     const copyBtn = feedbackDiv.querySelector('.copy-btn');
+    const supportBtn = feedbackDiv.querySelector('.support-btn');
     const textEl = messageContent.querySelector('.message-text');
+
+    if (supportBtn) {
+        supportBtn.addEventListener('click', () => {
+            document.getElementById('stellarSupportModal').classList.remove('hidden');
+        });
+    }
 
     likeBtn.addEventListener('click', async () => {
         const msgContainer = messageContent.closest('.message');
@@ -2006,7 +2036,7 @@ function initEventListeners() {
                 fullAvatarUrl = rawAvatar;
             } else {
                 const filename = rawAvatar.split('/').pop();
-                fullAvatarUrl = `https://deenlink.org/uploads/profile/${filename}`;
+                fullAvatarUrl = `${SITE_BASE_URL}/uploads/profile/${filename}`;
             }
             const img = document.createElement('img');
             img.src = fullAvatarUrl;
@@ -2491,10 +2521,12 @@ window.addEventListener("load", async () => {
     _restoreTabMode();
 
     fetchUserProfile();
+    await fetchFeatures();
     await loadConversations();
     updateEmptyStateVisibility();
 
     initSpeechToText();
+    initStellarModal();
 
     Elements.messageInput?.focus();
 });
@@ -2506,7 +2538,7 @@ if (backBtn) {
         if (document.referrer && document.referrer.includes('deenlink.org')) {
             window.history.back();
         } else {
-            window.location.href = 'https://deenlink.org/index.html';
+            window.location.href = `${SITE_BASE_URL}/index.html`;
         }
     });
 }
@@ -2553,3 +2585,108 @@ function _renderMemoryNotice(fact, persist = true) {
 
 function showMemoryUpdatedInline(fact) { _renderMemoryNotice(fact, true); }
 function showMemoryUpdatedToast(fact)  { showMemoryUpdatedInline(fact); }
+
+async function fetchFeatures() {
+    try {
+        const res = await fetch(`${API_BASE_URL.replace('/v2', '')}/config/features`);
+        if (res.ok) {
+            const data = await res.json();
+            State.stellarPaymentsEnabled = !!data.stellar_payments;
+            
+            // Dynamically update visibility across the DOM
+            document.querySelectorAll('.support-btn').forEach(btn => {
+                btn.style.display = State.stellarPaymentsEnabled ? 'flex' : 'none';
+            });
+            const headerSupport = document.getElementById('headerSupportBtn');
+            if (headerSupport) headerSupport.style.display = State.stellarPaymentsEnabled ? 'inline-flex' : 'none';
+            const sidebarSupport = document.getElementById('sidebarSupportBtn');
+            if (sidebarSupport) sidebarSupport.style.display = State.stellarPaymentsEnabled ? 'flex' : 'none';
+        }
+    } catch (e) {
+        console.error("Failed to fetch features", e);
+    }
+}
+
+function initStellarModal() {
+    const modal = document.getElementById('stellarSupportModal');
+    if (!modal) return;
+    
+    document.getElementById('closeStellarSupportModal')?.addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('cancelStellarSupportBtn')?.addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('headerSupportBtn')?.addEventListener('click', () => modal.classList.remove('hidden'));
+    document.getElementById('sidebarSupportBtn')?.addEventListener('click', () => modal.classList.remove('hidden'));
+    
+    const initBtn = document.getElementById('initStellarSupportBtn');
+    const verifyBtn = document.getElementById('verifyStellarSupportBtn');
+    const xdrContainer = document.getElementById('stellarXdrContainer');
+    
+    initBtn.addEventListener('click', async () => {
+        const pubKey = document.getElementById('stellarPublicKeyInput').value;
+        const amount = document.getElementById('stellarAmountInput').value;
+        if (!pubKey || !amount) {
+            showErrorToast('Please enter your public key and amount');
+            return;
+        }
+        
+        try {
+            const token = await getValidToken();
+            const res = await fetch(`${API_BASE_URL}/stellar/payment/initialize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ public_key: pubKey, amount: amount, memo: "DeenLink Support" })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('stellarXdrOutput').value = data.xdr;
+                xdrContainer.classList.remove('hidden');
+                initBtn.classList.add('hidden');
+                verifyBtn.classList.remove('hidden');
+            } else {
+                const err = await res.json();
+                showErrorToast(err.detail || 'Failed to initialize payment');
+            }
+        } catch (e) {
+            showErrorToast('Network error');
+        }
+    });
+    
+    verifyBtn.addEventListener('click', async () => {
+        const txHash = document.getElementById('stellarTxHashInput').value;
+        if (!txHash) {
+            showErrorToast('Please enter the transaction hash');
+            return;
+        }
+        
+        try {
+            const token = await getValidToken();
+            const res = await fetch(`${API_BASE_URL}/stellar/payment/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tx_hash: txHash })
+            });
+            
+            if (res.ok) {
+                showSuccessToast('Payment verified! Jazakallah Khair for your support.');
+                modal.classList.add('hidden');
+                
+                // Reset form
+                document.getElementById('stellarXdrOutput').value = '';
+                document.getElementById('stellarTxHashInput').value = '';
+                xdrContainer.classList.add('hidden');
+                verifyBtn.classList.add('hidden');
+                initBtn.classList.remove('hidden');
+            } else {
+                showErrorToast('Payment verification failed');
+            }
+        } catch (e) {
+            showErrorToast('Network error');
+        }
+    });
+}
